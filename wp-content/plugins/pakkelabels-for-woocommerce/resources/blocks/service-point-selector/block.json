@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "shipmondo/service-point-selector",
+  "version": "1.0.0",
+  "title": "Shipmondo Service Point Selector",
+  "category": "woocommerce",
+  "icon": "location",
+  "description": "Selector for shipping service point, when using a compatible Shipmondo shipping method.",
+  "supports": {
+    "html": false,
+    "align": false,
+    "multiple": false,
+    "reusable": false
+  },
+  "parent": [ "woocommerce/checkout-shipping-methods-block" ],
+  "attributes": {
+    "lock": {
+      "type": "object",
+      "default": {
+        "remove": true,
+        "move": true
+      }
+    }
+  },
+  "textdomain": "shipmondo",
+  "style": "file:./style-view.css",
+  "viewScript": "file:./view.js",
+  "editorScript": "file:./edit.php"
+}

@@ -1,0 +1,152 @@
+<wpml-config>
+  <elementor-widgets>
+    <widget name="pebutton">
+      <fields>
+        <field>button_text</field>
+      </fields>
+    </widget>
+    <widget name="pewooajaxsearch">
+      <fields>
+        <field>search_button_text</field>
+        <field>placeholder</field>
+        <field>view_text</field>
+      </fields>
+    </widget>
+    <widget name="pecalltoaction">
+      <fields>
+        <field>cta_title</field>
+        <field>cta_text</field>
+        <field>play_text</field>
+      </fields>
+    </widget>
+    <widget name="pefancyobjects">
+      <fields>
+        <field>fancy_objects</field>
+      </fields>
+      <fields-in-item items_of="fancy_objects">
+        <field>object_type</field>
+        <field>_id</field>
+        <field>object_text</field>
+      </fields-in-item>
+    </widget>
+    <widget name="pepricingtable">
+      <fields>
+        <field>pt_title</field>
+        <field>pt_price</field>
+        <field>pt_short_desc</field>
+        <field>pt_desc</field>
+        <field>highlight_text</field>
+        <field>button_text</field>
+      </fields>
+    </widget>
+    <widget name="peinfobox">
+      <fields>
+        <field>info_box_title</field>
+        <field>info_box_text</field>
+        <field>play_text</field>
+      </fields>
+    </widget>
+    <widget name="peteammember">
+      <fields>
+        <field>team_member_name</field>
+        <field>team_member_title</field>
+        <field>team_member_summary</field>
+        <field>team_member_socials</field>
+      </fields>
+    </widget>
+    <widget name="peaccordion">
+      <fields>
+        <field>accordion</field>
+      </fields>
+      <fields-in-item items_of="accordion">
+        <field>accordion_title</field>
+        <field>accordion_content</field>
+        <field>_id</field>
+      </fields-in-item>
+    </widget>
+    <widget name="petestimonials">
+      <fields>
+        <field>testimonials</field>
+      </fields>
+      <fields-in-item items_of="testimonials">
+        <field>testimonial_name</field>
+        <field>testimonial_title</field>
+        <field>testimonial_text</field>
+        <field>_id</field>
+      </fields-in-item>
+    </widget>
+    <widget name="peinfinitetabs">
+      <fields>
+        <field>infinite_tabs</field>
+      </fields>
+      <fields-in-item items_of="infinite_tabs">
+        <field>tab_title</field>
+        <field>tab_content_normal</field>
+        <field>_id</field>
+        <field>1-1-1-1_1_content</field>
+        <field>1-1-1-1_2_content</field>
+      </fields-in-item>
+    </widget>
+    <widget name="peclients">
+      <fields>
+        <field>client</field>
+      </fields>
+      <fields-in-item items_of="client">
+        <field>client_title</field>
+        <field>_id</field>
+      </fields-in-item>
+    </widget>
+    <widget name="pemarquee">
+      <fields>
+        <field>marquee_text</field>
+      </fields>
+    </widget>
+    <widget name="petable">
+      <fields>
+        <field>table_rows_2</field>
+        <field>table_rows_3</field>
+        <field>table_rows_4</field>
+        <field>table_rows_5</field>
+        <field>table_rows_6</field>
+      </fields>
+
+      <fields-in-item items_of="table_rows_5">
+        <field>_id</field>
+        <field>column_1</field>
+        <field>column_2</field>
+        <field>column_3</field>
+        <field>column_4</field>
+        <field>column_5</field>
+      </fields-in-item>
+    </widget>
+    <widget name="pelist">
+      <fields>
+        <field>list</field>
+      </fields>
+      <fields-in-item items_of="list">
+        <field>list_text</field>
+        <field>_id</field>
+      </fields-in-item>
+    </widget>
+    <widget name="pecircletext">
+      <fields>
+        <field>circle_text</field>
+      </fields>
+    </widget>
+        <widget name="petextwrapper">
+      <fields>
+        <field>text_wrapper</field>
+      </fields>
+      <fields-in-item items_of="customized_words"/>
+        <field>target_word</field></fields-in-item>
+      <fields-in-item items_of="customized_lines"/></fields-in-item>
+      <fields-in-item items_of="inner_elements"/></fields-in-item>
+    </widget>
+    <widget name="pehotspotimage">
+      <fields-in-item items_of="hotspot_repeater">
+        <field>hotspot_title</field>
+        <field>hotspot_content</field>
+      </fields-in-item>
+    </widget>
+  </elementor-widgets>
+</wpml-config>

@@ -1,0 +1,27 @@
+.shipmondo_service_point_selection .service_points_dropdown {
+	border : 1px solid #e5e5e5;
+	border-radius: 4px;
+	overflow-y: auto;
+	margin-top: 0.5em;
+
+	.service_point {
+		padding: 0.6em 1em;
+
+		.header{
+			margin-bottom: 0.2em;
+
+			.name {
+				width: 100%;
+				font-size: 0.9em;
+			}
+		}
+
+		&:not(:last-child) {
+			border-bottom: 1px solid #DDD;
+		}
+
+		&.selected {
+			background-color: hsla(0, 0%, 7%, 0.05);
+		}
+	}
+}

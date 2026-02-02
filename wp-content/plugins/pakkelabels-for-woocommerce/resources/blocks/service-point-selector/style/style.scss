@@ -1,0 +1,131 @@
+@use "./selectors/_dropdown.scss";
+
+@use "./selectors/_modal.scss";
+
+.shipmondo_service_point_selection {
+	h3.service_point_title {
+		font-size: 1.1em;
+		margin-bottom: 1em;
+	}
+
+	.powered_by_shipmondo {
+		font-size: 0.8em;
+		color: hsla(0, 0%, 7%, 0.5);
+		width: 100%;
+		text-align: center;
+		margin: 0.5em 0;
+
+		p {
+			margin: 0;
+		}
+	}
+
+	.selected_service_point {
+		border: 1px solid hsla(0, 0%, 7%, 0.11);
+		border-radius: 4px;
+		padding: 1em 2.5em 1em 1em;
+		position: relative;
+
+		&.has-error {
+			border-color: #cc1818;
+		}
+
+		&::after {
+			content: '';
+			width: 1.6em;
+			height: 1.6em;
+			background: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' width='24' height='24' aria-hidden='true' class='wc-block-components-panel__button-icon' focusable='false'%3E%3Cpath d='M6.5 12.4L12 8l5.5 4.4-.9 1.2L12 10l-4.5 3.6-1-1.2z'%3E%3C/path%3E%3C/svg%3E") no-repeat right;
+			background-size: cover;
+			position: absolute;
+			right: 0.3em;
+			top: calc(50% - 0.8em);
+			transform: rotate(180deg);
+			opacity: .5;
+		}
+
+		&.selector_open {
+			&::after {
+				transform: rotate(0);
+			}
+		}
+
+		&.selector_type-modal::after {
+			transform: rotate(90deg)
+		}
+
+		&.loading {
+			opacity: .5;
+			transition: opacity .2s ease;
+			cursor: wait;
+
+			&::after {
+				display: none;
+			}
+
+			&:hover {
+				background: none;
+			}
+		}
+
+		&.no_service_point {
+			text-align: center;
+			cursor: not-allowed;
+
+			&::after {
+				display: none;
+			}
+
+			&:hover {
+				background: none;
+			}
+		}
+	}
+
+	.service_point {
+		cursor: pointer;
+		user-select: none;
+
+		&:hover {
+			background-color: hsla(0, 0%, 7%, 0.05);
+		}
+
+		.header {
+			margin-bottom: 0.5em;
+			overflow: hidden;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			flex-wrap: wrap;
+			gap: 0.2em 0.5em;
+
+			.name {
+				font-size: 1em;
+				font-weight: bold;
+			}
+
+			.rate_name {
+				text-align: right;
+				font-size: 0.7em;
+				color: hsla(0, 0%, 7%, 0.5);
+			}
+		}
+
+		.location {
+			font-size: 0.8em;
+			color: hsla(0, 0%, 7%, 0.8);
+			display: flex;
+			justify-content: space-between;
+			flex-wrap: wrap;
+			gap: 0.2em 0.5em;
+			align-items: center;
+
+			.distance {
+				text-align: right;
+			}
+		}
+	}
+}
+
+body.shipmondo_modal_open {
+	overflow: hidden;
+}

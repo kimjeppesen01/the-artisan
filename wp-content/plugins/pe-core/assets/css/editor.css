@@ -1,0 +1,77 @@
+.canvas {
+    position: relative;
+    /* max-width: 32rem;
+    aspect-ratio: 1/1; */
+    width: 100%;
+    height: 300px;
+    background: #fff
+}
+
+.canvas__svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+i.pe-widget::after {
+    content: "PE";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: 11px;
+    font-family: var(--e-a-font-family);
+    padding: 5px;
+    border-right: var(--e-a-border-bold);
+    border-bottom: var(--e-a-border-bold)
+}
+
+
+.elementor-control.elementor-control-transform_origin .elementor-choices {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    height: auto;
+    width: auto;
+}
+
+
+.elementor-control.elementor-control-transform_origin {
+    width: 50%;
+    float: left;
+}
+
+.elementor-control.elementor-control-start_scale {
+    width: 50%;
+    float: left;
+    padding-left: 0;
+    margin-top: 1em;
+}
+
+.elementor-control.elementor-control-end_scale {
+    width: 50%;
+    float: left;
+    padding-left: 0;
+}
+
+.elementor-control.elementor-control-ia_more_options {
+    width: 100%;
+    float: left;
+    margin-top: 1em;
+}
+
+.elementor-control-type-choose.elementor-label-block .elementor-choices>label {
+    height: 2em;
+}
+
+.elementor-control.elementor-control-inner_scale {
+    width: 100%;
+    float: left;
+}
+
+.elementor-control-background_color {
+    /* display: none; */
+}
+

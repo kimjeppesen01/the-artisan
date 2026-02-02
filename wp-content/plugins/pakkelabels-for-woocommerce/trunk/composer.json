@@ -1,0 +1,10 @@
+{
+    "name": "shipmondo/shipmondo-for-woocommerce",
+    "type": "wordpress-plugin",
+    "autoload": {
+        "psr-4": {
+            "Shipmondo\\": "app/"
+        }
+    },
+    "require": {}
+}
