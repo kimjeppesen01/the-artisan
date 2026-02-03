@@ -1,0 +1,235 @@
+<?php
+/**
+ * Public Frontend Controller
+ */
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+class AB2B_Public {
+
+    private $customer = null;
+
+    /**
+     * Constructor
+     */
+    public function __construct() {
+        add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);
+        add_action('init', [$this, 'register_shortcodes']);
+        add_action('template_redirect', [$this, 'check_portal_access']);
+    }
+
+    /**
+     * Register shortcodes
+     */
+    public function register_shortcodes() {
+        add_shortcode('ab2b_portal', [$this, 'render_portal']);
+        add_shortcode('ab2b_shop', [$this, 'render_shop']);
+        add_shortcode('ab2b_cart', [$this, 'render_cart']);
+        add_shortcode('ab2b_orders', [$this, 'render_orders']);
+    }
+
+    /**
+     * Check portal access on page load
+     */
+    public function check_portal_access() {
+        // Only check on portal page
+        $portal_page_id = get_option('ab2b_portal_page_id');
+        if (!$portal_page_id || !is_page($portal_page_id)) {
+            return;
+        }
+
+        $access_key = isset($_GET['key']) ? sanitize_text_field($_GET['key']) : '';
+
+        if ($access_key) {
+            $customer = AB2B_Customer::validate_key($access_key);
+            if ($customer) {
+                // Store in session/cookie
+                setcookie('ab2b_access_key', $access_key, time() + (30 * DAY_IN_SECONDS), COOKIEPATH, COOKIE_DOMAIN, is_ssl(), true);
+                $this->customer = $customer;
+            }
+        } else {
+            // Check cookie
+            $access_key = isset($_COOKIE['ab2b_access_key']) ? sanitize_text_field($_COOKIE['ab2b_access_key']) : '';
+            if ($access_key) {
+                $customer = AB2B_Customer::validate_key($access_key);
+                if ($customer) {
+                    $this->customer = $customer;
+                }
+            }
+        }
+    }
+
+    /**
+     * Get current customer
+     */
+    private function get_current_customer() {
+        if ($this->customer) {
+            return $this->customer;
+        }
+
+        // Check cookie
+        $access_key = isset($_COOKIE['ab2b_access_key']) ? sanitize_text_field($_COOKIE['ab2b_access_key']) : '';
+
+        // Check URL param
+        if (!$access_key && isset($_GET['key'])) {
+            $access_key = sanitize_text_field($_GET['key']);
+        }
+
+        if ($access_key) {
+            $this->customer = AB2B_Customer::validate_key($access_key);
+        }
+
+        return $this->customer;
+    }
+
+    /**
+     * Enqueue frontend assets
+     */
+    public function enqueue_assets() {
+        // Only load on pages with our shortcodes
+        global $post;
+        if (!$post) return;
+
+        $shortcodes = ['ab2b_portal', 'ab2b_shop', 'ab2b_cart', 'ab2b_orders'];
+        $has_shortcode = false;
+
+        foreach ($shortcodes as $shortcode) {
+            if (has_shortcode($post->post_content, $shortcode)) {
+                $has_shortcode = true;
+                break;
+            }
+        }
+
+        if (!$has_shortcode) return;
+
+        wp_enqueue_style(
+            'ab2b-portal',
+            AB2B_PLUGIN_URL . 'assets/public/css/portal.css',
+            [],
+            AB2B_VERSION
+        );
+
+        wp_enqueue_script(
+            'ab2b-portal',
+            AB2B_PLUGIN_URL . 'assets/public/js/portal.js',
+            ['jquery'],
+            AB2B_VERSION,
+            true
+        );
+
+        $customer = $this->get_current_customer();
+        $access_key = $customer ? $customer->access_key : '';
+
+        wp_localize_script('ab2b-portal', 'ab2b_portal', [
+            'api_url'    => rest_url('ab2b/v1'),
+            'access_key' => $access_key,
+            'is_authenticated' => (bool) $customer,
+            'customer'   => $customer ? [
+                'company_name' => $customer->company_name,
+                'contact_name' => $customer->contact_name,
+                'email'        => $customer->email,
+            ] : null,
+            'min_days'   => ab2b_get_option('min_days_before', 2),
+            'currency'   => ab2b_get_option('currency_symbol', 'kr.'),
+            'strings'    => [
+                'add_to_cart'      => __('Add to Cart', 'artisan-b2b-portal'),
+                'added'            => __('Added!', 'artisan-b2b-portal'),
+                'cart_empty'       => __('Your cart is empty.', 'artisan-b2b-portal'),
+                'select_weight'    => __('Select weight', 'artisan-b2b-portal'),
+                'quantity'         => __('Quantity', 'artisan-b2b-portal'),
+                'delivery_date'    => __('Delivery Date', 'artisan-b2b-portal'),
+                'friday_only'      => __('Delivery available on Fridays only.', 'artisan-b2b-portal'),
+                'place_order'      => __('Place Order', 'artisan-b2b-portal'),
+                'placing_order'    => __('Placing Order...', 'artisan-b2b-portal'),
+                'order_success'    => __('Order placed successfully!', 'artisan-b2b-portal'),
+                'error'            => __('An error occurred. Please try again.', 'artisan-b2b-portal'),
+                'no_orders'        => __('No orders yet.', 'artisan-b2b-portal'),
+                'view_details'     => __('View Details', 'artisan-b2b-portal'),
+                'loading'          => __('Loading...', 'artisan-b2b-portal'),
+                'remove'           => __('Remove', 'artisan-b2b-portal'),
+                'total'            => __('Total', 'artisan-b2b-portal'),
+                'special_instructions' => __('Special Instructions', 'artisan-b2b-portal'),
+            ],
+        ]);
+    }
+
+    /**
+     * Render full portal (tabs: shop, cart, orders)
+     */
+    public function render_portal($atts) {
+        $customer = $this->get_current_customer();
+
+        if (!$customer) {
+            return $this->render_access_denied();
+        }
+
+        ob_start();
+        include AB2B_PLUGIN_DIR . 'templates/portal/portal.php';
+        return ob_get_clean();
+    }
+
+    /**
+     * Render shop only
+     */
+    public function render_shop($atts) {
+        $customer = $this->get_current_customer();
+
+        if (!$customer) {
+            return $this->render_access_denied();
+        }
+
+        ob_start();
+        include AB2B_PLUGIN_DIR . 'templates/portal/shop.php';
+        return ob_get_clean();
+    }
+
+    /**
+     * Render cart only
+     */
+    public function render_cart($atts) {
+        $customer = $this->get_current_customer();
+
+        if (!$customer) {
+            return $this->render_access_denied();
+        }
+
+        ob_start();
+        include AB2B_PLUGIN_DIR . 'templates/portal/cart.php';
+        return ob_get_clean();
+    }
+
+    /**
+     * Render orders only
+     */
+    public function render_orders($atts) {
+        $customer = $this->get_current_customer();
+
+        if (!$customer) {
+            return $this->render_access_denied();
+        }
+
+        ob_start();
+        include AB2B_PLUGIN_DIR . 'templates/portal/orders.php';
+        return ob_get_clean();
+    }
+
+    /**
+     * Render access denied message
+     */
+    private function render_access_denied() {
+        ob_start();
+        ?>
+        <div class="ab2b-access-denied">
+            <div class="ab2b-access-denied-content">
+                <span class="ab2b-access-icon">🔒</span>
+                <h2><?php esc_html_e('Access Required', 'artisan-b2b-portal'); ?></h2>
+                <p><?php esc_html_e('Please use the link provided by your account manager to access the B2B portal.', 'artisan-b2b-portal'); ?></p>
+                <p><?php esc_html_e('If you believe you should have access, please contact us.', 'artisan-b2b-portal'); ?></p>
+            </div>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+}
