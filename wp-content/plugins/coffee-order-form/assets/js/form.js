@@ -40,7 +40,7 @@
                 <!-- Table 1: New Order Form -->
                 <div class="cof-section">
                     <h3 class="cof-section-title">Place New Order</h3>
-                    <p class="cof-info-text">Orders must be placed at least ${this.minDaysBefore} days before delivery date.</p>
+                    <p class="cof-info-text">Orders must be placed at least ${this.minDaysBefore} weeks before delivery date.</p>
                     <div class="coffee-order-table">
                         <table>
                             <thead>
