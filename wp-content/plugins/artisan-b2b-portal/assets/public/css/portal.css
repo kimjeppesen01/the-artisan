@@ -913,3 +913,67 @@
     background: var(--ab2b-danger-bg);
     color: var(--ab2b-danger);
 }
+
+/* Product Badges */
+.ab2b-product-badges {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    z-index: 5;
+}
+
+.ab2b-badge {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--ab2b-radius);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ab2b-badge-sale {
+    background: var(--ab2b-danger-bg);
+    color: var(--ab2b-danger);
+}
+
+.ab2b-badge-exclusive {
+    background: #6f42c1;
+    color: #fff;
+}
+
+/* Sale Pricing */
+.ab2b-sale-price {
+    color: var(--ab2b-danger);
+    font-weight: 700;
+}
+
+.ab2b-original-price {
+    color: var(--ab2b-secondary);
+    text-decoration: line-through;
+    font-weight: 400;
+    font-size: 0.85em;
+    margin-left: 0.5rem;
+}
+
+.ab2b-discount-badge {
+    display: inline-block;
+    background: var(--ab2b-success-bg);
+    color: var(--ab2b-success);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
+
+.ab2b-weight-price .ab2b-sale-price {
+    font-size: 1.25rem;
+}
+
+.ab2b-weight-price .ab2b-original-price {
+    font-size: 1rem;
+}

@@ -40,10 +40,29 @@ if (!defined('ABSPATH')) exit;
 
             <table class="form-table">
                 <tr>
+                    <th><label for="order_notification_email"><?php esc_html_e('Order Notification Email', 'artisan-b2b-portal'); ?></label></th>
+                    <td>
+                        <input type="email" name="order_notification_email" id="order_notification_email" class="regular-text"
+                               value="<?php echo esc_attr($settings['order_notification_email'] ?? ''); ?>"
+                               placeholder="order@yourdomain.com">
+                        <p class="description"><?php esc_html_e('Email address to receive new order notifications. Leave blank to use admin emails below.', 'artisan-b2b-portal'); ?></p>
+                    </td>
+                </tr>
+                <tr>
                     <th><label for="admin_emails"><?php esc_html_e('Admin Notification Emails', 'artisan-b2b-portal'); ?></label></th>
                     <td>
                         <textarea name="admin_emails" id="admin_emails" rows="3" class="large-text"><?php echo esc_textarea($settings['admin_emails'] ?? ''); ?></textarea>
-                        <p class="description"><?php esc_html_e('Email addresses to receive order notifications. One per line.', 'artisan-b2b-portal'); ?></p>
+                        <p class="description"><?php esc_html_e('Additional email addresses to receive order notifications. One per line.', 'artisan-b2b-portal'); ?></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="send_customer_confirmation"><?php esc_html_e('Customer Order Confirmation', 'artisan-b2b-portal'); ?></label></th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="send_customer_confirmation" id="send_customer_confirmation" value="1"
+                                   <?php checked($settings['send_customer_confirmation'] ?? '1', '1'); ?>>
+                            <?php esc_html_e('Send confirmation email to customer when order is confirmed', 'artisan-b2b-portal'); ?>
+                        </label>
                     </td>
                 </tr>
             </table>

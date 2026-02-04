@@ -77,6 +77,100 @@ $page_title = $is_edit ? __('Edit Customer', 'artisan-b2b-portal') : __('Add New
                         </tr>
                     </table>
                 </div>
+
+                <?php if ($is_edit) :
+                    require_once AB2B_PLUGIN_DIR . 'includes/core/class-ab2b-customer-pricing.php';
+                    $all_products = AB2B_Product::get_all(['is_active' => 1]);
+                    $customer_prices = AB2B_Customer_Pricing::get_customer_price_map($customer->id);
+                    $customer_products = AB2B_Customer_Pricing::get_customer_products($customer->id);
+                    $assigned_product_ids = wp_list_pluck($customer_products, 'product_id');
+                ?>
+                <div class="ab2b-form-card">
+                    <h2><?php esc_html_e('Custom Pricing & Exclusive Products', 'artisan-b2b-portal'); ?></h2>
+                    <p class="description"><?php esc_html_e('Set special prices for this customer. Leave blank to use default price. Mark products as "Exclusive" to make them only visible to this customer.', 'artisan-b2b-portal'); ?></p>
+
+                    <div class="ab2b-pricing-section">
+                        <?php foreach ($all_products as $product) :
+                            $is_assigned = in_array($product->id, $assigned_product_ids);
+                            $customer_product = null;
+                            if ($is_assigned) {
+                                foreach ($customer_products as $cp) {
+                                    if ($cp->product_id == $product->id) {
+                                        $customer_product = $cp;
+                                        break;
+                                    }
+                                }
+                            }
+                        ?>
+                        <div class="ab2b-pricing-product <?php echo $is_assigned ? 'ab2b-product-assigned' : ''; ?>">
+                            <div class="ab2b-pricing-product-header">
+                                <label class="ab2b-pricing-toggle">
+                                    <input type="checkbox" name="customer_products[<?php echo esc_attr($product->id); ?>][enabled]" value="1"
+                                           <?php checked($is_assigned); ?> class="ab2b-toggle-product">
+                                    <strong><?php echo esc_html($product->name); ?></strong>
+                                </label>
+                                <label class="ab2b-exclusive-toggle">
+                                    <input type="checkbox" name="customer_products[<?php echo esc_attr($product->id); ?>][exclusive]" value="1"
+                                           <?php checked($customer_product && $customer_product->is_exclusive); ?>>
+                                    <span class="ab2b-exclusive-badge"><?php esc_html_e('Exclusive', 'artisan-b2b-portal'); ?></span>
+                                </label>
+                            </div>
+
+                            <div class="ab2b-pricing-product-body">
+                                <div class="ab2b-custom-name-row">
+                                    <label><?php esc_html_e('Custom Product Name (optional)', 'artisan-b2b-portal'); ?></label>
+                                    <input type="text" name="customer_products[<?php echo esc_attr($product->id); ?>][custom_name]"
+                                           value="<?php echo $customer_product ? esc_attr($customer_product->custom_name) : ''; ?>"
+                                           placeholder="<?php echo esc_attr($product->name); ?>" class="regular-text">
+                                </div>
+
+                                <?php if (!empty($product->weights)) : ?>
+                                <table class="ab2b-pricing-table widefat">
+                                    <thead>
+                                        <tr>
+                                            <th><?php esc_html_e('Weight', 'artisan-b2b-portal'); ?></th>
+                                            <th><?php esc_html_e('Default Price', 'artisan-b2b-portal'); ?></th>
+                                            <th><?php esc_html_e('Custom Price', 'artisan-b2b-portal'); ?></th>
+                                            <th><?php esc_html_e('Discount', 'artisan-b2b-portal'); ?></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($product->weights as $weight) :
+                                            $custom_price = isset($customer_prices[$weight->id]) ? $customer_prices[$weight->id] : '';
+                                            $discount_pct = '';
+                                            if ($custom_price !== '' && $weight->price > 0) {
+                                                $discount_pct = round((($weight->price - $custom_price) / $weight->price) * 100, 1);
+                                            }
+                                        ?>
+                                        <tr>
+                                            <td><?php echo esc_html($weight->weight_label); ?></td>
+                                            <td class="ab2b-default-price"><?php echo esc_html(AB2B_Helpers::format_price($weight->price)); ?></td>
+                                            <td>
+                                                <input type="number" step="0.01" min="0"
+                                                       name="customer_prices[<?php echo esc_attr($weight->id); ?>]"
+                                                       value="<?php echo $custom_price !== '' ? esc_attr($custom_price) : ''; ?>"
+                                                       placeholder="<?php echo esc_attr($weight->price); ?>"
+                                                       class="small-text ab2b-custom-price-input"
+                                                       data-default="<?php echo esc_attr($weight->price); ?>">
+                                            </td>
+                                            <td class="ab2b-discount-display">
+                                                <?php if ($discount_pct !== '' && $discount_pct > 0) : ?>
+                                                    <span class="ab2b-discount-badge">-<?php echo esc_html($discount_pct); ?>%</span>
+                                                <?php elseif ($discount_pct !== '' && $discount_pct < 0) : ?>
+                                                    <span class="ab2b-markup-badge">+<?php echo esc_html(abs($discount_pct)); ?>%</span>
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
             </div>
 
             <div class="ab2b-form-sidebar">

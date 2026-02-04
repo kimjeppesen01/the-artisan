@@ -127,12 +127,45 @@ class AB2B_Activator {
             KEY product_id (product_id)
         ) {$charset_collate};";
 
+        // Customer-specific products (exclusive products for certain customers)
+        $table_customer_products = $wpdb->prefix . 'ab2b_customer_products';
+        $sql_customer_products = "CREATE TABLE {$table_customer_products} (
+            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            customer_id BIGINT(20) UNSIGNED NOT NULL,
+            product_id BIGINT(20) UNSIGNED NOT NULL,
+            custom_name VARCHAR(255) DEFAULT NULL,
+            custom_description TEXT,
+            is_exclusive TINYINT(1) DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY customer_product (customer_id, product_id),
+            KEY customer_id (customer_id),
+            KEY product_id (product_id)
+        ) {$charset_collate};";
+
+        // Customer-specific pricing
+        $table_customer_prices = $wpdb->prefix . 'ab2b_customer_prices';
+        $sql_customer_prices = "CREATE TABLE {$table_customer_prices} (
+            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            customer_id BIGINT(20) UNSIGNED NOT NULL,
+            product_weight_id BIGINT(20) UNSIGNED NOT NULL,
+            custom_price DECIMAL(10,2) NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY customer_weight (customer_id, product_weight_id),
+            KEY customer_id (customer_id),
+            KEY product_weight_id (product_weight_id)
+        ) {$charset_collate};";
+
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         dbDelta($sql_customers);
         dbDelta($sql_products);
         dbDelta($sql_weights);
         dbDelta($sql_orders);
         dbDelta($sql_items);
+        dbDelta($sql_customer_products);
+        dbDelta($sql_customer_prices);
 
         // Store DB version
         update_option('ab2b_db_version', AB2B_VERSION);
@@ -145,6 +178,7 @@ class AB2B_Activator {
         $defaults = [
             'min_days_before' => 2,
             'admin_emails' => get_option('admin_email'),
+            'order_notification_email' => 'order@theartisan.dk',
             'company_name' => get_bloginfo('name'),
             'company_logo' => '',
             'currency_symbol' => 'kr.',

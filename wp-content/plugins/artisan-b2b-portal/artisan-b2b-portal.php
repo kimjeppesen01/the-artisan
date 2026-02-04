@@ -97,6 +97,9 @@ function ab2b_init() {
     // Initialize REST API
     require_once AB2B_PLUGIN_DIR . 'includes/api/class-ab2b-rest-api.php';
     new AB2B_Rest_Api();
+
+    // Initialize email system (registers hooks for order notifications)
+    require_once AB2B_PLUGIN_DIR . 'includes/core/class-ab2b-email.php';
 }
 add_action('plugins_loaded', 'ab2b_init');
 

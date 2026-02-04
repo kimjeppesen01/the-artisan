@@ -178,8 +178,49 @@ class AB2B_Admin {
 
         if ($id > 0) {
             $result = AB2B_Customer::update($id, $data);
+            $customer_id = $id;
         } else {
             $result = AB2B_Customer::create($data);
+            $customer_id = is_wp_error($result) ? 0 : $result;
+        }
+
+        // Save customer products and pricing (only for existing customers)
+        if ($customer_id > 0 && !is_wp_error($result)) {
+            require_once AB2B_PLUGIN_DIR . 'includes/core/class-ab2b-customer-pricing.php';
+
+            // Process customer products (exclusive assignments)
+            if (isset($_POST['customer_products']) && is_array($_POST['customer_products'])) {
+                $all_products = AB2B_Product::get_all();
+                $all_product_ids = wp_list_pluck($all_products, 'id');
+
+                foreach ($all_product_ids as $product_id) {
+                    $product_data = isset($_POST['customer_products'][$product_id]) ? $_POST['customer_products'][$product_id] : null;
+
+                    if ($product_data && !empty($product_data['enabled'])) {
+                        // Assign product to customer
+                        AB2B_Customer_Pricing::assign_product($customer_id, $product_id, [
+                            'custom_name'        => sanitize_text_field($product_data['custom_name'] ?? ''),
+                            'custom_description' => '',
+                            'is_exclusive'       => !empty($product_data['exclusive']) ? 1 : 0,
+                        ]);
+                    } else {
+                        // Remove product assignment
+                        AB2B_Customer_Pricing::remove_product($customer_id, $product_id);
+                    }
+                }
+            }
+
+            // Process customer prices
+            if (isset($_POST['customer_prices']) && is_array($_POST['customer_prices'])) {
+                foreach ($_POST['customer_prices'] as $weight_id => $price) {
+                    $weight_id = (int) $weight_id;
+                    if ($price === '' || $price === null) {
+                        AB2B_Customer_Pricing::remove_custom_price($customer_id, $weight_id);
+                    } else {
+                        AB2B_Customer_Pricing::set_custom_price($customer_id, $weight_id, (float) $price);
+                    }
+                }
+            }
         }
 
         if (is_wp_error($result)) {
@@ -248,13 +289,15 @@ class AB2B_Admin {
      */
     private function handle_save_settings() {
         $settings = [
-            'min_days_before'   => (int) ($_POST['min_days_before'] ?? 2),
-            'admin_emails'      => sanitize_textarea_field($_POST['admin_emails'] ?? ''),
-            'company_name'      => sanitize_text_field($_POST['company_name'] ?? ''),
-            'company_logo'      => esc_url_raw($_POST['company_logo'] ?? ''),
-            'currency_symbol'   => sanitize_text_field($_POST['currency_symbol'] ?? 'kr.'),
-            'currency_position' => sanitize_text_field($_POST['currency_position'] ?? 'before'),
-            'order_prefix'      => sanitize_text_field($_POST['order_prefix'] ?? 'B2B-'),
+            'min_days_before'            => (int) ($_POST['min_days_before'] ?? 2),
+            'order_notification_email'   => sanitize_email($_POST['order_notification_email'] ?? ''),
+            'admin_emails'               => sanitize_textarea_field($_POST['admin_emails'] ?? ''),
+            'send_customer_confirmation' => isset($_POST['send_customer_confirmation']) ? '1' : '0',
+            'company_name'               => sanitize_text_field($_POST['company_name'] ?? ''),
+            'company_logo'               => esc_url_raw($_POST['company_logo'] ?? ''),
+            'currency_symbol'            => sanitize_text_field($_POST['currency_symbol'] ?? 'kr.'),
+            'currency_position'          => sanitize_text_field($_POST['currency_position'] ?? 'before'),
+            'order_prefix'               => sanitize_text_field($_POST['order_prefix'] ?? 'B2B-'),
         ];
 
         update_option('ab2b_settings', $settings);

@@ -135,9 +135,30 @@ class AB2B_Rest_Api {
      * Get all active products
      */
     public function get_products($request) {
-        $products = AB2B_Product::get_all(['is_active' => 1]);
+        $customer = $request->get_param('_customer');
+        $all_products = AB2B_Product::get_all(['is_active' => 1]);
 
-        $data = array_map([$this, 'format_product'], $products);
+        // Filter products based on customer access (exclusivity)
+        $products = [];
+        foreach ($all_products as $product) {
+            if (AB2B_Customer_Pricing::customer_has_product_access($customer->id, $product->id)) {
+                $products[] = $product;
+            }
+        }
+
+        // Get customer's price map and product customizations
+        $price_map = AB2B_Customer_Pricing::get_customer_price_map($customer->id);
+        $customer_products = AB2B_Customer_Pricing::get_customer_products($customer->id);
+
+        // Index customer products by product_id
+        $customer_product_map = [];
+        foreach ($customer_products as $cp) {
+            $customer_product_map[$cp->product_id] = $cp;
+        }
+
+        $data = array_map(function($product) use ($price_map, $customer_product_map) {
+            return $this->format_product($product, $price_map, $customer_product_map);
+        }, $products);
 
         return rest_ensure_response($data);
     }
@@ -146,6 +167,7 @@ class AB2B_Rest_Api {
      * Get single product
      */
     public function get_product($request) {
+        $customer = $request->get_param('_customer');
         $product = AB2B_Product::get($request->get_param('id'));
 
         if (!$product || !$product->is_active) {
@@ -156,13 +178,32 @@ class AB2B_Rest_Api {
             );
         }
 
-        return rest_ensure_response($this->format_product($product));
+        // Check if customer has access to this product
+        if (!AB2B_Customer_Pricing::customer_has_product_access($customer->id, $product->id)) {
+            return new WP_Error(
+                'product_not_found',
+                __('Product not found.', 'artisan-b2b-portal'),
+                ['status' => 404]
+            );
+        }
+
+        // Get customer's price map and product customizations
+        $price_map = AB2B_Customer_Pricing::get_customer_price_map($customer->id);
+        $customer_products = AB2B_Customer_Pricing::get_customer_products($customer->id);
+
+        // Index customer products by product_id
+        $customer_product_map = [];
+        foreach ($customer_products as $cp) {
+            $customer_product_map[$cp->product_id] = $cp;
+        }
+
+        return rest_ensure_response($this->format_product($product, $price_map, $customer_product_map));
     }
 
     /**
      * Format product for API response
      */
-    private function format_product($product) {
+    private function format_product($product, $price_map = [], $customer_product_map = []) {
         $image_url = $product->image_id
             ? wp_get_attachment_image_url($product->image_id, 'medium')
             : null;
@@ -175,33 +216,68 @@ class AB2B_Rest_Api {
             ? wp_get_attachment_image_url($product->image_id, 'large')
             : null;
 
-        // Get active weights only
+        // Check for customer-specific product customizations
+        $custom_product = isset($customer_product_map[$product->id]) ? $customer_product_map[$product->id] : null;
+
+        // Use custom name/description if available
+        $name = ($custom_product && !empty($custom_product->custom_name))
+            ? $custom_product->custom_name
+            : $product->name;
+
+        $description = ($custom_product && !empty($custom_product->custom_description))
+            ? $custom_product->custom_description
+            : $product->description;
+
+        // Get active weights with customer-specific pricing
         $weights = [];
+        $has_sale_pricing = false;
         if (!empty($product->weights)) {
             foreach ($product->weights as $weight) {
                 if ($weight->is_active) {
-                    $weights[] = [
-                        'id'           => (int) $weight->id,
-                        'label'        => $weight->weight_label,
-                        'value'        => (int) $weight->weight_value,
-                        'unit'         => $weight->weight_unit,
-                        'price'        => (float) $weight->price,
-                        'price_formatted' => AB2B_Helpers::format_price($weight->price),
+                    $original_price = (float) $weight->price;
+                    $custom_price = isset($price_map[$weight->id]) ? (float) $price_map[$weight->id] : null;
+
+                    // Use custom price if set, otherwise use original
+                    $current_price = ($custom_price !== null) ? $custom_price : $original_price;
+
+                    // Check if this is a sale (custom price lower than original)
+                    $is_on_sale = ($custom_price !== null && $custom_price < $original_price);
+                    if ($is_on_sale) {
+                        $has_sale_pricing = true;
+                    }
+
+                    $weight_data = [
+                        'id'               => (int) $weight->id,
+                        'label'            => $weight->weight_label,
+                        'value'            => (int) $weight->weight_value,
+                        'unit'             => $weight->weight_unit,
+                        'price'            => $current_price,
+                        'price_formatted'  => AB2B_Helpers::format_price($current_price),
+                        'is_on_sale'       => $is_on_sale,
                     ];
+
+                    // Include original price if on sale
+                    if ($is_on_sale) {
+                        $weight_data['original_price'] = $original_price;
+                        $weight_data['original_price_formatted'] = AB2B_Helpers::format_price($original_price);
+                        $weight_data['discount_percent'] = round((($original_price - $custom_price) / $original_price) * 100);
+                    }
+
+                    $weights[] = $weight_data;
                 }
             }
         }
 
-        // Calculate price range
+        // Calculate price range (using customer-specific prices)
         $prices = array_column($weights, 'price');
         $price_min = !empty($prices) ? min($prices) : 0;
         $price_max = !empty($prices) ? max($prices) : 0;
 
         return [
             'id'                => (int) $product->id,
-            'name'              => $product->name,
+            'name'              => $name,
             'slug'              => $product->slug,
-            'description'       => $product->description,
+            'description'       => $description,
             'short_description' => $product->short_description,
             'image'             => $image_url,
             'image_full'        => $image_full,
@@ -212,6 +288,8 @@ class AB2B_Rest_Api {
             'price_range'       => $price_min === $price_max
                 ? AB2B_Helpers::format_price($price_min)
                 : AB2B_Helpers::format_price($price_min) . ' - ' . AB2B_Helpers::format_price($price_max),
+            'has_sale_pricing'  => $has_sale_pricing,
+            'is_exclusive'      => ($custom_product && $custom_product->is_exclusive) ? true : false,
         ];
     }
 
@@ -283,6 +361,16 @@ class AB2B_Rest_Api {
             );
         }
 
+        // Get customer's price map and product customizations
+        $price_map = AB2B_Customer_Pricing::get_customer_price_map($customer->id);
+        $customer_products = AB2B_Customer_Pricing::get_customer_products($customer->id);
+
+        // Index customer products by product_id
+        $customer_product_map = [];
+        foreach ($customer_products as $cp) {
+            $customer_product_map[$cp->product_id] = $cp;
+        }
+
         // Validate and format items
         $order_items = [];
         foreach ($items as $item) {
@@ -297,13 +385,28 @@ class AB2B_Rest_Api {
                 continue;
             }
 
+            // Check if customer has access to this product
+            if (!AB2B_Customer_Pricing::customer_has_product_access($customer->id, $product->id)) {
+                continue;
+            }
+
+            // Use customer-specific price if available
+            $unit_price = isset($price_map[$weight->id])
+                ? (float) $price_map[$weight->id]
+                : (float) $weight->price;
+
+            // Use custom product name if available
+            $product_name = (isset($customer_product_map[$product->id]) && !empty($customer_product_map[$product->id]->custom_name))
+                ? $customer_product_map[$product->id]->custom_name
+                : $product->name;
+
             $order_items[] = [
                 'product_id'        => (int) $product->id,
                 'product_weight_id' => (int) $weight->id,
-                'product_name'      => $product->name,
+                'product_name'      => $product_name,
                 'weight_label'      => $weight->weight_label,
                 'quantity'          => (int) $item['quantity'],
-                'unit_price'        => (float) $weight->price,
+                'unit_price'        => $unit_price,
             ];
         }
 
