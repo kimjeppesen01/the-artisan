@@ -350,24 +350,26 @@
             const html = `
                 <div class="ab2b-quick-add" data-product-id="${product.id}">
                     <img src="${product.image || placeholder}" alt="${product.name}" class="ab2b-quick-add-image">
-                    <h3 class="ab2b-quick-add-name">${product.name}</h3>
-                    ${product.short_description ? `<p class="ab2b-quick-add-desc">${product.short_description}</p>` : ''}
-                    <form class="ab2b-quick-add-form">
-                        <div class="ab2b-form-group">
-                            <label for="ab2b-weight-select">${ab2b_portal.strings.select_weight}</label>
-                            <select id="ab2b-weight-select" name="weight_id">
-                                ${weightsHtml}
-                            </select>
-                        </div>
-                        <div class="ab2b-form-group">
-                            <label for="ab2b-quantity">${ab2b_portal.strings.quantity}</label>
-                            <input type="number" id="ab2b-quantity" name="quantity" value="1" min="1" max="999">
-                        </div>
-                        <p class="ab2b-weight-price" id="ab2b-selected-price">${priceHtml}</p>
-                        <button type="button" class="ab2b-btn ab2b-btn-primary ab2b-btn-full ab2b-add-to-cart-btn">
-                            ${ab2b_portal.strings.add_to_cart}
-                        </button>
-                    </form>
+                    <div class="ab2b-quick-add-info">
+                        <h3 class="ab2b-quick-add-name">${product.name}</h3>
+                        ${product.short_description ? `<p class="ab2b-quick-add-desc">${product.short_description}</p>` : ''}
+                        <form class="ab2b-quick-add-form">
+                            <div class="ab2b-form-group">
+                                <label for="ab2b-weight-select">${ab2b_portal.strings.select_weight}</label>
+                                <select id="ab2b-weight-select" name="weight_id">
+                                    ${weightsHtml}
+                                </select>
+                            </div>
+                            <div class="ab2b-form-group">
+                                <label for="ab2b-quantity">${ab2b_portal.strings.quantity}</label>
+                                <input type="number" id="ab2b-quantity" name="quantity" value="1" min="1" max="999">
+                            </div>
+                            <p class="ab2b-weight-price" id="ab2b-selected-price">${priceHtml}</p>
+                            <button type="button" class="ab2b-btn ab2b-btn-primary ab2b-btn-full ab2b-add-to-cart-btn">
+                                ${ab2b_portal.strings.add_to_cart}
+                            </button>
+                        </form>
+                    </div>
                 </div>
             `;
 

@@ -776,6 +776,20 @@ body.ab2b-modal-open {
     padding: 2rem;
 }
 
+/* Desktop: Compact modal padding */
+@media (min-width: 769px) {
+    .ab2b-modal-body {
+        padding: 1.5rem;
+    }
+}
+
+/* Mobile: stack layout for info wrapper */
+.ab2b-quick-add-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
 /* Quick Add Modal Content */
 .ab2b-quick-add {
     display: flex;
@@ -806,6 +820,47 @@ body.ab2b-modal-open {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+}
+
+/* Desktop: Horizontal modal layout to fit viewport without scrolling */
+@media (min-width: 769px) {
+    .ab2b-quick-add {
+        flex-direction: row;
+        gap: 1.5rem;
+        align-items: flex-start;
+    }
+
+    .ab2b-quick-add-image {
+        width: 200px;
+        min-width: 200px;
+        max-width: 200px;
+        aspect-ratio: 1;
+        flex-shrink: 0;
+    }
+
+    .ab2b-quick-add-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .ab2b-quick-add-name {
+        font-size: 1.1rem;
+    }
+
+    .ab2b-quick-add-desc {
+        font-size: 0.85rem;
+    }
+
+    .ab2b-quick-add-form {
+        gap: 0.75rem;
+    }
+
+    .ab2b-form-group select,
+    .ab2b-form-group input[type="number"] {
+        padding: 0.6rem 0.85rem;
+    }
 }
 
 .ab2b-form-group {
