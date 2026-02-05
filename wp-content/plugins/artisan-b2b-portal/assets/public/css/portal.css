@@ -722,14 +722,14 @@ body.ab2b-modal-open {
     background: var(--ab2b-card-bg);
     border-radius: var(--ab2b-radius);
     width: calc(100% - 2rem);
-    max-width: 500px;
+    max-width: 700px;
     margin: 2rem auto;
     animation: ab2b-modal-in 0.3s ease;
     pointer-events: auto;
 }
 
 .ab2b-modal-wide {
-    max-width: 700px;
+    max-width: 900px;
 }
 
 @keyframes ab2b-modal-in {

@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) exit;
                 <div class="ab2b-form-card">
                     <h2><?php esc_html_e('Order Items', 'artisan-b2b-portal'); ?></h2>
 
-                    <table class="wp-list-table widefat fixed striped">
+                    <table class="wp-list-table widefat fixed striped" id="order-items-table">
                         <thead>
                             <tr>
                                 <th><?php esc_html_e('Product', 'artisan-b2b-portal'); ?></th>
@@ -31,25 +31,40 @@ if (!defined('ABSPATH')) exit;
                                 <th class="column-quantity"><?php esc_html_e('Qty', 'artisan-b2b-portal'); ?></th>
                                 <th class="column-price"><?php esc_html_e('Unit Price', 'artisan-b2b-portal'); ?></th>
                                 <th class="column-total"><?php esc_html_e('Total', 'artisan-b2b-portal'); ?></th>
+                                <th class="column-actions" style="width: 100px;"><?php esc_html_e('Actions', 'artisan-b2b-portal'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($order->items as $item) : ?>
-                                <tr>
-                                    <td>
+                                <tr data-item-id="<?php echo esc_attr($item->id); ?>">
+                                    <td class="item-product-name">
                                         <strong><?php echo esc_html($item->product_name); ?></strong>
                                     </td>
-                                    <td><?php echo esc_html($item->weight_label); ?></td>
-                                    <td class="column-quantity"><?php echo esc_html($item->quantity); ?></td>
-                                    <td class="column-price"><?php echo esc_html(AB2B_Helpers::format_price($item->unit_price)); ?></td>
-                                    <td class="column-total"><?php echo esc_html(AB2B_Helpers::format_price($item->line_total)); ?></td>
+                                    <td class="item-weight-label"><?php echo esc_html($item->weight_label); ?></td>
+                                    <td class="column-quantity item-quantity"><?php echo esc_html($item->quantity); ?></td>
+                                    <td class="column-price item-unit-price"><?php echo esc_html(AB2B_Helpers::format_price($item->unit_price)); ?></td>
+                                    <td class="column-total item-line-total"><?php echo esc_html(AB2B_Helpers::format_price($item->line_total)); ?></td>
+                                    <td class="column-actions">
+                                        <button type="button" class="button button-small ab2b-edit-order-item"
+                                                data-item-id="<?php echo esc_attr($item->id); ?>"
+                                                data-product-name="<?php echo esc_attr($item->product_name); ?>"
+                                                data-weight-label="<?php echo esc_attr($item->weight_label); ?>"
+                                                data-quantity="<?php echo esc_attr($item->quantity); ?>"
+                                                data-unit-price="<?php echo esc_attr($item->unit_price); ?>">
+                                            <?php esc_html_e('Edit', 'artisan-b2b-portal'); ?>
+                                        </button>
+                                        <button type="button" class="button button-small button-link-delete ab2b-delete-order-item"
+                                                data-item-id="<?php echo esc_attr($item->id); ?>">
+                                            <?php esc_html_e('Delete', 'artisan-b2b-portal'); ?>
+                                        </button>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="4" class="ab2b-order-total-label"><?php esc_html_e('Total', 'artisan-b2b-portal'); ?></td>
-                                <td class="ab2b-order-total-value"><strong><?php echo esc_html(AB2B_Helpers::format_price($order->total)); ?></strong></td>
+                                <td colspan="5" class="ab2b-order-total-label"><?php esc_html_e('Total', 'artisan-b2b-portal'); ?></td>
+                                <td class="ab2b-order-total-value"><strong id="order-total-display"><?php echo esc_html(AB2B_Helpers::format_price($order->total)); ?></strong></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -162,3 +177,122 @@ if (!defined('ABSPATH')) exit;
         </div>
     </div>
 </div>
+
+<!-- Edit Order Item Modal -->
+<div id="ab2b-edit-item-modal" class="ab2b-modal" style="display: none;">
+    <div class="ab2b-modal-overlay"></div>
+    <div class="ab2b-modal-content">
+        <div class="ab2b-modal-header">
+            <h2><?php esc_html_e('Edit Order Item', 'artisan-b2b-portal'); ?></h2>
+            <button type="button" class="ab2b-modal-close">&times;</button>
+        </div>
+        <div class="ab2b-modal-body">
+            <form id="edit-order-item-form">
+                <input type="hidden" id="edit-item-id" name="item_id" value="">
+
+                <table class="form-table">
+                    <tr>
+                        <th><label for="edit-product-name"><?php esc_html_e('Product Name', 'artisan-b2b-portal'); ?></label></th>
+                        <td><input type="text" id="edit-product-name" name="product_name" class="regular-text" required></td>
+                    </tr>
+                    <tr>
+                        <th><label for="edit-weight-label"><?php esc_html_e('Weight/Variant', 'artisan-b2b-portal'); ?></label></th>
+                        <td><input type="text" id="edit-weight-label" name="weight_label" class="regular-text" required></td>
+                    </tr>
+                    <tr>
+                        <th><label for="edit-quantity"><?php esc_html_e('Quantity', 'artisan-b2b-portal'); ?></label></th>
+                        <td><input type="number" id="edit-quantity" name="quantity" class="small-text" min="1" required></td>
+                    </tr>
+                    <tr>
+                        <th><label for="edit-unit-price"><?php esc_html_e('Unit Price', 'artisan-b2b-portal'); ?></label></th>
+                        <td><input type="number" id="edit-unit-price" name="unit_price" class="small-text" step="0.01" min="0" required></td>
+                    </tr>
+                </table>
+            </form>
+        </div>
+        <div class="ab2b-modal-footer">
+            <button type="button" class="button ab2b-modal-cancel"><?php esc_html_e('Cancel', 'artisan-b2b-portal'); ?></button>
+            <button type="button" class="button button-primary" id="save-order-item"><?php esc_html_e('Save Changes', 'artisan-b2b-portal'); ?></button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Modal Styles */
+.ab2b-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.ab2b-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+}
+.ab2b-modal-content {
+    position: relative;
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow: auto;
+}
+.ab2b-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #ddd;
+}
+.ab2b-modal-header h2 {
+    margin: 0;
+    font-size: 18px;
+}
+.ab2b-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    line-height: 1;
+}
+.ab2b-modal-close:hover {
+    color: #000;
+}
+.ab2b-modal-body {
+    padding: 20px;
+}
+.ab2b-modal-body .form-table th {
+    padding: 10px 10px 10px 0;
+    width: 120px;
+}
+.ab2b-modal-body .form-table td {
+    padding: 10px 0;
+}
+.ab2b-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 15px 20px;
+    border-top: 1px solid #ddd;
+    background: #f6f6f6;
+}
+.column-actions {
+    text-align: right;
+}
+.column-actions .button {
+    margin-left: 5px;
+}
+</style>

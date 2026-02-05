@@ -442,6 +442,141 @@ class AB2B_Order {
     }
 
     /**
+     * Get single order item
+     */
+    public static function get_item($item_id) {
+        global $wpdb;
+        $table = $wpdb->prefix . self::$items_table;
+
+        return $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$table} WHERE id = %d",
+            $item_id
+        ));
+    }
+
+    /**
+     * Update order item
+     */
+    public static function update_item($item_id, $data) {
+        global $wpdb;
+        $table = $wpdb->prefix . self::$items_table;
+
+        $item = self::get_item($item_id);
+        if (!$item) {
+            return new WP_Error('not_found', __('Order item not found.', 'artisan-b2b-portal'));
+        }
+
+        $update_data = [];
+        $format = [];
+
+        if (isset($data['product_name'])) {
+            $update_data['product_name'] = sanitize_text_field($data['product_name']);
+            $format[] = '%s';
+        }
+
+        if (isset($data['weight_label'])) {
+            $update_data['weight_label'] = sanitize_text_field($data['weight_label']);
+            $format[] = '%s';
+        }
+
+        if (isset($data['quantity'])) {
+            $update_data['quantity'] = (int) $data['quantity'];
+            $format[] = '%d';
+        }
+
+        if (isset($data['unit_price'])) {
+            $update_data['unit_price'] = (float) $data['unit_price'];
+            $format[] = '%f';
+        }
+
+        // Calculate line total if quantity or unit_price changed
+        $quantity = isset($data['quantity']) ? (int) $data['quantity'] : $item->quantity;
+        $unit_price = isset($data['unit_price']) ? (float) $data['unit_price'] : $item->unit_price;
+        $update_data['line_total'] = $quantity * $unit_price;
+        $format[] = '%f';
+
+        if (empty($update_data)) {
+            return true;
+        }
+
+        $result = $wpdb->update($table, $update_data, ['id' => $item_id], $format, ['%d']);
+
+        if ($result === false) {
+            return new WP_Error('db_error', __('Failed to update order item.', 'artisan-b2b-portal'));
+        }
+
+        // Recalculate order total
+        self::recalculate_total($item->order_id);
+
+        return true;
+    }
+
+    /**
+     * Delete order item
+     */
+    public static function delete_item($item_id) {
+        global $wpdb;
+        $table = $wpdb->prefix . self::$items_table;
+
+        $item = self::get_item($item_id);
+        if (!$item) {
+            return new WP_Error('not_found', __('Order item not found.', 'artisan-b2b-portal'));
+        }
+
+        // Check if this is the last item in the order
+        $items_count = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$table} WHERE order_id = %d",
+            $item->order_id
+        ));
+
+        if ($items_count <= 1) {
+            return new WP_Error('last_item', __('Cannot delete the last item in an order. Delete the entire order instead.', 'artisan-b2b-portal'));
+        }
+
+        $result = $wpdb->delete($table, ['id' => $item_id], ['%d']);
+
+        if ($result === false) {
+            return new WP_Error('db_error', __('Failed to delete order item.', 'artisan-b2b-portal'));
+        }
+
+        // Recalculate order total
+        self::recalculate_total($item->order_id);
+
+        return true;
+    }
+
+    /**
+     * Recalculate order total based on items
+     */
+    public static function recalculate_total($order_id) {
+        global $wpdb;
+        $table = $wpdb->prefix . self::$table;
+        $items_table = $wpdb->prefix . self::$items_table;
+
+        // Sum all line totals
+        $total = $wpdb->get_var($wpdb->prepare(
+            "SELECT SUM(line_total) FROM {$items_table} WHERE order_id = %d",
+            $order_id
+        ));
+
+        $total = $total ? (float) $total : 0;
+
+        // Update order
+        $wpdb->update(
+            $table,
+            [
+                'subtotal' => $total,
+                'total'    => $total,
+            ],
+            ['id' => $order_id],
+            ['%f', '%f'],
+            ['%d']
+        );
+
+        return $total;
+    }
+
+    /**
      * Get recent orders for dashboard
      */
     public static function get_recent($limit = 10) {

@@ -22,9 +22,17 @@ class AB2B_Email {
      * Send portal access link to customer
      */
     public static function send_portal_link($customer) {
-        $portal_url = AB2B_Helpers::get_portal_url($customer->access_key);
         $company_name = ab2b_get_option('company_name', get_bloginfo('name'));
         $company_logo = ab2b_get_option('company_logo', '');
+
+        // Determine which URL to use: custom slug (with password) or access key
+        $has_custom_url = !empty($customer->url_slug) && !empty($customer->password_hash);
+
+        if ($has_custom_url) {
+            $portal_url = AB2B_Helpers::get_portal_url(null, $customer->url_slug);
+        } else {
+            $portal_url = AB2B_Helpers::get_portal_url($customer->access_key);
+        }
 
         $subject = sprintf(__('Your B2B Portal Access - %s', 'artisan-b2b-portal'), $company_name);
 
@@ -61,6 +69,22 @@ class AB2B_Email {
                             <?php esc_html_e('You can now access your B2B ordering portal using the link below. From there you can browse products, place orders, and track your order history.', 'artisan-b2b-portal'); ?>
                         </p>
 
+                        <?php if ($has_custom_url) : ?>
+                            <div style="background-color: #f8f8f8; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                                <p style="color: #333; font-weight: bold; margin: 0 0 10px;">
+                                    <?php esc_html_e('Your Login Details:', 'artisan-b2b-portal'); ?>
+                                </p>
+                                <p style="color: #666; margin: 5px 0;">
+                                    <strong><?php esc_html_e('Portal URL:', 'artisan-b2b-portal'); ?></strong><br>
+                                    <a href="<?php echo esc_url($portal_url); ?>" style="color: #333;"><?php echo esc_url($portal_url); ?></a>
+                                </p>
+                                <p style="color: #666; margin: 5px 0;">
+                                    <strong><?php esc_html_e('Password:', 'artisan-b2b-portal'); ?></strong>
+                                    <?php esc_html_e('Use the password provided by your account manager.', 'artisan-b2b-portal'); ?>
+                                </p>
+                            </div>
+                        <?php endif; ?>
+
                         <div style="text-align: center; margin: 30px 0;">
                             <a href="<?php echo esc_url($portal_url); ?>" style="display: inline-block; padding: 15px 30px; background-color: #333; color: #ffffff; text-decoration: none; font-weight: bold; border-radius: 5px; font-size: 16px;">
                                 <?php esc_html_e('Access Your Portal', 'artisan-b2b-portal'); ?>
@@ -75,7 +99,11 @@ class AB2B_Email {
                         </p>
 
                         <p style="color: #999; font-size: 13px; line-height: 1.6; margin: 20px 0 0; padding-top: 20px; border-top: 1px solid #eee;">
-                            <?php esc_html_e('This link is unique to your account. Please do not share it with others.', 'artisan-b2b-portal'); ?>
+                            <?php if ($has_custom_url) : ?>
+                                <?php esc_html_e('Keep your password secure and do not share it with others.', 'artisan-b2b-portal'); ?>
+                            <?php else : ?>
+                                <?php esc_html_e('This link is unique to your account. Please do not share it with others.', 'artisan-b2b-portal'); ?>
+                            <?php endif; ?>
                         </p>
                     </td>
                 </tr>

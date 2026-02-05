@@ -31,6 +31,14 @@
 
             // Save admin notes
             $(document).on('click', '.ab2b-save-notes', this.saveAdminNotes);
+
+            // Order item editing
+            $(document).on('click', '.ab2b-edit-order-item', this.openEditItemModal);
+            $(document).on('click', '#save-order-item', this.saveOrderItem);
+            $(document).on('click', '.ab2b-delete-order-item', this.deleteOrderItem);
+
+            // Modal close handlers
+            $(document).on('click', '.ab2b-modal-close, .ab2b-modal-cancel, .ab2b-modal-overlay', this.closeModal);
         },
 
         /**
@@ -323,6 +331,157 @@
                     $btn.prop('disabled', false).text(originalText);
                 }
             });
+        },
+
+        /**
+         * Open Edit Order Item Modal
+         */
+        openEditItemModal: function(e) {
+            e.preventDefault();
+
+            var $btn = $(this);
+            var itemId = $btn.data('item-id');
+            var productName = $btn.data('product-name');
+            var weightLabel = $btn.data('weight-label');
+            var quantity = $btn.data('quantity');
+            var unitPrice = $btn.data('unit-price');
+
+            // Populate modal fields
+            $('#edit-item-id').val(itemId);
+            $('#edit-product-name').val(productName);
+            $('#edit-weight-label').val(weightLabel);
+            $('#edit-quantity').val(quantity);
+            $('#edit-unit-price').val(unitPrice);
+
+            // Show modal
+            $('#ab2b-edit-item-modal').fadeIn(200);
+        },
+
+        /**
+         * Close Modal
+         */
+        closeModal: function(e) {
+            if (e) e.preventDefault();
+            $('.ab2b-modal').fadeOut(200);
+        },
+
+        /**
+         * Save Order Item Changes
+         */
+        saveOrderItem: function(e) {
+            e.preventDefault();
+
+            var $btn = $(this);
+            var originalText = $btn.text();
+            var itemId = $('#edit-item-id').val();
+
+            $btn.prop('disabled', true).text('Saving...');
+
+            $.ajax({
+                url: ab2b_admin.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'ab2b_update_order_item',
+                    nonce: ab2b_admin.nonce,
+                    item_id: itemId,
+                    product_name: $('#edit-product-name').val(),
+                    weight_label: $('#edit-weight-label').val(),
+                    quantity: $('#edit-quantity').val(),
+                    unit_price: $('#edit-unit-price').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        var item = response.data.item;
+                        var $row = $('tr[data-item-id="' + itemId + '"]');
+
+                        // Update row data
+                        $row.find('.item-product-name strong').text(item.product_name);
+                        $row.find('.item-weight-label').text(item.weight_label);
+                        $row.find('.item-quantity').text(item.quantity);
+                        $row.find('.item-unit-price').text(AB2B_Admin.formatPrice(item.unit_price));
+                        $row.find('.item-line-total').text(AB2B_Admin.formatPrice(item.line_total));
+
+                        // Update edit button data attributes
+                        var $editBtn = $row.find('.ab2b-edit-order-item');
+                        $editBtn.data('product-name', item.product_name);
+                        $editBtn.data('weight-label', item.weight_label);
+                        $editBtn.data('quantity', item.quantity);
+                        $editBtn.data('unit-price', item.unit_price);
+
+                        // Update order total
+                        $('#order-total-display').html('<strong>' + response.data.formatted_total + '</strong>');
+
+                        // Close modal
+                        AB2B_Admin.closeModal();
+                    } else {
+                        alert(response.data.message || ab2b_admin.strings.error);
+                    }
+                    $btn.prop('disabled', false).text(originalText);
+                },
+                error: function() {
+                    alert(ab2b_admin.strings.error);
+                    $btn.prop('disabled', false).text(originalText);
+                }
+            });
+        },
+
+        /**
+         * Delete Order Item
+         */
+        deleteOrderItem: function(e) {
+            e.preventDefault();
+
+            if (!confirm('Are you sure you want to delete this item from the order?')) {
+                return;
+            }
+
+            var $btn = $(this);
+            var itemId = $btn.data('item-id');
+            var $row = $btn.closest('tr');
+
+            $btn.prop('disabled', true).text('Deleting...');
+
+            $.ajax({
+                url: ab2b_admin.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'ab2b_delete_order_item',
+                    nonce: ab2b_admin.nonce,
+                    item_id: itemId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Remove row with animation
+                        $row.fadeOut(300, function() {
+                            $(this).remove();
+                        });
+
+                        // Update order total
+                        $('#order-total-display').html('<strong>' + response.data.formatted_total + '</strong>');
+                    } else {
+                        alert(response.data.message || ab2b_admin.strings.error);
+                        $btn.prop('disabled', false).text('Delete');
+                    }
+                },
+                error: function() {
+                    alert(ab2b_admin.strings.error);
+                    $btn.prop('disabled', false).text('Delete');
+                }
+            });
+        },
+
+        /**
+         * Format price helper
+         */
+        formatPrice: function(price) {
+            var formatted = parseFloat(price).toFixed(2);
+            var symbol = ab2b_admin.currency_symbol || 'kr.';
+            var position = ab2b_admin.currency_position || 'after';
+
+            if (position === 'before') {
+                return symbol + ' ' + formatted;
+            }
+            return formatted + ' ' + symbol;
         }
     };
 

@@ -203,42 +203,44 @@ $page_title = $is_edit ? __('Edit Customer', 'artisan-b2b-portal') : __('Add New
                             <p class="description"><?php esc_html_e('This will invalidate the current link.', 'artisan-b2b-portal'); ?></p>
                         </div>
                     </div>
+                <?php endif; ?>
 
-                    <div class="ab2b-form-card">
-                        <h2><?php esc_html_e('Custom URL & Password', 'artisan-b2b-portal'); ?></h2>
-                        <p class="description" style="margin-bottom: 15px;"><?php esc_html_e('Create a memorable URL with password protection.', 'artisan-b2b-portal'); ?></p>
+                <div class="ab2b-form-card">
+                    <h2><?php esc_html_e('Custom URL & Password', 'artisan-b2b-portal'); ?></h2>
+                    <p class="description" style="margin-bottom: 15px;"><?php esc_html_e('Create a memorable URL with password protection.', 'artisan-b2b-portal'); ?></p>
 
-                        <p>
-                            <label for="url_slug" style="display: block; margin-bottom: 5px; font-weight: 500;"><?php esc_html_e('Custom URL Slug', 'artisan-b2b-portal'); ?></label>
-                            <input type="text" name="url_slug" id="url_slug" class="regular-text" style="width: 100%;"
-                                   value="<?php echo esc_attr($customer->url_slug ?? ''); ?>"
-                                   pattern="[a-z0-9\-]+"
-                                   placeholder="<?php esc_attr_e('e.g. company-name', 'artisan-b2b-portal'); ?>">
-                            <span class="description"><?php esc_html_e('Lowercase letters, numbers, hyphens only.', 'artisan-b2b-portal'); ?></span>
+                    <p>
+                        <label for="url_slug" style="display: block; margin-bottom: 5px; font-weight: 500;"><?php esc_html_e('Custom URL Slug', 'artisan-b2b-portal'); ?></label>
+                        <input type="text" name="url_slug" id="url_slug" class="regular-text" style="width: 100%;"
+                               value="<?php echo $is_edit ? esc_attr($customer->url_slug ?? '') : ''; ?>"
+                               pattern="[a-z0-9\-]+"
+                               placeholder="<?php esc_attr_e('e.g. company-name', 'artisan-b2b-portal'); ?>">
+                        <span class="description"><?php esc_html_e('Lowercase letters, numbers, hyphens only.', 'artisan-b2b-portal'); ?></span>
+                    </p>
+
+                    <?php if ($is_edit && !empty($customer->url_slug)) : ?>
+                        <p style="margin-top: 10px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 500;"><?php esc_html_e('Custom Portal URL', 'artisan-b2b-portal'); ?></label>
+                            <input type="text" id="custom-portal-url" readonly class="regular-text" style="width: 100%;"
+                                   value="<?php echo esc_url(AB2B_Helpers::get_portal_url(null, $customer->url_slug)); ?>">
+                            <button type="button" class="button ab2b-copy-url" data-target="#custom-portal-url" style="margin-top: 5px;">
+                                <?php esc_html_e('Copy Custom URL', 'artisan-b2b-portal'); ?>
+                            </button>
                         </p>
+                    <?php endif; ?>
 
-                        <?php if (!empty($customer->url_slug)) : ?>
-                            <p style="margin-top: 10px;">
-                                <label style="display: block; margin-bottom: 5px; font-weight: 500;"><?php esc_html_e('Custom Portal URL', 'artisan-b2b-portal'); ?></label>
-                                <input type="text" id="custom-portal-url" readonly class="regular-text" style="width: 100%;"
-                                       value="<?php echo esc_url(AB2B_Helpers::get_portal_url(null, $customer->url_slug)); ?>">
-                                <button type="button" class="button ab2b-copy-url" data-target="#custom-portal-url" style="margin-top: 5px;">
-                                    <?php esc_html_e('Copy Custom URL', 'artisan-b2b-portal'); ?>
-                                </button>
-                            </p>
+                    <p style="margin-top: 15px;">
+                        <label for="customer_password" style="display: block; margin-bottom: 5px; font-weight: 500;"><?php esc_html_e('Password', 'artisan-b2b-portal'); ?></label>
+                        <input type="password" name="customer_password" id="customer_password" class="regular-text" style="width: 100%;" autocomplete="new-password">
+                        <?php if ($is_edit && !empty($customer->password_hash)) : ?>
+                            <span class="description" style="color: green;">&#10003; <?php esc_html_e('Password set. Leave blank to keep current.', 'artisan-b2b-portal'); ?></span>
+                        <?php else : ?>
+                            <span class="description"><?php esc_html_e('Required when using custom URL.', 'artisan-b2b-portal'); ?></span>
                         <?php endif; ?>
+                    </p>
+                </div>
 
-                        <p style="margin-top: 15px;">
-                            <label for="customer_password" style="display: block; margin-bottom: 5px; font-weight: 500;"><?php esc_html_e('Password', 'artisan-b2b-portal'); ?></label>
-                            <input type="password" name="customer_password" id="customer_password" class="regular-text" style="width: 100%;" autocomplete="new-password">
-                            <?php if (!empty($customer->password_hash)) : ?>
-                                <span class="description" style="color: green;">&#10003; <?php esc_html_e('Password set. Leave blank to keep current.', 'artisan-b2b-portal'); ?></span>
-                            <?php else : ?>
-                                <span class="description"><?php esc_html_e('Required when using custom URL.', 'artisan-b2b-portal'); ?></span>
-                            <?php endif; ?>
-                        </p>
-                    </div>
-
+                <?php if ($is_edit) : ?>
                     <div class="ab2b-form-card">
                         <h2><?php esc_html_e('Customer Details', 'artisan-b2b-portal'); ?></h2>
                         <ul class="ab2b-meta-list">

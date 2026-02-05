@@ -24,6 +24,8 @@ class AB2B_Admin {
         add_action('wp_ajax_ab2b_update_order_status', [$this, 'ajax_update_order_status']);
         add_action('wp_ajax_ab2b_delete_item', [$this, 'ajax_delete_item']);
         add_action('wp_ajax_ab2b_remove_customer_product', [$this, 'ajax_remove_customer_product']);
+        add_action('wp_ajax_ab2b_update_order_item', [$this, 'ajax_update_order_item']);
+        add_action('wp_ajax_ab2b_delete_order_item', [$this, 'ajax_delete_order_item']);
     }
 
     /**
@@ -140,12 +142,17 @@ class AB2B_Admin {
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce'    => wp_create_nonce('ab2b_admin_nonce'),
             'strings'  => [
-                'confirm_delete'   => __('Are you sure you want to delete this?', 'artisan-b2b-portal'),
-                'confirm_status'   => __('Change order status?', 'artisan-b2b-portal'),
-                'link_sent'        => __('Portal link sent successfully!', 'artisan-b2b-portal'),
-                'key_regenerated'  => __('Access key regenerated!', 'artisan-b2b-portal'),
-                'error'            => __('An error occurred. Please try again.', 'artisan-b2b-portal'),
+                'confirm_delete'      => __('Are you sure you want to delete this?', 'artisan-b2b-portal'),
+                'confirm_status'      => __('Change order status?', 'artisan-b2b-portal'),
+                'link_sent'           => __('Portal link sent successfully!', 'artisan-b2b-portal'),
+                'key_regenerated'     => __('Access key regenerated!', 'artisan-b2b-portal'),
+                'error'               => __('An error occurred. Please try again.', 'artisan-b2b-portal'),
+                'confirm_delete_item' => __('Are you sure you want to delete this item from the order?', 'artisan-b2b-portal'),
+                'item_updated'        => __('Order item updated.', 'artisan-b2b-portal'),
+                'item_deleted'        => __('Order item deleted.', 'artisan-b2b-portal'),
             ],
+            'currency_symbol'   => ab2b_get_option('currency_symbol', 'kr.'),
+            'currency_position' => ab2b_get_option('currency_position', 'after'),
         ]);
 
         // Enqueue media for image uploads
@@ -714,5 +721,99 @@ class AB2B_Admin {
         AB2B_Customer_Pricing::remove_product($customer_id, $product_id);
 
         wp_send_json_success(['message' => __('Product assignment removed.', 'artisan-b2b-portal')]);
+    }
+
+    /**
+     * AJAX: Update order item
+     */
+    public function ajax_update_order_item() {
+        check_ajax_referer('ab2b_admin_nonce', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => __('Permission denied.', 'artisan-b2b-portal')]);
+        }
+
+        $item_id = isset($_POST['item_id']) ? (int) $_POST['item_id'] : 0;
+
+        if (!$item_id) {
+            wp_send_json_error(['message' => __('Invalid item ID.', 'artisan-b2b-portal')]);
+        }
+
+        $data = [];
+        if (isset($_POST['product_name'])) {
+            $data['product_name'] = sanitize_text_field($_POST['product_name']);
+        }
+        if (isset($_POST['weight_label'])) {
+            $data['weight_label'] = sanitize_text_field($_POST['weight_label']);
+        }
+        if (isset($_POST['quantity'])) {
+            $data['quantity'] = (int) $_POST['quantity'];
+        }
+        if (isset($_POST['unit_price'])) {
+            $data['unit_price'] = (float) $_POST['unit_price'];
+        }
+
+        $result = AB2B_Order::update_item($item_id, $data);
+
+        if (is_wp_error($result)) {
+            wp_send_json_error(['message' => $result->get_error_message()]);
+        }
+
+        // Get updated item and order total
+        $item = AB2B_Order::get_item($item_id);
+        $order = AB2B_Order::get($item->order_id, false);
+
+        wp_send_json_success([
+            'message'    => __('Order item updated.', 'artisan-b2b-portal'),
+            'item'       => [
+                'id'           => $item->id,
+                'product_name' => $item->product_name,
+                'weight_label' => $item->weight_label,
+                'quantity'     => $item->quantity,
+                'unit_price'   => $item->unit_price,
+                'line_total'   => $item->line_total,
+            ],
+            'order_total' => $order->total,
+            'formatted_total' => AB2B_Helpers::format_price($order->total),
+        ]);
+    }
+
+    /**
+     * AJAX: Delete order item
+     */
+    public function ajax_delete_order_item() {
+        check_ajax_referer('ab2b_admin_nonce', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => __('Permission denied.', 'artisan-b2b-portal')]);
+        }
+
+        $item_id = isset($_POST['item_id']) ? (int) $_POST['item_id'] : 0;
+
+        if (!$item_id) {
+            wp_send_json_error(['message' => __('Invalid item ID.', 'artisan-b2b-portal')]);
+        }
+
+        // Get order ID before deleting
+        $item = AB2B_Order::get_item($item_id);
+        if (!$item) {
+            wp_send_json_error(['message' => __('Order item not found.', 'artisan-b2b-portal')]);
+        }
+
+        $order_id = $item->order_id;
+        $result = AB2B_Order::delete_item($item_id);
+
+        if (is_wp_error($result)) {
+            wp_send_json_error(['message' => $result->get_error_message()]);
+        }
+
+        // Get updated order total
+        $order = AB2B_Order::get($order_id, false);
+
+        wp_send_json_success([
+            'message'         => __('Order item deleted.', 'artisan-b2b-portal'),
+            'order_total'     => $order->total,
+            'formatted_total' => AB2B_Helpers::format_price($order->total),
+        ]);
     }
 }
