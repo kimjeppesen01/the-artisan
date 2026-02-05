@@ -158,6 +158,31 @@ class AB2B_Activator {
             KEY product_weight_id (product_weight_id)
         ) {$charset_collate};";
 
+        // Categories table
+        $table_categories = $wpdb->prefix . 'ab2b_categories';
+        $sql_categories = "CREATE TABLE {$table_categories} (
+            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            name VARCHAR(255) NOT NULL,
+            slug VARCHAR(255) NOT NULL,
+            sort_order INT DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY slug (slug),
+            KEY sort_order (sort_order)
+        ) {$charset_collate};";
+
+        // Product-Category pivot table
+        $table_product_categories = $wpdb->prefix . 'ab2b_product_categories';
+        $sql_product_categories = "CREATE TABLE {$table_product_categories} (
+            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            product_id BIGINT(20) UNSIGNED NOT NULL,
+            category_id BIGINT(20) UNSIGNED NOT NULL,
+            PRIMARY KEY (id),
+            UNIQUE KEY product_category (product_id, category_id),
+            KEY product_id (product_id),
+            KEY category_id (category_id)
+        ) {$charset_collate};";
+
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         dbDelta($sql_customers);
         dbDelta($sql_products);
@@ -166,6 +191,8 @@ class AB2B_Activator {
         dbDelta($sql_items);
         dbDelta($sql_customer_products);
         dbDelta($sql_customer_prices);
+        dbDelta($sql_categories);
+        dbDelta($sql_product_categories);
 
         // Store DB version
         update_option('ab2b_db_version', AB2B_VERSION);

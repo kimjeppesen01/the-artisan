@@ -23,6 +23,7 @@ class AB2B_Admin {
         add_action('wp_ajax_ab2b_regenerate_key', [$this, 'ajax_regenerate_key']);
         add_action('wp_ajax_ab2b_update_order_status', [$this, 'ajax_update_order_status']);
         add_action('wp_ajax_ab2b_delete_item', [$this, 'ajax_delete_item']);
+        add_action('wp_ajax_ab2b_remove_customer_product', [$this, 'ajax_remove_customer_product']);
     }
 
     /**
@@ -78,6 +79,26 @@ class AB2B_Admin {
             'manage_options',
             'ab2b-products',
             [$this, 'render_products']
+        );
+
+        // Customer Products submenu
+        add_submenu_page(
+            'ab2b-dashboard',
+            __('Customer Products', 'artisan-b2b-portal'),
+            __('Customer Products', 'artisan-b2b-portal'),
+            'manage_options',
+            'ab2b-customer-products',
+            [$this, 'render_customer_products']
+        );
+
+        // Categories submenu
+        add_submenu_page(
+            'ab2b-dashboard',
+            __('Categories', 'artisan-b2b-portal'),
+            __('Categories', 'artisan-b2b-portal'),
+            'manage_options',
+            'ab2b-categories',
+            [$this, 'render_categories']
         );
 
         // Settings submenu
@@ -156,6 +177,12 @@ class AB2B_Admin {
                 break;
             case 'save_settings':
                 $this->handle_save_settings();
+                break;
+            case 'assign_customer_product':
+                $this->handle_assign_customer_product();
+                break;
+            case 'save_category':
+                $this->handle_save_category();
                 break;
         }
     }
@@ -270,8 +297,19 @@ class AB2B_Admin {
 
         if ($id > 0) {
             $result = AB2B_Product::update($id, $data);
+            $product_id = $id;
         } else {
             $result = AB2B_Product::create($data);
+            $product_id = is_wp_error($result) ? 0 : $result;
+        }
+
+        // Save product categories
+        if ($product_id > 0 && !is_wp_error($result)) {
+            require_once AB2B_PLUGIN_DIR . 'includes/core/class-ab2b-category.php';
+            $category_ids = isset($_POST['product_categories']) && is_array($_POST['product_categories'])
+                ? array_map('intval', $_POST['product_categories'])
+                : [];
+            AB2B_Category::set_product_categories($product_id, $category_ids);
         }
 
         if (is_wp_error($result)) {
@@ -281,6 +319,39 @@ class AB2B_Admin {
         }
 
         wp_redirect(admin_url('admin.php?page=ab2b-products'));
+        exit;
+    }
+
+    /**
+     * Handle assign customer product
+     */
+    private function handle_assign_customer_product() {
+        $customer_id = isset($_POST['customer_id']) ? (int) $_POST['customer_id'] : 0;
+        $product_id = isset($_POST['product_id']) ? (int) $_POST['product_id'] : 0;
+        $custom_name = sanitize_text_field($_POST['custom_name'] ?? '');
+        $is_exclusive = isset($_POST['is_exclusive']) ? 1 : 0;
+
+        if (!$customer_id || !$product_id) {
+            set_transient('ab2b_admin_error', __('Customer and Product are required.', 'artisan-b2b-portal'), 30);
+            wp_redirect(admin_url('admin.php?page=ab2b-customer-products'));
+            exit;
+        }
+
+        require_once AB2B_PLUGIN_DIR . 'includes/core/class-ab2b-customer-pricing.php';
+
+        $result = AB2B_Customer_Pricing::assign_product($customer_id, $product_id, [
+            'custom_name'        => $custom_name,
+            'custom_description' => '',
+            'is_exclusive'       => $is_exclusive,
+        ]);
+
+        if ($result) {
+            set_transient('ab2b_admin_success', __('Product assigned to customer successfully.', 'artisan-b2b-portal'), 30);
+        } else {
+            set_transient('ab2b_admin_error', __('Failed to assign product.', 'artisan-b2b-portal'), 30);
+        }
+
+        wp_redirect(admin_url('admin.php?page=ab2b-customer-products'));
         exit;
     }
 
@@ -437,6 +508,49 @@ class AB2B_Admin {
     }
 
     /**
+     * Render customer products page
+     */
+    public function render_customer_products() {
+        include AB2B_PLUGIN_DIR . 'includes/admin/views/customer-products.php';
+    }
+
+    /**
+     * Render categories page
+     */
+    public function render_categories() {
+        include AB2B_PLUGIN_DIR . 'includes/admin/views/categories.php';
+    }
+
+    /**
+     * Handle save category
+     */
+    private function handle_save_category() {
+        require_once AB2B_PLUGIN_DIR . 'includes/core/class-ab2b-category.php';
+
+        $id = isset($_POST['category_id']) ? (int) $_POST['category_id'] : 0;
+        $data = [
+            'name'       => sanitize_text_field($_POST['name'] ?? ''),
+            'slug'       => sanitize_text_field($_POST['slug'] ?? ''),
+            'sort_order' => (int) ($_POST['sort_order'] ?? 0),
+        ];
+
+        if ($id > 0) {
+            $result = AB2B_Category::update($id, $data);
+        } else {
+            $result = AB2B_Category::create($data);
+        }
+
+        if (is_wp_error($result)) {
+            set_transient('ab2b_admin_error', $result->get_error_message(), 30);
+        } else {
+            set_transient('ab2b_admin_success', __('Category saved successfully.', 'artisan-b2b-portal'), 30);
+        }
+
+        wp_redirect(admin_url('admin.php?page=ab2b-categories'));
+        exit;
+    }
+
+    /**
      * AJAX: Send portal link
      */
     public function ajax_send_portal_link() {
@@ -538,6 +652,10 @@ class AB2B_Admin {
             case 'order':
                 $result = AB2B_Order::delete($id);
                 break;
+            case 'category':
+                require_once AB2B_PLUGIN_DIR . 'includes/core/class-ab2b-category.php';
+                $result = AB2B_Category::delete($id);
+                break;
             default:
                 wp_send_json_error(['message' => __('Invalid item type.', 'artisan-b2b-portal')]);
         }
@@ -547,5 +665,28 @@ class AB2B_Admin {
         }
 
         wp_send_json_success(['message' => __('Item deleted successfully.', 'artisan-b2b-portal')]);
+    }
+
+    /**
+     * AJAX: Remove customer product assignment
+     */
+    public function ajax_remove_customer_product() {
+        check_ajax_referer('ab2b_admin_nonce', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => __('Permission denied.', 'artisan-b2b-portal')]);
+        }
+
+        $customer_id = isset($_POST['customer_id']) ? (int) $_POST['customer_id'] : 0;
+        $product_id = isset($_POST['product_id']) ? (int) $_POST['product_id'] : 0;
+
+        if (!$customer_id || !$product_id) {
+            wp_send_json_error(['message' => __('Invalid parameters.', 'artisan-b2b-portal')]);
+        }
+
+        require_once AB2B_PLUGIN_DIR . 'includes/core/class-ab2b-customer-pricing.php';
+        AB2B_Customer_Pricing::remove_product($customer_id, $product_id);
+
+        wp_send_json_success(['message' => __('Product assignment removed.', 'artisan-b2b-portal')]);
     }
 }

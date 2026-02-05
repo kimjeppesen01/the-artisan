@@ -9,6 +9,9 @@
         cart: [],
         products: [],
         orders: [],
+        categories: [],
+        activeCategory: 'all',
+        viewMode: 'grid',
 
         init: function() {
             if (!ab2b_portal.is_authenticated) {
@@ -17,6 +20,7 @@
 
             this.loadCart();
             this.bindEvents();
+            this.loadCategories();
             this.loadProducts();
             this.loadOrders();
             this.updateCartUI();
@@ -60,6 +64,12 @@
 
             // Delivery date - enforce Fridays
             $(document).on('change', '#ab2b-delivery-date', this.validateDeliveryDate.bind(this));
+
+            // Category filter
+            $(document).on('click', '.ab2b-cat-filter', this.filterByCategory.bind(this));
+
+            // View toggle (grid/list)
+            $(document).on('click', '.ab2b-view-btn', this.switchView.bind(this));
         },
 
         /**
@@ -86,6 +96,97 @@
         },
 
         /**
+         * Load categories from API
+         */
+        loadCategories: function() {
+            const self = this;
+
+            this.api('/categories').done(function(categories) {
+                self.categories = categories;
+                self.renderCategoryFilters(categories);
+            });
+        },
+
+        /**
+         * Render category filter buttons (saren-style)
+         */
+        renderCategoryFilters: function(categories) {
+            if (!categories || categories.length === 0) {
+                return;
+            }
+
+            let html = '<label class="ab2b-cat-filter active" data-category="all"><input type="checkbox" checked>All</label>';
+
+            categories.forEach(function(cat) {
+                html += '<label class="ab2b-cat-filter" data-category="' + cat.id + '"><input type="checkbox">' + cat.name + '</label>';
+            });
+
+            $('#ab2b-category-filters').html(html);
+            $('#ab2b-shop-controls').show();
+        },
+
+        /**
+         * Filter products by category
+         */
+        filterByCategory: function(e) {
+            e.preventDefault();
+            const $filter = $(e.currentTarget);
+            const category = $filter.data('category');
+
+            this.activeCategory = category;
+
+            // Update active state
+            $('.ab2b-cat-filter').removeClass('active').find('input').prop('checked', false);
+            $filter.addClass('active').find('input').prop('checked', true);
+
+            // Filter and re-render
+            this.renderFilteredProducts();
+        },
+
+        /**
+         * Get filtered products based on active category
+         */
+        getFilteredProducts: function() {
+            if (this.activeCategory === 'all') {
+                return this.products;
+            }
+
+            const catId = parseInt(this.activeCategory);
+            return this.products.filter(function(product) {
+                return product.categories && product.categories.indexOf(catId) !== -1;
+            });
+        },
+
+        /**
+         * Render filtered products in current view mode
+         */
+        renderFilteredProducts: function() {
+            const filtered = this.getFilteredProducts();
+            if (this.viewMode === 'list') {
+                this.renderProductsList(filtered);
+            } else {
+                this.renderProducts(filtered);
+            }
+        },
+
+        /**
+         * Switch between grid and list view
+         */
+        switchView: function(e) {
+            const $btn = $(e.currentTarget);
+            const view = $btn.data('view');
+
+            this.viewMode = view;
+
+            // Update active state
+            $('.ab2b-view-btn').removeClass('active');
+            $btn.addClass('active');
+
+            // Re-render products
+            this.renderFilteredProducts();
+        },
+
+        /**
          * Load products from API
          */
         loadProducts: function() {
@@ -93,7 +194,11 @@
 
             this.api('/products').done(function(products) {
                 self.products = products;
-                self.renderProducts(products);
+                self.renderFilteredProducts();
+                // Show controls bar if it exists (even without categories, for the view toggle)
+                if ($('#ab2b-shop-controls').length) {
+                    $('#ab2b-shop-controls').show();
+                }
             }).fail(function() {
                 $('#ab2b-products').html('<p class="ab2b-error">' + ab2b_portal.strings.error + '</p>');
             });
@@ -103,8 +208,11 @@
          * Render products grid
          */
         renderProducts: function(products) {
+            const $container = $('#ab2b-products');
+            $container.removeClass('ab2b-products-list').addClass('ab2b-products-grid');
+
             if (!products || products.length === 0) {
-                $('#ab2b-products').html('<p class="ab2b-no-products">No products available.</p>');
+                $container.html('<p class="ab2b-no-products">No products available.</p>');
                 return;
             }
 
@@ -143,7 +251,59 @@
                 `;
             });
 
-            $('#ab2b-products').html(html);
+            $container.html(html);
+        },
+
+        /**
+         * Render products as list view
+         */
+        renderProductsList: function(products) {
+            const $container = $('#ab2b-products');
+            $container.removeClass('ab2b-products-grid').addClass('ab2b-products-list');
+
+            if (!products || products.length === 0) {
+                $container.html('<p class="ab2b-no-products">No products available.</p>');
+                return;
+            }
+
+            let html = '';
+
+            products.forEach(function(product) {
+                const placeholder = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Crect fill="%23f0f0f1" width="100" height="100"/%3E%3C/svg%3E';
+
+                let badgesHtml = '';
+                if (product.has_sale_pricing) {
+                    badgesHtml += '<span class="ab2b-badge ab2b-badge-sale">Sale</span>';
+                }
+                if (product.is_exclusive) {
+                    badgesHtml += '<span class="ab2b-badge ab2b-badge-exclusive">Exclusive</span>';
+                }
+
+                html += `
+                    <div class="ab2b-product-list-item" data-product-id="${product.id}">
+                        <div class="ab2b-product-list-image">
+                            <img src="${product.image || placeholder}" alt="${product.name}" loading="lazy">
+                        </div>
+                        <div class="ab2b-product-list-info">
+                            <div class="ab2b-product-list-top">
+                                <h3 class="ab2b-product-name">${product.name}</h3>
+                                ${badgesHtml ? `<div class="ab2b-product-list-badges">${badgesHtml}</div>` : ''}
+                            </div>
+                            ${product.short_description ? `<p class="ab2b-product-list-desc">${product.short_description}</p>` : ''}
+                        </div>
+                        <div class="ab2b-product-list-price">
+                            <span class="ab2b-product-price">${product.price_range}</span>
+                        </div>
+                        <div class="ab2b-product-list-action">
+                            <button type="button" class="ab2b-btn ab2b-btn-primary ab2b-quick-add-btn" data-product-id="${product.id}">
+                                ${ab2b_portal.strings.add_to_cart}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            $container.html(html);
         },
 
         /**
@@ -157,6 +317,10 @@
             const product = this.products.find(p => p.id === productId);
 
             if (!product) return;
+
+            // Lock body scroll
+            this.scrollPos = window.pageYOffset;
+            $('body').addClass('ab2b-modal-open').css('top', -this.scrollPos + 'px');
 
             let weightsHtml = '';
             product.weights.forEach(function(weight, index) {
@@ -565,6 +729,8 @@
                 `;
 
                 $('#ab2b-order-modal-body').html(html);
+                self.scrollPos = window.pageYOffset;
+                $('body').addClass('ab2b-modal-open').css('top', -self.scrollPos + 'px');
                 $('#ab2b-order-modal').addClass('active');
             });
         },
@@ -592,6 +758,10 @@
          */
         closeModal: function() {
             $('.ab2b-modal').removeClass('active');
+            // Restore body scroll
+            var scrollPos = AB2B_Portal.scrollPos || 0;
+            $('body').removeClass('ab2b-modal-open').css('top', '');
+            window.scrollTo(0, scrollPos);
         },
 
         /**

@@ -53,6 +53,20 @@ if (!defined('ABSPATH')) exit;
     <div class="ab2b-portal-content">
         <!-- Shop Tab -->
         <div class="ab2b-tab-content active" id="tab-shop">
+            <!-- Shop Controls Bar (category filters + grid/list toggle) -->
+            <div class="ab2b-shop-controls" id="ab2b-shop-controls" style="display: none;">
+                <div class="ab2b-category-filters" id="ab2b-category-filters">
+                    <!-- Filled by JS -->
+                </div>
+                <div class="ab2b-view-toggle">
+                    <button type="button" class="ab2b-view-btn active" data-view="grid" title="<?php esc_attr_e('Grid view', 'artisan-b2b-portal'); ?>">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="20" height="20"><path d="M120-520v-320h320v320H120Zm0 400v-320h320v320H120Zm400-400v-320h320v320H520Zm0 400v-320h320v320H520ZM200-600h160v-160H200v160Zm400 0h160v-160H600v160Zm0 400h160v-160H600v160ZM200-200h160v-160H200v160Zm400-400Zm0 240Zm-240 0Zm0-240Z"/></svg>
+                    </button>
+                    <button type="button" class="ab2b-view-btn" data-view="list" title="<?php esc_attr_e('List view', 'artisan-b2b-portal'); ?>">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="20" height="20"><path d="M280-600v-80h560v80H280Zm0 160v-80h560v80H280Zm0 160v-80h560v80H280ZM160-600q-17 0-28.5-11.5T120-640q0-17 11.5-28.5T160-680q17 0 28.5 11.5T200-640q0 17-11.5 28.5T160-600Zm0 160q-17 0-28.5-11.5T120-480q0-17 11.5-28.5T160-520q17 0 28.5 11.5T200-480q0 17-11.5 28.5T160-440Zm0 160q-17 0-28.5-11.5T120-320q0-17 11.5-28.5T160-360q17 0 28.5 11.5T200-320q0 17-11.5 28.5T160-280Z"/></svg>
+                    </button>
+                </div>
+            </div>
             <div class="ab2b-products-grid" id="ab2b-products">
                 <div class="ab2b-loading">
                     <span class="ab2b-spinner"></span>

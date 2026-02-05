@@ -84,6 +84,13 @@ class AB2B_Rest_Api {
             'callback'            => [$this, 'get_settings'],
             'permission_callback' => [$this, 'check_customer_permission'],
         ]);
+
+        // Categories
+        register_rest_route($this->namespace, '/categories', [
+            'methods'             => WP_REST_Server::READABLE,
+            'callback'            => [$this, 'get_categories'],
+            'permission_callback' => [$this, 'check_customer_permission'],
+        ]);
     }
 
     /**
@@ -290,7 +297,16 @@ class AB2B_Rest_Api {
                 : AB2B_Helpers::format_price($price_min) . ' - ' . AB2B_Helpers::format_price($price_max),
             'has_sale_pricing'  => $has_sale_pricing,
             'is_exclusive'      => ($custom_product && $custom_product->is_exclusive) ? true : false,
+            'categories'        => $this->get_product_category_ids($product->id),
         ];
+    }
+
+    /**
+     * Get category IDs for a product
+     */
+    private function get_product_category_ids($product_id) {
+        require_once AB2B_PLUGIN_DIR . 'includes/core/class-ab2b-category.php';
+        return array_map('intval', AB2B_Category::get_product_category_ids($product_id));
     }
 
     /**
@@ -475,6 +491,24 @@ class AB2B_Rest_Api {
         }
 
         return $data;
+    }
+
+    /**
+     * Get active categories
+     */
+    public function get_categories($request) {
+        require_once AB2B_PLUGIN_DIR . 'includes/core/class-ab2b-category.php';
+        $categories = AB2B_Category::get_active_categories();
+
+        $data = array_map(function($cat) {
+            return [
+                'id'   => (int) $cat->id,
+                'name' => $cat->name,
+                'slug' => $cat->slug,
+            ];
+        }, $categories);
+
+        return rest_ensure_response($data);
     }
 
     /**

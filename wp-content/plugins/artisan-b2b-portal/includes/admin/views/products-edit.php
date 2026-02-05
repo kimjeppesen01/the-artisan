@@ -7,6 +7,11 @@ if (!defined('ABSPATH')) exit;
 $is_edit = !empty($product);
 $page_title = $is_edit ? __('Edit Product', 'artisan-b2b-portal') : __('Add New Product', 'artisan-b2b-portal');
 $weights = $is_edit && !empty($product->weights) ? $product->weights : [];
+
+// Get categories
+require_once AB2B_PLUGIN_DIR . 'includes/core/class-ab2b-category.php';
+$all_categories = AB2B_Category::get_all();
+$product_category_ids = $is_edit ? AB2B_Category::get_product_category_ids($product->id) : [];
 ?>
 
 <div class="wrap ab2b-admin-wrap">
@@ -195,6 +200,28 @@ $weights = $is_edit && !empty($product->weights) ? $product->weights : [];
                             <button type="button" class="button ab2b-remove-image" <?php echo (!$is_edit || !$product->hover_image_id) ? 'style="display:none;"' : ''; ?>><?php esc_html_e('Remove', 'artisan-b2b-portal'); ?></button>
                         </p>
                     </div>
+                </div>
+
+                <div class="ab2b-form-card">
+                    <h2><?php esc_html_e('Categories', 'artisan-b2b-portal'); ?></h2>
+                    <?php if (!empty($all_categories)) : ?>
+                        <div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+                            <?php foreach ($all_categories as $cat) : ?>
+                                <label style="display: block; margin-bottom: 6px; cursor: pointer;">
+                                    <input type="checkbox" name="product_categories[]" value="<?php echo esc_attr($cat->id); ?>"
+                                           <?php checked(in_array($cat->id, $product_category_ids)); ?>>
+                                    <?php echo esc_html($cat->name); ?>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else : ?>
+                        <p class="description">
+                            <?php printf(
+                                __('No categories yet. <a href="%s">Create one</a>.', 'artisan-b2b-portal'),
+                                esc_url(admin_url('admin.php?page=ab2b-categories'))
+                            ); ?>
+                        </p>
+                    <?php endif; ?>
                 </div>
 
                 <div class="ab2b-form-card">
