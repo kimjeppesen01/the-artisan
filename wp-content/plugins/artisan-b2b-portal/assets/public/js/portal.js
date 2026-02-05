@@ -221,11 +221,8 @@
             products.forEach(function(product) {
                 const placeholder = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400"%3E%3Crect fill="%23f0f0f1" width="300" height="400"/%3E%3C/svg%3E';
 
-                // Build badges HTML
+                // Build badges HTML (only exclusive badge, no sale badge)
                 let badgesHtml = '';
-                if (product.has_sale_pricing) {
-                    badgesHtml += '<span class="ab2b-badge ab2b-badge-sale">Sale</span>';
-                }
                 if (product.is_exclusive) {
                     badgesHtml += '<span class="ab2b-badge ab2b-badge-exclusive">Exclusive</span>';
                 }
@@ -282,10 +279,8 @@
             products.forEach(function(product) {
                 const placeholder = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Crect fill="%23f0f0f1" width="100" height="100"/%3E%3C/svg%3E';
 
+                // Only exclusive badge, no sale badge
                 let badgesHtml = '';
-                if (product.has_sale_pricing) {
-                    badgesHtml += '<span class="ab2b-badge ab2b-badge-sale">Sale</span>';
-                }
                 if (product.is_exclusive) {
                     badgesHtml += '<span class="ab2b-badge ab2b-badge-exclusive">Exclusive</span>';
                 }
@@ -337,7 +332,8 @@
             product.weights.forEach(function(weight, index) {
                 let optionLabel = weight.label + ' - ' + weight.price_formatted;
                 if (weight.is_on_sale) {
-                    optionLabel = weight.label + ' - ' + weight.price_formatted + ' (was ' + weight.original_price_formatted + ')';
+                    // Show discount percentage in dropdown instead of "was" text
+                    optionLabel = weight.label + ' - ' + weight.price_formatted + ' (-' + weight.discount_percent + '%)';
                 }
                 weightsHtml += `<option value="${weight.id}" data-price="${weight.price}" data-formatted="${weight.price_formatted}" data-on-sale="${weight.is_on_sale ? '1' : '0'}" data-original="${weight.original_price_formatted || ''}" data-discount="${weight.discount_percent || 0}" ${index === 0 ? 'selected' : ''}>${optionLabel}</option>`;
             });

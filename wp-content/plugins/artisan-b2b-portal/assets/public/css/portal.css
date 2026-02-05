@@ -363,11 +363,13 @@
 }
 
 .ab2b-cart-item {
+    position: relative;
     display: grid;
     grid-template-columns: auto 1fr auto auto;
     gap: 1rem;
     align-items: center;
     padding: 1rem;
+    padding-right: 1rem;
     border-bottom: 1px solid var(--ab2b-border);
 }
 
@@ -406,15 +408,21 @@
 .ab2b-qty-btn {
     width: 32px;
     height: 32px;
+    min-width: 32px;
+    min-height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--ab2b-bg);
+    background: var(--ab2b-card-bg);
     border: 1px solid var(--ab2b-border);
     border-radius: 50%;
     cursor: pointer;
     font-size: 1.2rem;
     line-height: 1;
+    color: var(--ab2b-primary);
+    box-sizing: border-box;
+    flex-shrink: 0;
+    padding: 0;
 }
 
 .ab2b-qty-btn:hover {
@@ -436,12 +444,28 @@
 }
 
 .ab2b-cart-item-remove {
-    background: none;
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    min-height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ab2b-danger-bg);
     border: none;
+    border-radius: 50%;
     color: var(--ab2b-danger);
     cursor: pointer;
-    padding: 0.5rem;
-    opacity: 0.6;
+    padding: 0;
+    font-size: 0.85rem;
+    line-height: 1;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    box-sizing: border-box;
+    flex-shrink: 0;
 }
 
 .ab2b-cart-item-remove:hover {
@@ -509,6 +533,8 @@
     font-size: 1rem;
     resize: vertical;
     min-height: 80px;
+    color: var(--ab2b-primary);
+    background: var(--ab2b-card-bg);
 }
 
 /* Orders List */
@@ -688,6 +714,7 @@ body.ab2b-modal-open {
     right: 0;
     bottom: 0;
     background: rgba(0,0,0,0.5);
+    pointer-events: none;
 }
 
 .ab2b-modal-content {
@@ -698,6 +725,7 @@ body.ab2b-modal-open {
     max-width: 500px;
     margin: 2rem auto;
     animation: ab2b-modal-in 0.3s ease;
+    pointer-events: auto;
 }
 
 .ab2b-modal-wide {
@@ -721,6 +749,8 @@ body.ab2b-modal-open {
     right: 1rem;
     width: 32px;
     height: 32px;
+    min-width: 32px;
+    min-height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -733,6 +763,9 @@ body.ab2b-modal-open {
     cursor: pointer;
     z-index: 1;
     transition: background 0.2s;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    padding: 0;
 }
 
 .ab2b-modal-close:hover {
@@ -938,10 +971,10 @@ body.ab2b-modal-open {
     }
 
     .ab2b-modal-content {
-        margin: 0;
-        border-radius: 0;
-        max-height: 100vh;
-        height: 100%;
+        margin: 1rem;
+        border-radius: var(--ab2b-radius);
+        max-height: none;
+        height: auto;
     }
 }
 
@@ -1113,12 +1146,16 @@ body.ab2b-modal-open {
     justify-content: center;
     width: 36px;
     height: 36px;
+    min-width: 36px;
+    min-height: 36px;
     padding: 0;
     border: 1px solid var(--ab2b-border);
     background: var(--ab2b-card-bg);
     color: var(--ab2b-secondary);
     cursor: pointer;
     transition: background 0.2s, color 0.2s, border-color 0.2s;
+    box-sizing: border-box;
+    flex-shrink: 0;
 }
 
 .ab2b-view-btn:first-child {

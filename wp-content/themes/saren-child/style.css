@@ -9,3 +9,78 @@ Template: saren
 
 /* =Theme customization starts here
 -------------------------------------------------------------- */
+
+/* ========================================
+   1. Header Menu Element - Hide on Desktop/iPad, Show on Phone Only
+   Also fix white text on white container
+   ======================================== */
+
+/* Hide on desktop and tablet (iPad) */
+@media (min-width: 768px) {
+    .elementor-6829 .elementor-element.elementor-element-8fe1ca9 {
+        display: none !important;
+    }
+}
+
+/* Show only on phone (mobile) */
+@media (max-width: 767px) {
+    .elementor-6829 .elementor-element.elementor-element-8fe1ca9 {
+        display: block !important;
+        color: var(--mainColor, #0f0f0f) !important;
+    }
+
+    .elementor-6829 .elementor-element.elementor-element-8fe1ca9,
+    .elementor-6829 .elementor-element.elementor-element-8fe1ca9 * {
+        color: inherit !important;
+    }
+}
+
+/* ========================================
+   2. Product Grid - Max Width 300px per product
+   With centered grid and larger side margins
+   ======================================== */
+
+/* Add larger side margins on wide screens */
+@media (min-width: 1400px) {
+    .archive-products-section {
+        padding-left: 80px;
+        padding-right: 80px;
+    }
+}
+
+@media (min-width: 1600px) {
+    .archive-products-section {
+        padding-left: 120px;
+        padding-right: 120px;
+    }
+}
+
+@media (min-width: 1800px) {
+    .archive-products-section {
+        padding-left: 180px;
+        padding-right: 180px;
+    }
+}
+
+@media (min-width: 2000px) {
+    .archive-products-section {
+        padding-left: 250px;
+        padding-right: 250px;
+    }
+}
+
+/* For masonry layout: control column width via sizer */
+@media (min-width: 1200px) {
+    .saren--products-grid.saren--masonry--layout .saren--products--masonry--sizer,
+    .saren--products-grid.saren--masonry--layout .saren--single--product {
+        width: calc(25% - 20px);
+        max-width: 300px;
+    }
+}
+
+/* Center the grid container content */
+@media (min-width: 1400px) {
+    .archive-products-section .saren--products-grid {
+        justify-content: center;
+    }
+}
