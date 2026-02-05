@@ -10,6 +10,8 @@ if (!defined('ABSPATH')) {
 class AB2B_Public {
 
     private $customer = null;
+    private $needs_password = false;
+    private $password_customer_slug = null;
 
     /**
      * Constructor
@@ -17,7 +19,45 @@ class AB2B_Public {
     public function __construct() {
         add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);
         add_action('init', [$this, 'register_shortcodes']);
+        add_action('init', [$this, 'handle_password_login']);
         add_action('template_redirect', [$this, 'check_portal_access']);
+    }
+
+    /**
+     * Handle password form submission
+     */
+    public function handle_password_login() {
+        if (!isset($_POST['ab2b_customer_login'])) {
+            return;
+        }
+
+        // Verify nonce
+        if (!isset($_POST['ab2b_login_nonce']) || !wp_verify_nonce($_POST['ab2b_login_nonce'], 'ab2b_customer_login')) {
+            return;
+        }
+
+        $customer_slug = sanitize_text_field($_POST['ab2b_customer_slug'] ?? '');
+        $password = $_POST['ab2b_password'] ?? '';
+
+        if (empty($customer_slug) || empty($password)) {
+            return;
+        }
+
+        $customer = AB2B_Customer::get_by_slug($customer_slug);
+        if (!$customer) {
+            return;
+        }
+
+        if (AB2B_Customer::verify_password($customer->id, $password)) {
+            // Set cookie with access key for session
+            setcookie('ab2b_access_key', $customer->access_key, time() + (30 * DAY_IN_SECONDS), COOKIEPATH, COOKIE_DOMAIN, is_ssl(), true);
+            $this->customer = $customer;
+
+            // Redirect to remove password from URL and show portal
+            $portal_url = AB2B_Helpers::get_portal_url(null, $customer_slug);
+            wp_safe_redirect($portal_url);
+            exit;
+        }
     }
 
     /**
@@ -40,6 +80,7 @@ class AB2B_Public {
             return;
         }
 
+        // Check for direct access key first
         $access_key = isset($_GET['key']) ? sanitize_text_field($_GET['key']) : '';
 
         if ($access_key) {
@@ -48,15 +89,36 @@ class AB2B_Public {
                 // Store in session/cookie
                 setcookie('ab2b_access_key', $access_key, time() + (30 * DAY_IN_SECONDS), COOKIEPATH, COOKIE_DOMAIN, is_ssl(), true);
                 $this->customer = $customer;
+                return;
             }
-        } else {
-            // Check cookie
-            $access_key = isset($_COOKIE['ab2b_access_key']) ? sanitize_text_field($_COOKIE['ab2b_access_key']) : '';
-            if ($access_key) {
-                $customer = AB2B_Customer::validate_key($access_key);
-                if ($customer) {
+        }
+
+        // Check for custom URL slug (password-protected access)
+        $customer_slug = isset($_GET['customer']) ? sanitize_text_field($_GET['customer']) : '';
+
+        if ($customer_slug) {
+            $customer = AB2B_Customer::get_by_slug($customer_slug);
+            if ($customer) {
+                // Check if already authenticated via cookie
+                $cookie_key = isset($_COOKIE['ab2b_access_key']) ? sanitize_text_field($_COOKIE['ab2b_access_key']) : '';
+                if ($cookie_key && $cookie_key === $customer->access_key) {
                     $this->customer = $customer;
+                    return;
                 }
+
+                // Needs password authentication
+                $this->needs_password = true;
+                $this->password_customer_slug = $customer_slug;
+                return;
+            }
+        }
+
+        // Check cookie for regular access
+        $access_key = isset($_COOKIE['ab2b_access_key']) ? sanitize_text_field($_COOKIE['ab2b_access_key']) : '';
+        if ($access_key) {
+            $customer = AB2B_Customer::validate_key($access_key);
+            if ($customer) {
+                $this->customer = $customer;
             }
         }
     }
@@ -159,6 +221,11 @@ class AB2B_Public {
      * Render full portal (tabs: shop, cart, orders)
      */
     public function render_portal($atts) {
+        // Check if needs password login
+        if ($this->needs_password && $this->password_customer_slug) {
+            return $this->render_password_form($this->password_customer_slug);
+        }
+
         $customer = $this->get_current_customer();
 
         if (!$customer) {
@@ -167,6 +234,46 @@ class AB2B_Public {
 
         ob_start();
         include AB2B_PLUGIN_DIR . 'templates/portal/portal.php';
+        return ob_get_clean();
+    }
+
+    /**
+     * Render password login form
+     */
+    private function render_password_form($customer_slug) {
+        $customer = AB2B_Customer::get_by_slug($customer_slug);
+        $company_name = $customer ? $customer->company_name : '';
+
+        ob_start();
+        ?>
+        <div class="ab2b-login-form">
+            <div class="ab2b-login-content">
+                <span class="ab2b-login-icon">🔐</span>
+                <h2><?php esc_html_e('B2B Portal Login', 'artisan-b2b-portal'); ?></h2>
+                <?php if ($company_name) : ?>
+                    <p class="ab2b-login-company"><?php echo esc_html($company_name); ?></p>
+                <?php endif; ?>
+                <p><?php esc_html_e('Please enter your password to access the portal.', 'artisan-b2b-portal'); ?></p>
+
+                <form method="post" class="ab2b-password-form">
+                    <?php wp_nonce_field('ab2b_customer_login', 'ab2b_login_nonce'); ?>
+                    <input type="hidden" name="ab2b_customer_slug" value="<?php echo esc_attr($customer_slug); ?>">
+                    <input type="hidden" name="ab2b_customer_login" value="1">
+
+                    <div class="ab2b-form-group">
+                        <label for="ab2b_password"><?php esc_html_e('Password', 'artisan-b2b-portal'); ?></label>
+                        <input type="password" id="ab2b_password" name="ab2b_password" required autofocus>
+                    </div>
+
+                    <button type="submit" class="ab2b-btn ab2b-btn-primary ab2b-btn-full">
+                        <?php esc_html_e('Login', 'artisan-b2b-portal'); ?>
+                    </button>
+                </form>
+
+                <p class="ab2b-login-help"><?php esc_html_e('Forgot your password? Contact your account manager.', 'artisan-b2b-portal'); ?></p>
+            </div>
+        </div>
+        <?php
         return ob_get_clean();
     }
 

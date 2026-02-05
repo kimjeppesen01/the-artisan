@@ -280,6 +280,63 @@
     line-height: 1.3;
 }
 
+/* Product Info Tooltip */
+.ab2b-product-info-icon {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    margin-left: 0.35rem;
+    vertical-align: middle;
+    cursor: help;
+}
+
+.ab2b-product-info-icon svg {
+    fill: var(--ab2b-secondary);
+    transition: fill 0.2s;
+}
+
+.ab2b-product-info-icon:hover svg {
+    fill: var(--ab2b-primary);
+}
+
+.ab2b-product-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ab2b-primary);
+    color: var(--ab2b-card-bg);
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 400;
+    line-height: 1.4;
+    white-space: nowrap;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+    z-index: 100;
+    pointer-events: none;
+}
+
+.ab2b-product-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: var(--ab2b-primary);
+}
+
+.ab2b-product-info-icon:hover .ab2b-product-tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
 .ab2b-product-price {
     color: var(--ab2b-secondary);
     font-size: 0.9rem;
@@ -604,6 +661,7 @@ body.ab2b-modal-open {
     overflow: hidden;
     position: fixed;
     width: 100%;
+    height: 100%;
 }
 
 .ab2b-modal {
@@ -614,19 +672,17 @@ body.ab2b-modal-open {
     right: 0;
     bottom: 0;
     z-index: 9999;
-    padding: 1rem;
     overflow-y: auto;
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
 }
 
 .ab2b-modal.active {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: block;
 }
 
 .ab2b-modal-overlay {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
@@ -638,10 +694,9 @@ body.ab2b-modal-open {
     position: relative;
     background: var(--ab2b-card-bg);
     border-radius: var(--ab2b-radius);
-    width: 100%;
+    width: calc(100% - 2rem);
     max-width: 500px;
-    max-height: 90vh;
-    overflow-y: auto;
+    margin: 2rem auto;
     animation: ab2b-modal-in 0.3s ease;
 }
 
@@ -669,16 +724,19 @@ body.ab2b-modal-open {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--ab2b-bg);
+    background: var(--ab2b-primary);
+    color: var(--ab2b-card-bg);
     border: none;
     border-radius: 50%;
     font-size: 1.25rem;
+    line-height: 1;
     cursor: pointer;
     z-index: 1;
+    transition: background 0.2s;
 }
 
 .ab2b-modal-close:hover {
-    background: var(--ab2b-border);
+    background: var(--ab2b-secondary);
 }
 
 .ab2b-modal-body {
@@ -1263,4 +1321,82 @@ body.ab2b-modal-open {
         font-size: 0.75rem;
         padding: 0.4rem 0.8rem;
     }
+}
+
+/* ========================================
+   Login Form (Password Protected Access)
+   ======================================== */
+
+.ab2b-login-form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+    padding: 2rem;
+}
+
+.ab2b-login-content {
+    background: var(--ab2b-card-bg);
+    border: 1px solid var(--ab2b-border);
+    border-radius: var(--ab2b-radius);
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.ab2b-login-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.ab2b-login-content h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.5rem;
+}
+
+.ab2b-login-company {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--ab2b-primary);
+    margin: 0 0 1rem;
+}
+
+.ab2b-login-content > p {
+    color: var(--ab2b-secondary);
+    margin-bottom: 1.5rem;
+}
+
+.ab2b-password-form {
+    text-align: left;
+}
+
+.ab2b-password-form .ab2b-form-group {
+    margin-bottom: 1.25rem;
+}
+
+.ab2b-password-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.ab2b-password-form input[type="password"] {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--ab2b-border);
+    border-radius: var(--ab2b-radius);
+    font-size: 1rem;
+}
+
+.ab2b-password-form input[type="password"]:focus {
+    outline: none;
+    border-color: var(--ab2b-primary);
+}
+
+.ab2b-login-help {
+    margin-top: 1.5rem;
+    font-size: 0.85rem;
+    color: var(--ab2b-secondary);
 }

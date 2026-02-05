@@ -111,6 +111,7 @@ $product_category_ids = $is_edit ? AB2B_Category::get_product_category_ids($prod
                                             <select name="weights[<?php echo $index; ?>][weight_unit]">
                                                 <option value="g" <?php selected($weight->weight_unit, 'g'); ?>>g</option>
                                                 <option value="kg" <?php selected($weight->weight_unit, 'kg'); ?>>kg</option>
+                                                <option value="ltr" <?php selected($weight->weight_unit, 'ltr'); ?>>ltr</option>
                                             </select>
                                         </td>
                                         <td>
@@ -146,6 +147,7 @@ $product_category_ids = $is_edit ? AB2B_Category::get_product_category_ids($prod
                                 <select name="weights[__INDEX__][weight_unit]">
                                     <option value="g">g</option>
                                     <option value="kg">kg</option>
+                                    <option value="ltr">ltr</option>
                                 </select>
                             </td>
                             <td>

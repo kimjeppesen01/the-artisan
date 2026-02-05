@@ -36,6 +36,70 @@ class AB2B_Customer {
     }
 
     /**
+     * Get customer by URL slug
+     */
+    public static function get_by_slug($url_slug) {
+        global $wpdb;
+        $table = $wpdb->prefix . self::$table;
+        return $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$table} WHERE url_slug = %s AND is_active = 1",
+            $url_slug
+        ));
+    }
+
+    /**
+     * Verify customer password
+     */
+    public static function verify_password($customer_id, $password) {
+        $customer = self::get($customer_id);
+        if (!$customer || empty($customer->password_hash)) {
+            return false;
+        }
+        return wp_check_password($password, $customer->password_hash);
+    }
+
+    /**
+     * Set customer password
+     */
+    public static function set_password($customer_id, $password) {
+        global $wpdb;
+        $table = $wpdb->prefix . self::$table;
+
+        $hash = wp_hash_password($password);
+        return $wpdb->update(
+            $table,
+            ['password_hash' => $hash],
+            ['id' => $customer_id],
+            ['%s'],
+            ['%d']
+        );
+    }
+
+    /**
+     * Set customer URL slug
+     */
+    public static function set_url_slug($customer_id, $url_slug) {
+        global $wpdb;
+        $table = $wpdb->prefix . self::$table;
+
+        // Check for duplicate slug (excluding current customer)
+        if (!empty($url_slug)) {
+            $existing = self::get_by_slug($url_slug);
+            if ($existing && $existing->id != $customer_id) {
+                return new WP_Error('duplicate_slug', __('This URL slug is already in use.', 'artisan-b2b-portal'));
+            }
+        }
+
+        return $wpdb->update(
+            $table,
+            ['url_slug' => $url_slug ?: null],
+            ['id' => $customer_id],
+            ['%s'],
+            ['%d']
+        );
+    }
+
+    /**
      * Get customer by email
      */
     public static function get_by_email($email) {

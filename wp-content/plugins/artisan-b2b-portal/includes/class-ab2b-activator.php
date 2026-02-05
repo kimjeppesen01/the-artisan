@@ -42,12 +42,15 @@ class AB2B_Activator {
             phone VARCHAR(50) DEFAULT '',
             address TEXT,
             access_key VARCHAR(64) NOT NULL,
+            url_slug VARCHAR(64) DEFAULT NULL,
+            password_hash VARCHAR(255) DEFAULT NULL,
             is_active TINYINT(1) DEFAULT 1,
             notes TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
             UNIQUE KEY access_key (access_key),
+            UNIQUE KEY url_slug (url_slug),
             KEY email (email),
             KEY is_active (is_active)
         ) {$charset_collate};";

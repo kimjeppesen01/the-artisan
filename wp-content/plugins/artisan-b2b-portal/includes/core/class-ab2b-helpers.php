@@ -121,14 +121,28 @@ class AB2B_Helpers {
 
     /**
      * Get portal URL for customer
+     *
+     * @param string|null $access_key The access key (used for direct access link)
+     * @param string|null $url_slug   The custom URL slug (used for password-protected access)
+     * @return string
      */
-    public static function get_portal_url($access_key) {
+    public static function get_portal_url($access_key = null, $url_slug = null) {
         $page_id = get_option('ab2b_portal_page_id');
         if (!$page_id) {
-            return home_url('/b2b-portal/');
+            $url = home_url('/b2b-portal/');
+        } else {
+            $url = get_permalink($page_id);
         }
-        $url = get_permalink($page_id);
-        return add_query_arg('key', $access_key, $url);
+
+        if ($url_slug) {
+            return add_query_arg('customer', $url_slug, $url);
+        }
+
+        if ($access_key) {
+            return add_query_arg('key', $access_key, $url);
+        }
+
+        return $url;
     }
 
     /**

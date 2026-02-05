@@ -215,6 +215,20 @@ class AB2B_Admin {
         if ($customer_id > 0 && !is_wp_error($result)) {
             require_once AB2B_PLUGIN_DIR . 'includes/core/class-ab2b-customer-pricing.php';
 
+            // Handle URL slug
+            if (isset($_POST['url_slug'])) {
+                $url_slug = sanitize_title($_POST['url_slug']);
+                $slug_result = AB2B_Customer::set_url_slug($customer_id, $url_slug);
+                if (is_wp_error($slug_result)) {
+                    set_transient('ab2b_admin_error', $slug_result->get_error_message(), 30);
+                }
+            }
+
+            // Handle password
+            if (!empty($_POST['customer_password'])) {
+                AB2B_Customer::set_password($customer_id, $_POST['customer_password']);
+            }
+
             // Process customer products (exclusive assignments)
             if (isset($_POST['customer_products']) && is_array($_POST['customer_products'])) {
                 $all_products = AB2B_Product::get_all();
@@ -344,6 +358,18 @@ class AB2B_Admin {
             'custom_description' => '',
             'is_exclusive'       => $is_exclusive,
         ]);
+
+        // Handle custom prices for product variants
+        if ($result && isset($_POST['custom_prices']) && is_array($_POST['custom_prices'])) {
+            foreach ($_POST['custom_prices'] as $weight_id => $price) {
+                $weight_id = (int) $weight_id;
+                if ($price === '' || $price === null) {
+                    // No custom price set, skip
+                    continue;
+                }
+                AB2B_Customer_Pricing::set_custom_price($customer_id, $weight_id, (float) $price);
+            }
+        }
 
         if ($result) {
             set_transient('ab2b_admin_success', __('Product assigned to customer successfully.', 'artisan-b2b-portal'), 30);

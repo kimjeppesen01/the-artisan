@@ -212,15 +212,15 @@ class AB2B_Rest_Api {
      */
     private function format_product($product, $price_map = [], $customer_product_map = []) {
         $image_url = $product->image_id
-            ? wp_get_attachment_image_url($product->image_id, 'medium')
+            ? wp_get_attachment_image_url($product->image_id, 'large')
             : null;
 
         $hover_image_url = $product->hover_image_id
-            ? wp_get_attachment_image_url($product->hover_image_id, 'medium')
+            ? wp_get_attachment_image_url($product->hover_image_id, 'large')
             : null;
 
         $image_full = $product->image_id
-            ? wp_get_attachment_image_url($product->image_id, 'large')
+            ? wp_get_attachment_image_url($product->image_id, 'full')
             : null;
 
         // Check for customer-specific product customizations

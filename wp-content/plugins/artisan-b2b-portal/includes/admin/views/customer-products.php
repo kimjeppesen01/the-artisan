@@ -212,6 +212,28 @@ foreach ($products as $product) {
                     </select>
                 </p>
 
+                <!-- Product Variants / Custom Pricing -->
+                <div id="modal_variants_section" style="display: none; margin: 15px 0; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 500;">
+                        <?php esc_html_e('Custom Prices (Optional)', 'artisan-b2b-portal'); ?>
+                    </label>
+                    <p class="description" style="margin-bottom: 10px;">
+                        <?php esc_html_e('Set discounted prices for this customer. Leave blank to use default price.', 'artisan-b2b-portal'); ?>
+                    </p>
+                    <table class="widefat" id="modal_variants_table" style="background: #fff;">
+                        <thead>
+                            <tr>
+                                <th><?php esc_html_e('Variant', 'artisan-b2b-portal'); ?></th>
+                                <th style="width: 100px;"><?php esc_html_e('Default', 'artisan-b2b-portal'); ?></th>
+                                <th style="width: 120px;"><?php esc_html_e('Custom Price', 'artisan-b2b-portal'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Filled by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
                 <p>
                     <label for="modal_custom_name" style="display: block; margin-bottom: 5px; font-weight: 500;">
                         <?php esc_html_e('Custom Product Name (Optional)', 'artisan-b2b-portal'); ?>
@@ -238,6 +260,30 @@ foreach ($products as $product) {
 
 <script>
 jQuery(document).ready(function($) {
+    // Product weights data
+    var productsData = <?php
+        $products_with_weights = [];
+        foreach ($products as $product) {
+            $weights = [];
+            if (!empty($product->weights)) {
+                foreach ($product->weights as $weight) {
+                    if ($weight->is_active) {
+                        $weights[] = [
+                            'id' => (int) $weight->id,
+                            'label' => $weight->weight_label,
+                            'price' => (float) $weight->price,
+                        ];
+                    }
+                }
+            }
+            $products_with_weights[$product->id] = [
+                'name' => $product->name,
+                'weights' => $weights,
+            ];
+        }
+        echo json_encode($products_with_weights);
+    ?>;
+
     // Show modal when clicking "Assign Product to Customer"
     $('a[href*="action=add"]').on('click', function(e) {
         e.preventDefault();
@@ -247,6 +293,54 @@ jQuery(document).ready(function($) {
     // Close modal
     $('.ab2b-close-modal, .ab2b-modal-backdrop').on('click', function() {
         $('#ab2b-add-assignment-modal').hide();
+        resetModal();
+    });
+
+    // Reset modal state
+    function resetModal() {
+        $('#modal_customer_id').val('');
+        $('#modal_product_id').val('');
+        $('#modal_custom_name').val('');
+        $('input[name="is_exclusive"]').prop('checked', false);
+        $('#modal_variants_section').hide();
+        $('#modal_variants_table tbody').empty();
+    }
+
+    // When product is selected, load its variants
+    $('#modal_product_id').on('change', function() {
+        var productId = $(this).val();
+        var $section = $('#modal_variants_section');
+        var $tbody = $('#modal_variants_table tbody');
+
+        $tbody.empty();
+
+        if (!productId || !productsData[productId]) {
+            $section.hide();
+            return;
+        }
+
+        var product = productsData[productId];
+        var weights = product.weights;
+
+        if (!weights || weights.length === 0) {
+            $section.hide();
+            return;
+        }
+
+        weights.forEach(function(weight) {
+            var row = '<tr>' +
+                '<td><strong>' + weight.label + '</strong></td>' +
+                '<td style="color: #666;">' + weight.price.toFixed(2) + '</td>' +
+                '<td>' +
+                    '<input type="number" name="custom_prices[' + weight.id + ']" ' +
+                    'step="0.01" min="0" class="small-text" style="width: 100%;" ' +
+                    'placeholder="' + weight.price.toFixed(2) + '">' +
+                '</td>' +
+                '</tr>';
+            $tbody.append(row);
+        });
+
+        $section.show();
     });
 
     // Remove assignment
