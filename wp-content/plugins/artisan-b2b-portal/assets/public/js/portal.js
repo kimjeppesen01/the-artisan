@@ -529,7 +529,8 @@
             const minDate = this.getNextFriday();
 
             const shippingCost = 100;
-            const grandTotal = total + shippingCost;
+            const vat = (total + shippingCost) * 0.25;
+            const grandTotal = total + shippingCost + vat;
 
             $cart.html(`
                 <div class="ab2b-cart-items">
@@ -563,6 +564,10 @@
                         <div class="ab2b-cart-shipping" id="ab2b-shipping-row">
                             <span>Shipping</span>
                             <span id="ab2b-shipping-cost">${this.formatPrice(shippingCost)}</span>
+                        </div>
+                        <div class="ab2b-cart-vat">
+                            <span>VAT 25%</span>
+                            <span id="ab2b-vat">${this.formatPrice(vat)}</span>
                         </div>
                         <div class="ab2b-cart-total">
                             <span>${ab2b_portal.strings.total}</span>
@@ -616,10 +621,12 @@
                 subtotal += item.unit_price * item.quantity;
             });
 
-            const grandTotal = subtotal + shippingCost;
+            const vat = (subtotal + shippingCost) * 0.25;
+            const grandTotal = subtotal + shippingCost + vat;
 
             // Update UI
             $('#ab2b-shipping-cost').text(shippingCost > 0 ? this.formatPrice(shippingCost) : 'Free');
+            $('#ab2b-vat').text(this.formatPrice(vat));
             $('#ab2b-grand-total').text(this.formatPrice(grandTotal));
 
             // Toggle active class on options

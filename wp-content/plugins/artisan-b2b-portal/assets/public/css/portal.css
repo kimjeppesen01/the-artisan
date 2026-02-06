@@ -546,7 +546,8 @@
 }
 
 .ab2b-cart-subtotal,
-.ab2b-cart-shipping {
+.ab2b-cart-shipping,
+.ab2b-cart-vat {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -608,8 +609,8 @@
     font-size: 1rem;
     resize: vertical;
     min-height: 80px;
-    color: var(--ab2b-primary);
-    background: var(--ab2b-card-bg);
+    color: #333;
+    background: #fff;
 }
 
 /* Orders List */
