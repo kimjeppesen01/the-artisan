@@ -243,6 +243,14 @@ class AB2B_Order {
             $subtotal += $line_total;
         }
 
+        // Delivery method and shipping cost
+        $delivery_method = isset($data['delivery_method']) ? sanitize_text_field($data['delivery_method']) : 'shipping';
+        if (!in_array($delivery_method, ['shipping', 'pickup'])) {
+            $delivery_method = 'shipping';
+        }
+        $shipping_cost = ($delivery_method === 'shipping') ? 100.00 : 0.00;
+        $total = $subtotal + $shipping_cost;
+
         // Generate order number
         $order_number = AB2B_Helpers::generate_order_number();
 
@@ -252,11 +260,13 @@ class AB2B_Order {
             'customer_id'           => (int) $data['customer_id'],
             'status'                => 'pending',
             'delivery_date'         => $data['delivery_date'],
+            'delivery_method'       => $delivery_method,
+            'shipping_cost'         => $shipping_cost,
             'special_instructions'  => isset($data['special_instructions']) ? sanitize_textarea_field($data['special_instructions']) : '',
             'subtotal'              => $subtotal,
-            'total'                 => $subtotal,
+            'total'                 => $total,
             'admin_notes'           => '',
-        ], ['%s', '%d', '%s', '%s', '%s', '%f', '%f', '%s']);
+        ], ['%s', '%d', '%s', '%s', '%s', '%f', '%s', '%f', '%f', '%s']);
 
         if ($result === false) {
             return new WP_Error('db_error', __('Failed to create order.', 'artisan-b2b-portal'));
@@ -554,18 +564,26 @@ class AB2B_Order {
         $items_table = $wpdb->prefix . self::$items_table;
 
         // Sum all line totals
-        $total = $wpdb->get_var($wpdb->prepare(
+        $subtotal = $wpdb->get_var($wpdb->prepare(
             "SELECT SUM(line_total) FROM {$items_table} WHERE order_id = %d",
             $order_id
         ));
 
-        $total = $total ? (float) $total : 0;
+        $subtotal = $subtotal ? (float) $subtotal : 0;
+
+        // Get shipping cost from current order
+        $shipping_cost = (float) $wpdb->get_var($wpdb->prepare(
+            "SELECT shipping_cost FROM {$table} WHERE id = %d",
+            $order_id
+        ));
+
+        $total = $subtotal + $shipping_cost;
 
         // Update order
         $wpdb->update(
             $table,
             [
-                'subtotal' => $total,
+                'subtotal' => $subtotal,
                 'total'    => $total,
             ],
             ['id' => $order_id],

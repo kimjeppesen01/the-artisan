@@ -80,6 +80,9 @@ function ab2b_init() {
     // Load text domain
     load_plugin_textdomain('artisan-b2b-portal', false, dirname(AB2B_PLUGIN_BASENAME) . '/languages');
 
+    // Run DB migrations if needed
+    ab2b_maybe_migrate();
+
     // Initialize core classes
     require_once AB2B_PLUGIN_DIR . 'includes/class-ab2b-loader.php';
     require_once AB2B_PLUGIN_DIR . 'includes/core/class-ab2b-helpers.php';
@@ -126,4 +129,30 @@ function ab2b_update_option($key, $value) {
 function ab2b_table($table) {
     global $wpdb;
     return $wpdb->prefix . 'ab2b_' . $table;
+}
+
+/**
+ * Run database migrations if needed
+ */
+function ab2b_maybe_migrate() {
+    $db_version = get_option('ab2b_db_version', '1.0.0');
+
+    if (version_compare($db_version, '2.1.0', '<')) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'ab2b_orders';
+
+        // Add delivery_method column
+        $col = $wpdb->get_results("SHOW COLUMNS FROM {$table} LIKE 'delivery_method'");
+        if (empty($col)) {
+            $wpdb->query("ALTER TABLE {$table} ADD COLUMN delivery_method VARCHAR(20) DEFAULT 'shipping' AFTER delivery_date");
+        }
+
+        // Add shipping_cost column
+        $col = $wpdb->get_results("SHOW COLUMNS FROM {$table} LIKE 'shipping_cost'");
+        if (empty($col)) {
+            $wpdb->query("ALTER TABLE {$table} ADD COLUMN shipping_cost DECIMAL(10,2) NOT NULL DEFAULT 0 AFTER delivery_method");
+        }
+
+        update_option('ab2b_db_version', '2.1.0');
+    }
 }

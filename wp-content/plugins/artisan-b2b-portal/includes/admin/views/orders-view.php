@@ -62,6 +62,20 @@ if (!defined('ABSPATH')) exit;
                             <?php endforeach; ?>
                         </tbody>
                         <tfoot>
+                            <?php
+                            $shipping_cost = isset($order->shipping_cost) ? (float) $order->shipping_cost : 0;
+                            $delivery_method = isset($order->delivery_method) ? $order->delivery_method : 'shipping';
+                            ?>
+                            <?php if ($shipping_cost > 0) : ?>
+                                <tr>
+                                    <td colspan="5" class="ab2b-order-total-label"><?php esc_html_e('Subtotal', 'artisan-b2b-portal'); ?></td>
+                                    <td><?php echo esc_html(AB2B_Helpers::format_price($order->subtotal)); ?></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="5" class="ab2b-order-total-label"><?php esc_html_e('Shipping', 'artisan-b2b-portal'); ?></td>
+                                    <td><?php echo esc_html(AB2B_Helpers::format_price($shipping_cost)); ?></td>
+                                </tr>
+                            <?php endif; ?>
                             <tr>
                                 <td colspan="5" class="ab2b-order-total-label"><?php esc_html_e('Total', 'artisan-b2b-portal'); ?></td>
                                 <td class="ab2b-order-total-value"><strong id="order-total-display"><?php echo esc_html(AB2B_Helpers::format_price($order->total)); ?></strong></td>
@@ -108,6 +122,17 @@ if (!defined('ABSPATH')) exit;
                         <li>
                             <span class="ab2b-meta-label"><?php esc_html_e('Delivery Date', 'artisan-b2b-portal'); ?></span>
                             <span class="ab2b-meta-value"><strong><?php echo esc_html(date_i18n('l, M j, Y', strtotime($order->delivery_date))); ?></strong></span>
+                        </li>
+                        <li>
+                            <span class="ab2b-meta-label"><?php esc_html_e('Delivery Method', 'artisan-b2b-portal'); ?></span>
+                            <span class="ab2b-meta-value">
+                                <?php
+                                $method = isset($order->delivery_method) ? $order->delivery_method : 'shipping';
+                                echo $method === 'pickup'
+                                    ? esc_html__('Pick up', 'artisan-b2b-portal')
+                                    : esc_html__('Shipping', 'artisan-b2b-portal');
+                                ?>
+                            </span>
                         </li>
                     </ul>
                 </div>

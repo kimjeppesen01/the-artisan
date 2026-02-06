@@ -434,10 +434,17 @@ class AB2B_Rest_Api {
             );
         }
 
+        // Delivery method
+        $delivery_method = sanitize_text_field($request->get_param('delivery_method'));
+        if (!in_array($delivery_method, ['shipping', 'pickup'])) {
+            $delivery_method = 'shipping';
+        }
+
         // Create order
         $order_id = AB2B_Order::create([
             'customer_id'          => $customer->id,
             'delivery_date'        => $delivery_date,
+            'delivery_method'      => $delivery_method,
             'special_instructions' => $special_instructions,
             'items'                => $order_items,
         ]);
@@ -459,6 +466,9 @@ class AB2B_Rest_Api {
      * Format order for API response
      */
     private function format_order($order, $include_items = false) {
+        $delivery_method = isset($order->delivery_method) ? $order->delivery_method : 'shipping';
+        $shipping_cost = isset($order->shipping_cost) ? (float) $order->shipping_cost : 0;
+
         $data = [
             'id'                   => (int) $order->id,
             'order_number'         => $order->order_number,
@@ -467,7 +477,12 @@ class AB2B_Rest_Api {
             'status_class'         => AB2B_Helpers::get_status_class($order->status),
             'delivery_date'        => $order->delivery_date,
             'delivery_date_formatted' => date_i18n('l, M j, Y', strtotime($order->delivery_date)),
+            'delivery_method'      => $delivery_method,
+            'delivery_method_label' => ($delivery_method === 'pickup') ? __('Pick up', 'artisan-b2b-portal') : __('Shipping', 'artisan-b2b-portal'),
+            'shipping_cost'        => $shipping_cost,
+            'shipping_cost_formatted' => AB2B_Helpers::format_price($shipping_cost),
             'subtotal'             => (float) $order->subtotal,
+            'subtotal_formatted'   => AB2B_Helpers::format_price($order->subtotal),
             'total'                => (float) $order->total,
             'total_formatted'      => AB2B_Helpers::format_price($order->total),
             'created_at'           => $order->created_at,

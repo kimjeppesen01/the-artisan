@@ -65,6 +65,9 @@
             // Delivery date - enforce Fridays
             $(document).on('change', '#ab2b-delivery-date', this.validateDeliveryDate.bind(this));
 
+            // Delivery method toggle
+            $(document).on('change', 'input[name="delivery_method"]', this.updateDeliveryMethod.bind(this));
+
             // Category filter
             $(document).on('click', '.ab2b-cat-filter', this.filterByCategory.bind(this));
 
@@ -525,14 +528,46 @@
 
             const minDate = this.getNextFriday();
 
+            const shippingCost = 100;
+            const grandTotal = total + shippingCost;
+
             $cart.html(`
                 <div class="ab2b-cart-items">
                     ${itemsHtml}
                 </div>
                 <div class="ab2b-cart-summary">
-                    <div class="ab2b-cart-total">
-                        <span>${ab2b_portal.strings.total}</span>
-                        <span>${this.formatPrice(total)}</span>
+                    <div class="ab2b-delivery-method">
+                        <label class="ab2b-delivery-method-label">Delivery Method</label>
+                        <div class="ab2b-delivery-options">
+                            <label class="ab2b-delivery-option ab2b-delivery-option-active">
+                                <input type="radio" name="delivery_method" value="shipping" checked>
+                                <span class="ab2b-delivery-option-content">
+                                    <span class="ab2b-delivery-option-name">Shipping</span>
+                                    <span class="ab2b-delivery-option-price">${this.formatPrice(shippingCost)} ex. VAT</span>
+                                </span>
+                            </label>
+                            <label class="ab2b-delivery-option">
+                                <input type="radio" name="delivery_method" value="pickup">
+                                <span class="ab2b-delivery-option-content">
+                                    <span class="ab2b-delivery-option-name">Pick up</span>
+                                    <span class="ab2b-delivery-option-price">Free</span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="ab2b-cart-totals">
+                        <div class="ab2b-cart-subtotal">
+                            <span>Subtotal</span>
+                            <span id="ab2b-subtotal">${this.formatPrice(total)}</span>
+                        </div>
+                        <div class="ab2b-cart-shipping" id="ab2b-shipping-row">
+                            <span>Shipping</span>
+                            <span id="ab2b-shipping-cost">${this.formatPrice(shippingCost)}</span>
+                        </div>
+                        <div class="ab2b-cart-total">
+                            <span>${ab2b_portal.strings.total}</span>
+                            <span id="ab2b-grand-total">${this.formatPrice(grandTotal)}</span>
+                        </div>
                     </div>
                     <div class="ab2b-delivery-picker">
                         <label for="ab2b-delivery-date">${ab2b_portal.strings.delivery_date}</label>
@@ -569,6 +604,30 @@
         },
 
         /**
+         * Update delivery method and recalculate total
+         */
+        updateDeliveryMethod: function(e) {
+            const method = $('input[name="delivery_method"]:checked').val();
+            const shippingCost = (method === 'shipping') ? 100 : 0;
+
+            // Calculate subtotal from cart
+            let subtotal = 0;
+            this.cart.forEach(function(item) {
+                subtotal += item.unit_price * item.quantity;
+            });
+
+            const grandTotal = subtotal + shippingCost;
+
+            // Update UI
+            $('#ab2b-shipping-cost').text(shippingCost > 0 ? this.formatPrice(shippingCost) : 'Free');
+            $('#ab2b-grand-total').text(this.formatPrice(grandTotal));
+
+            // Toggle active class on options
+            $('.ab2b-delivery-option').removeClass('ab2b-delivery-option-active');
+            $(e.target).closest('.ab2b-delivery-option').addClass('ab2b-delivery-option-active');
+        },
+
+        /**
          * Place order
          */
         placeOrder: function(e) {
@@ -578,6 +637,7 @@
             const $btn = $(e.currentTarget);
             const deliveryDate = $('#ab2b-delivery-date').val();
             const instructions = $('#ab2b-instructions').val();
+            const deliveryMethod = $('input[name="delivery_method"]:checked').val() || 'shipping';
 
             if (!deliveryDate) {
                 this.showMessage('Please select a delivery date.', 'error');
@@ -604,6 +664,7 @@
             this.api('/orders', 'POST', {
                 items: items,
                 delivery_date: deliveryDate,
+                delivery_method: deliveryMethod,
                 special_instructions: instructions
             }).done(function(response) {
                 self.cart = [];
@@ -697,6 +758,34 @@
                     `;
                 });
 
+                // Build tfoot with subtotal, shipping, total
+                let tfootHtml = '';
+                if (order.shipping_cost > 0) {
+                    tfootHtml = `
+                        <tr class="ab2b-order-subtotal-row">
+                            <td colspan="4" style="text-align: right;">Subtotal</td>
+                            <td>${order.subtotal_formatted}</td>
+                        </tr>
+                        <tr class="ab2b-order-shipping-row">
+                            <td colspan="4" style="text-align: right;">Shipping</td>
+                            <td>${order.shipping_cost_formatted}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" style="text-align: right;"><strong>Total</strong></td>
+                            <td><strong>${order.total_formatted}</strong></td>
+                        </tr>
+                    `;
+                } else {
+                    tfootHtml = `
+                        <tr>
+                            <td colspan="4" style="text-align: right;">Total</td>
+                            <td>${order.total_formatted}</td>
+                        </tr>
+                    `;
+                }
+
+                const deliveryMethodLabel = order.delivery_method_label || (order.delivery_method === 'pickup' ? 'Pick up' : 'Shipping');
+
                 const html = `
                     <div class="ab2b-order-detail">
                         <h2>
@@ -711,6 +800,10 @@
                             <div class="ab2b-order-meta-item">
                                 <span class="ab2b-order-meta-label">Delivery Date</span>
                                 <span class="ab2b-order-meta-value">${order.delivery_date_formatted}</span>
+                            </div>
+                            <div class="ab2b-order-meta-item">
+                                <span class="ab2b-order-meta-label">Delivery Method</span>
+                                <span class="ab2b-order-meta-value">${deliveryMethodLabel}</span>
                             </div>
                         </div>
                         <table class="ab2b-order-items-table">
@@ -727,10 +820,7 @@
                                 ${itemsHtml}
                             </tbody>
                             <tfoot>
-                                <tr>
-                                    <td colspan="4" style="text-align: right;">Total</td>
-                                    <td>${order.total_formatted}</td>
-                                </tr>
+                                ${tfootHtml}
                             </tfoot>
                         </table>
                         ${order.special_instructions ? `<p><strong>Special Instructions:</strong> ${order.special_instructions}</p>` : ''}

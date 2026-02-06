@@ -99,6 +99,8 @@ class AB2B_Activator {
             customer_id BIGINT(20) UNSIGNED NOT NULL,
             status VARCHAR(20) DEFAULT 'pending',
             delivery_date DATE NOT NULL,
+            delivery_method VARCHAR(20) DEFAULT 'shipping',
+            shipping_cost DECIMAL(10,2) NOT NULL DEFAULT 0,
             special_instructions TEXT,
             subtotal DECIMAL(10,2) NOT NULL DEFAULT 0,
             total DECIMAL(10,2) NOT NULL DEFAULT 0,

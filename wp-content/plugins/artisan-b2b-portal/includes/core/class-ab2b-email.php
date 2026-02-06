@@ -198,6 +198,19 @@ class AB2B_Email {
                                         </tr>
                                         <tr>
                                             <td style="padding: 8px 0; border-top: 1px solid #e0e0e0;">
+                                                <strong><?php esc_html_e('Delivery Method:', 'artisan-b2b-portal'); ?></strong>
+                                                <span style="float: right;">
+                                                    <?php
+                                                    $delivery_method = isset($order->delivery_method) ? $order->delivery_method : 'shipping';
+                                                    echo $delivery_method === 'pickup'
+                                                        ? esc_html__('Pick up', 'artisan-b2b-portal')
+                                                        : esc_html__('Shipping', 'artisan-b2b-portal');
+                                                    ?>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px 0; border-top: 1px solid #e0e0e0;">
                                                 <strong><?php esc_html_e('Total:', 'artisan-b2b-portal'); ?></strong>
                                                 <span style="float: right; font-weight: bold;"><?php echo esc_html(AB2B_Helpers::format_price($order->total)); ?></span>
                                             </td>
@@ -228,6 +241,17 @@ class AB2B_Email {
                                 <?php endforeach; ?>
                             </tbody>
                             <tfoot>
+                                <?php $shipping_cost = isset($order->shipping_cost) ? (float) $order->shipping_cost : 0; ?>
+                                <?php if ($shipping_cost > 0) : ?>
+                                    <tr>
+                                        <td colspan="3" align="right"><?php esc_html_e('Subtotal:', 'artisan-b2b-portal'); ?></td>
+                                        <td align="right"><?php echo esc_html(AB2B_Helpers::format_price($order->subtotal)); ?></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" align="right"><?php esc_html_e('Shipping:', 'artisan-b2b-portal'); ?></td>
+                                        <td align="right"><?php echo esc_html(AB2B_Helpers::format_price($shipping_cost)); ?></td>
+                                    </tr>
+                                <?php endif; ?>
                                 <tr>
                                     <td colspan="3" align="right" style="font-weight: bold;"><?php esc_html_e('Total:', 'artisan-b2b-portal'); ?></td>
                                     <td align="right" style="font-weight: bold; font-size: 16px;"><?php echo esc_html(AB2B_Helpers::format_price($order->total)); ?></td>
@@ -363,6 +387,19 @@ class AB2B_Email {
                                     </span>
                                 </td>
                             </tr>
+                            <tr>
+                                <td style="padding: 10px 0; border-bottom: 1px solid #eee;">
+                                    <strong><?php esc_html_e('Delivery Method:', 'artisan-b2b-portal'); ?></strong>
+                                    <span style="float: right;">
+                                        <?php
+                                        $admin_delivery_method = isset($order->delivery_method) ? $order->delivery_method : 'shipping';
+                                        echo $admin_delivery_method === 'pickup'
+                                            ? esc_html__('Pick up', 'artisan-b2b-portal')
+                                            : esc_html__('Shipping', 'artisan-b2b-portal');
+                                        ?>
+                                    </span>
+                                </td>
+                            </tr>
                         </table>
 
                         <h3 style="margin: 20px 0 10px; color: #333;"><?php esc_html_e('Order Items', 'artisan-b2b-portal'); ?></h3>
@@ -386,6 +423,17 @@ class AB2B_Email {
                                 <?php endforeach; ?>
                             </tbody>
                             <tfoot>
+                                <?php $admin_shipping = isset($order->shipping_cost) ? (float) $order->shipping_cost : 0; ?>
+                                <?php if ($admin_shipping > 0) : ?>
+                                    <tr>
+                                        <td colspan="3" align="right"><?php esc_html_e('Subtotal:', 'artisan-b2b-portal'); ?></td>
+                                        <td align="right"><?php echo esc_html(AB2B_Helpers::format_price($order->subtotal)); ?></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" align="right"><?php esc_html_e('Shipping:', 'artisan-b2b-portal'); ?></td>
+                                        <td align="right"><?php echo esc_html(AB2B_Helpers::format_price($admin_shipping)); ?></td>
+                                    </tr>
+                                <?php endif; ?>
                                 <tr>
                                     <td colspan="3" align="right" style="font-weight: bold;"><?php esc_html_e('Total:', 'artisan-b2b-portal'); ?></td>
                                     <td align="right" style="font-weight: bold; font-size: 16px;"><?php echo esc_html(AB2B_Helpers::format_price($order->total)); ?></td>
