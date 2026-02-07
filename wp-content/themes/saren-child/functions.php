@@ -1175,3 +1175,291 @@ function sa_coffee_table_shortcode($atts) {
     return ob_get_clean();
 }
 add_shortcode('sa_coffee_table', 'sa_coffee_table_shortcode');
+
+/**
+ * ------------------------------------------------------------------------
+ * - Category Hero [sa_category_hero]
+ *   Full-width hero banner auto-featuring a product from the given category.
+ *   Pulls product image, name, short description, price from WooCommerce.
+ *   Attributes:
+ *     category  = product_cat slug (required)
+ *     heading   = h1 text override (default: category name)
+ *     subtitle  = subtitle text
+ *     cta_text  = CTA button label (default: "Se alle produkter")
+ *     cta_url   = CTA link (default: #sa-coffee-table)
+ *     product_id = force a specific product (default: auto-select featured/newest)
+ * ------------------------------------------------------------------------
+ */
+function sa_category_hero_shortcode($atts) {
+    $atts = shortcode_atts([
+        'category'   => '',
+        'heading'    => '',
+        'subtitle'   => '',
+        'cta_text'   => 'Se alle produkter',
+        'cta_url'    => '#sa-coffee-table',
+        'product_id' => '',
+    ], $atts, 'sa_category_hero');
+
+    // --- Resolve the product to feature ---
+    $product = null;
+
+    if ($atts['product_id']) {
+        $product = wc_get_product((int) $atts['product_id']);
+    }
+
+    if (!$product && $atts['category']) {
+        // Try featured/sticky first
+        $args = [
+            'post_type'      => 'product',
+            'posts_per_page' => 1,
+            'post_status'    => 'publish',
+            'meta_key'       => '_featured',
+            'meta_value'     => 'yes',
+            'tax_query'      => [[
+                'taxonomy' => 'product_cat',
+                'field'    => 'slug',
+                'terms'    => $atts['category'],
+            ]],
+        ];
+        $q = new WP_Query($args);
+        if ($q->have_posts()) {
+            $q->the_post();
+            $product = wc_get_product(get_the_ID());
+        }
+        wp_reset_postdata();
+
+        // Fallback: best-selling (total_sales) then newest
+        if (!$product) {
+            $args = [
+                'post_type'      => 'product',
+                'posts_per_page' => 1,
+                'post_status'    => 'publish',
+                'orderby'        => 'meta_value_num',
+                'meta_key'       => 'total_sales',
+                'order'          => 'DESC',
+                'tax_query'      => [[
+                    'taxonomy' => 'product_cat',
+                    'field'    => 'slug',
+                    'terms'    => $atts['category'],
+                ]],
+            ];
+            $q = new WP_Query($args);
+            if ($q->have_posts()) {
+                $q->the_post();
+                $product = wc_get_product(get_the_ID());
+            }
+            wp_reset_postdata();
+        }
+    }
+
+    // --- Category name for heading fallback ---
+    $heading = $atts['heading'];
+    if (!$heading && $atts['category']) {
+        $term = get_term_by('slug', $atts['category'], 'product_cat');
+        $heading = $term ? $term->name : 'Vores Kaffe';
+    }
+
+    // --- Product data ---
+    $prod_html = '';
+    if ($product) {
+        $pid       = $product->get_id();
+        $name      = $product->get_name();
+        $desc      = wp_strip_all_tags($product->get_short_description());
+        $permalink = get_permalink($pid);
+        $price_html = $product->get_price_html();
+        $img_id    = $product->get_image_id();
+        $img_url   = $img_id ? wp_get_attachment_image_url($img_id, 'medium_large') : wc_placeholder_img_src('medium_large');
+        $img_alt   = $img_id ? (get_post_meta($img_id, '_wp_attachment_image_alt', true) ?: $name) : $name;
+
+        // Pull ACF fields for specs
+        $origin  = function_exists('get_field') ? get_field('origin_country', $pid) : '';
+        if (!$origin) $origin = $product->get_attribute('pa_origin');
+        $process = $product->get_attribute('pa_process');
+        $roast   = $product->get_attribute('pa_roast');
+
+        $prod_html = '
+        <div class="sa-hero__product">
+            <a href="' . esc_url($permalink) . '" class="sa-hero__product-image">
+                <img src="' . esc_url($img_url) . '" alt="' . esc_attr($img_alt) . '" loading="eager">
+            </a>
+            <div class="sa-hero__product-info">
+                <span class="sa-hero__product-badge">Udvalgt</span>
+                <h3 class="sa-hero__product-name"><a href="' . esc_url($permalink) . '">' . esc_html($name) . '</a></h3>
+                ' . ($desc ? '<p class="sa-hero__product-desc">' . esc_html(wp_trim_words($desc, 20, '...')) . '</p>' : '') . '
+                <div class="sa-hero__product-meta">'
+                    . ($origin ? '<span>' . esc_html($origin) . '</span>' : '')
+                    . ($process ? '<span>' . esc_html($process) . '</span>' : '')
+                    . ($roast ? '<span>' . esc_html($roast) . '</span>' : '') .
+                '</div>
+                <div class="sa-hero__product-price">' . $price_html . '</div>
+                <div class="pe--button pb--bordered pb--normal sa-hero__product-btn">
+                    <div class="pe--button--wrapper">
+                        <a href="' . esc_url($permalink) . '">
+                            <span class="pb__main">Se produkt<span class="pb__hover">Se produkt</span></span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>';
+    }
+
+    $subtitle_html = $atts['subtitle']
+        ? '<p class="sa-hero__subtitle">' . esc_html($atts['subtitle']) . '</p>'
+        : '';
+
+    ob_start();
+    ?>
+    <div class="sa-hero">
+        <div class="sa-hero__inner">
+            <div class="sa-hero__text">
+                <h1 class="sa-hero__heading"><?php echo esc_html($heading); ?></h1>
+                <?php echo $subtitle_html; ?>
+                <div class="pe--button pb--background pb--normal sa-hero__cta">
+                    <div class="pe--button--wrapper">
+                        <a href="<?php echo esc_url($atts['cta_url']); ?>">
+                            <span class="pb__main"><?php echo esc_html($atts['cta_text']); ?><span class="pb__hover"><?php echo esc_html($atts['cta_text']); ?></span></span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <?php echo $prod_html; ?>
+        </div>
+    </div>
+    <?php
+    return ob_get_clean();
+}
+add_shortcode('sa_category_hero', 'sa_category_hero_shortcode');
+
+/**
+ * ------------------------------------------------------------------------
+ * - Product Showcase [sa_product_showcase]
+ *   Mid-page immersive product feature with tasting notes, origin, and
+ *   interactive hover. Auto-fetches products from WooCommerce.
+ *   Attributes:
+ *     category   = product_cat slug (required)
+ *     count      = number of products (default: 3)
+ *     heading    = section heading
+ *     exclude    = comma-separated product IDs to skip
+ *     orderby    = total_sales | date | rand | menu_order (default: total_sales)
+ * ------------------------------------------------------------------------
+ */
+function sa_product_showcase_shortcode($atts) {
+    $atts = shortcode_atts([
+        'category' => '',
+        'count'    => 3,
+        'heading'  => 'Udvalgte kaffer',
+        'exclude'  => '',
+        'orderby'  => 'total_sales',
+    ], $atts, 'sa_product_showcase');
+
+    $args = [
+        'post_type'      => 'product',
+        'posts_per_page' => (int) $atts['count'],
+        'post_status'    => 'publish',
+    ];
+
+    // Order
+    if ($atts['orderby'] === 'total_sales') {
+        $args['orderby']  = 'meta_value_num';
+        $args['meta_key'] = 'total_sales';
+        $args['order']    = 'DESC';
+    } else {
+        $args['orderby'] = $atts['orderby'];
+        $args['order']   = ($atts['orderby'] === 'date') ? 'DESC' : 'ASC';
+    }
+
+    if ($atts['category']) {
+        $args['tax_query'] = [[
+            'taxonomy' => 'product_cat',
+            'field'    => 'slug',
+            'terms'    => array_map('trim', explode(',', $atts['category'])),
+        ]];
+    }
+
+    if ($atts['exclude']) {
+        $args['post__not_in'] = array_map('intval', explode(',', $atts['exclude']));
+    }
+
+    $products = new WP_Query($args);
+    if (!$products->have_posts()) return '';
+
+    ob_start();
+    ?>
+    <div class="sa-showcase">
+        <div class="sa-showcase__header">
+            <h2 class="sa-showcase__heading"><?php echo esc_html($atts['heading']); ?></h2>
+            <p class="sa-showcase__sub">Håndplukket af vores ristere</p>
+        </div>
+        <div class="sa-showcase__grid">
+            <?php while ($products->have_posts()) : $products->the_post();
+                global $product;
+                if (!$product || !is_a($product, 'WC_Product')) continue;
+
+                $pid        = $product->get_id();
+                $name       = $product->get_name();
+                $permalink  = get_permalink($pid);
+                $price_html = $product->get_price_html();
+                $desc       = wp_strip_all_tags($product->get_short_description());
+                $img_id     = $product->get_image_id();
+                $img_url    = $img_id ? wp_get_attachment_image_url($img_id, 'medium_large') : wc_placeholder_img_src('medium_large');
+                $img_alt    = $img_id ? (get_post_meta($img_id, '_wp_attachment_image_alt', true) ?: $name) : $name;
+
+                // Meta
+                $origin  = function_exists('get_field') ? get_field('origin_country', $pid) : '';
+                if (!$origin) $origin = $product->get_attribute('pa_origin');
+                $process = $product->get_attribute('pa_process');
+                $roast   = $product->get_attribute('pa_roast');
+
+                // Highlights
+                $notes = [];
+                if (function_exists('get_field')) {
+                    $h1 = get_field('highlight_1', $pid);
+                    $h2 = get_field('highlight_2', $pid);
+                    $h3 = get_field('highlight_3', $pid);
+                    if ($h1) $notes[] = $h1;
+                    if ($h2) $notes[] = $h2;
+                    if ($h3) $notes[] = $h3;
+                }
+            ?>
+            <div class="sa-showcase__card">
+                <a href="<?php echo esc_url($permalink); ?>" class="sa-showcase__image">
+                    <img src="<?php echo esc_url($img_url); ?>" alt="<?php echo esc_attr($img_alt); ?>" loading="lazy">
+                    <?php if ($roast) : ?>
+                        <span class="sa-showcase__roast"><?php echo esc_html($roast); ?></span>
+                    <?php endif; ?>
+                </a>
+                <div class="sa-showcase__body">
+                    <h3 class="sa-showcase__name"><a href="<?php echo esc_url($permalink); ?>"><?php echo esc_html($name); ?></a></h3>
+                    <?php if ($origin || $process) : ?>
+                        <div class="sa-showcase__origin">
+                            <?php if ($origin) : ?><span><?php echo esc_html($origin); ?></span><?php endif; ?>
+                            <?php if ($process) : ?><span><?php echo esc_html($process); ?></span><?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                    <?php if (!empty($notes)) : ?>
+                        <div class="sa-showcase__notes">
+                            <?php foreach ($notes as $note) : ?>
+                                <span class="sa-showcase__note"><?php echo esc_html($note); ?></span>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                    <div class="sa-showcase__footer">
+                        <div class="sa-showcase__price"><?php echo $price_html; ?></div>
+                        <div class="pe--button pb--bordered pb--small sa-showcase__btn">
+                            <div class="pe--button--wrapper">
+                                <a href="<?php echo esc_url($permalink); ?>">
+                                    <span class="pb__main">Se produkt<span class="pb__hover">Se produkt</span></span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php endwhile; ?>
+        </div>
+    </div>
+    <?php
+    wp_reset_postdata();
+    return ob_get_clean();
+}
+add_shortcode('sa_product_showcase', 'sa_product_showcase_shortcode');
