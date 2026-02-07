@@ -1874,6 +1874,613 @@ Template: saren
     text-align: center;
 }
 
+/* ========================================
+   6. Recipe Page (.sa-recipe)
+   Interactive brew guide — mobile-first, QR-scan landing
+   ======================================== */
+
+/* --- 6A. Recipe Wrapper --- */
+.sa-recipe {
+    max-width: 540px;
+    margin: 0 auto;
+    padding: 0 1rem 3rem;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.sa-recipe__section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 2.5rem 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--linesColor);
+}
+
+/* --- 6B. Recipe Hero --- */
+.sa-recipe__hero {
+    text-align: center;
+    padding: 2.5rem 1rem 2rem;
+}
+
+.sa-recipe__roast-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.3em 0.9em;
+    border: 1px solid var(--linesColor);
+    border-radius: 20px;
+    margin-bottom: 0.75rem;
+}
+
+.sa-recipe__title {
+    font-size: clamp(1.6rem, 5vw, 2.2rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin: 0 0 0.35rem;
+    line-height: 1.15;
+}
+
+.sa-recipe__origin {
+    font-size: 0.85rem;
+    color: var(--secondaryColor);
+    margin: 0;
+}
+
+/* --- 6C. Brew Method Selector --- */
+.sa-recipe__methods {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.sa-recipe__method {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.75rem 0.25rem;
+    background: var(--secondaryBackground);
+    border: 1px solid var(--linesColor);
+    border-radius: var(--radius, 7.5px);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(.19, 1, .22, 1);
+    position: relative;
+    overflow: hidden;
+    color: var(--mainColor);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.sa-recipe__method::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--mainColor);
+    transform: scaleX(0);
+    transition: transform 0.3s cubic-bezier(.19, 1, .22, 1);
+}
+
+.sa-recipe__method.active {
+    border-color: var(--mainColor);
+}
+
+.sa-recipe__method.active::after {
+    transform: scaleX(1);
+}
+
+.sa-recipe__method:hover {
+    border-color: var(--mainColor);
+}
+
+.sa-recipe__method-icon {
+    opacity: 0.6;
+    transition: opacity 0.3s;
+}
+
+.sa-recipe__method.active .sa-recipe__method-icon {
+    opacity: 1;
+}
+
+.sa-recipe__method-name {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.sa-recipe__method-time {
+    font-size: 0.6rem;
+    color: var(--secondaryColor);
+}
+
+/* --- 6D. Recipe Card --- */
+.sa-recipe__card {
+    background: var(--secondaryBackground);
+    border: 1px solid var(--linesColor);
+    border-radius: var(--radius, 7.5px);
+    overflow: hidden;
+}
+
+/* --- 6E. Recipe Parameters --- */
+.sa-recipe__params-wrap {
+    padding: 1.25rem;
+    border-bottom: 1px solid var(--linesColor);
+}
+
+.sa-recipe__params {
+    display: none;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.25rem;
+    text-align: center;
+}
+
+.sa-recipe__params.active {
+    display: grid;
+    animation: sa-fadeIn 0.3s ease;
+}
+
+@keyframes sa-fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.sa-recipe__param {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.sa-recipe__param-value {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+}
+
+.sa-recipe__param-label {
+    font-size: 0.6rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--secondaryColor);
+}
+
+/* --- 6F. Grind Size Visualizer --- */
+.sa-recipe__grind {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--linesColor);
+}
+
+.sa-recipe__grind-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--secondaryColor);
+    margin-bottom: 0.5rem;
+}
+
+.sa-recipe__grind-track {
+    position: relative;
+    height: 4px;
+    background: var(--linesColor);
+    border-radius: 2px;
+}
+
+.sa-recipe__grind-marker {
+    position: absolute;
+    top: 50%;
+    left: 12%;
+    width: 14px;
+    height: 14px;
+    background: var(--mainColor);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: left 0.5s cubic-bezier(.19, 1, .22, 1);
+    box-shadow: 0 0 0 3px var(--secondaryBackground);
+}
+
+.sa-recipe__grind-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.6rem;
+    color: var(--secondaryColor);
+    margin-top: 0.35rem;
+}
+
+.sa-recipe__grind-dots {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    margin-top: 0.5rem;
+    min-height: 12px;
+}
+
+.sa-recipe__grind-dot {
+    display: block;
+    background: var(--mainColor);
+    border-radius: 50%;
+    transition: width 0.4s ease, height 0.4s ease;
+    opacity: 0.5;
+}
+
+/* --- 6G. Brew Steps --- */
+.sa-recipe__steps-wrap {
+    padding: 1.25rem;
+    border-bottom: 1px solid var(--linesColor);
+}
+
+.sa-recipe__steps {
+    display: none;
+}
+
+.sa-recipe__steps.active {
+    display: block;
+    animation: sa-fadeIn 0.3s ease;
+}
+
+.sa-recipe__steps-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.sa-recipe__steps-title {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--secondaryColor);
+}
+
+.sa-recipe__steps-progress {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--secondaryColor);
+    transition: color 0.3s;
+}
+
+.sa-recipe__steps.all-done .sa-recipe__steps-progress {
+    color: #4caf50;
+}
+
+.sa-recipe__step {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--linesColor);
+    position: relative;
+    transition: opacity 0.3s;
+}
+
+.sa-recipe__step:last-child {
+    border-bottom: none;
+}
+
+.sa-recipe__step.completed {
+    opacity: 0.4;
+}
+
+.sa-recipe__step-check {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--linesColor);
+    background: transparent;
+    cursor: pointer;
+    margin-top: 0.15rem;
+    position: relative;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.sa-recipe__step-check:hover {
+    border-color: var(--mainColor);
+}
+
+.sa-recipe__step.completed .sa-recipe__step-check {
+    background: var(--mainColor);
+    border-color: var(--mainColor);
+}
+
+.sa-recipe__step.completed .sa-recipe__step-check::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 6px;
+    width: 5px;
+    height: 9px;
+    border: solid var(--mainBackground);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.sa-recipe__step-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.sa-recipe__step-body strong {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.15rem;
+}
+
+.sa-recipe__step-body p {
+    font-size: 0.8rem;
+    color: var(--secondaryColor);
+    margin: 0;
+    line-height: 1.45;
+}
+
+.sa-recipe__step-time {
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--mainColor);
+    padding: 0.2em 0.6em;
+    background: var(--mainBackground);
+    border: 1px solid var(--linesColor);
+    border-radius: 12px;
+    margin-top: 0.2rem;
+    white-space: nowrap;
+}
+
+/* --- 6H. Brew Timer --- */
+.sa-recipe__timer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem 1.25rem;
+    border-bottom: 1px solid var(--linesColor);
+}
+
+.sa-recipe__timer-ring {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.sa-recipe__timer-ring svg {
+    display: block;
+}
+
+#sa-timer-ring {
+    transition: stroke-dashoffset 0.3s ease;
+}
+
+.sa-recipe__timer-display {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+}
+
+.sa-recipe__timer-done {
+    animation: sa-timerFlash 0.6s ease infinite alternate;
+}
+
+@keyframes sa-timerFlash {
+    from { opacity: 1; }
+    to { opacity: 0.3; }
+}
+
+.sa-recipe__timer-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* --- 6I. Pro Tip --- */
+.sa-recipe__tip {
+    display: none;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+
+.sa-recipe__tip.active {
+    display: flex;
+    animation: sa-fadeIn 0.3s ease;
+}
+
+.sa-recipe__tip-icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+}
+
+.sa-recipe__tip strong {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.2rem;
+}
+
+.sa-recipe__tip p {
+    margin: 0;
+    color: var(--secondaryColor);
+}
+
+/* --- 6J. Coffee Profile --- */
+.sa-recipe__profile {
+    margin-top: 1rem;
+}
+
+.sa-recipe__profile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.sa-recipe__profile-detail {
+    background: var(--secondaryBackground);
+    border: 1px solid var(--linesColor);
+    border-radius: var(--radius, 7.5px);
+    padding: 0.75rem;
+}
+
+.sa-recipe__profile-label {
+    display: block;
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--secondaryColor);
+    margin-bottom: 0.2rem;
+}
+
+.sa-recipe__profile-value {
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.sa-recipe__profile-notes {
+    margin-top: 0.75rem;
+    background: var(--secondaryBackground);
+    border: 1px solid var(--linesColor);
+    border-radius: var(--radius, 7.5px);
+    padding: 0.75rem;
+}
+
+.sa-recipe__profile-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.35rem;
+}
+
+.sa-recipe__tag {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 0.25em 0.7em;
+    border: 1px solid var(--linesColor);
+    border-radius: 14px;
+    background: var(--mainBackground);
+}
+
+/* --- 6K. Read More Guides --- */
+.sa-recipe__guides-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+}
+
+.sa-recipe__guide-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--secondaryBackground);
+    border: 1px solid var(--linesColor);
+    border-radius: var(--radius, 7.5px);
+    text-decoration: none;
+    color: var(--mainColor);
+    transition: border-color 0.2s, transform 0.2s;
+}
+
+.sa-recipe__guide-card:hover {
+    border-color: var(--mainColor);
+    transform: translateY(-1px);
+}
+
+.sa-recipe__guide-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--mainBackground);
+    border-radius: 50%;
+    border: 1px solid var(--linesColor);
+}
+
+.sa-recipe__guide-icon svg {
+    opacity: 0.7;
+}
+
+.sa-recipe__guide-text {
+    min-width: 0;
+}
+
+.sa-recipe__guide-text strong {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.sa-recipe__guide-text span {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--secondaryColor);
+    line-height: 1.35;
+}
+
+/* --- 6L. Footer CTA --- */
+.sa-recipe__footer {
+    text-align: center;
+    padding: 2rem 0;
+}
+
+.sa-recipe__footer p {
+    font-size: 0.75rem;
+    color: var(--secondaryColor);
+    margin: 0 0 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 500;
+}
+
+.sa-recipe__footer .pe--button {
+    display: inline-block;
+}
+
+/* --- 6M. Recipe Responsive --- */
+@media (max-width: 400px) {
+    .sa-recipe__params {
+        grid-template-columns: repeat(3, 1fr);
+        row-gap: 0.75rem;
+    }
+
+    .sa-recipe__method-name {
+        font-size: 0.6rem;
+    }
+
+    .sa-recipe__method-time {
+        display: none;
+    }
+}
+
+@media (min-width: 541px) {
+    .sa-recipe {
+        max-width: 600px;
+    }
+
+    .sa-recipe__guides-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
 /* --- 5F. Freshness Badge --- */
 .sa-freshness {
     display: inline-flex;
