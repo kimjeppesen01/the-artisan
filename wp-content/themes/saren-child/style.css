@@ -2545,6 +2545,96 @@ Template: saren
     }
 }
 
+/* --- 6N. Recipe App Enhancements --- */
+
+.sa-recipe__hero {
+    background: linear-gradient(180deg, var(--secondaryBackground) 0%, transparent 100%);
+    border-radius: var(--radius, 7.5px) var(--radius, 7.5px) 0 0;
+}
+
+.sa-recipe__method:active {
+    transform: scale(0.96);
+    transition-duration: 0.1s;
+}
+
+.sa-recipe__method.active {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.sa-recipe__card {
+    box-shadow: 0 2px 16px rgba(0,0,0,0.04);
+}
+
+.sa-recipe__step.completed .sa-recipe__step-body strong {
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--secondaryColor);
+}
+
+.sa-recipe__step.completed .sa-recipe__step-check {
+    transform: scale(1.08);
+}
+
+.sa-recipe__step--active {
+    position: relative;
+}
+
+.sa-recipe__step--active::before {
+    content: '';
+    position: absolute;
+    left: -1.25rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--mainColor);
+    border-radius: 1px;
+    animation: sa-fadeIn 0.3s ease;
+}
+
+.sa-recipe__timer--running #sa-timer-ring {
+    filter: drop-shadow(0 0 6px var(--mainColor));
+}
+
+.sa-recipe__step-time:active {
+    transform: scale(0.94);
+    transition-duration: 0.1s;
+}
+
+.sa-recipe__step-check:active {
+    transform: scale(0.9);
+    transition-duration: 0.1s;
+}
+
+.sa-recipe__lang-toggle:active {
+    transform: scale(0.94);
+    transition-duration: 0.1s;
+}
+
+.sa-recipe__guide-card:active {
+    transform: scale(0.98);
+    transition-duration: 0.1s;
+}
+
+.sa-recipe__profile-detail {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sa-recipe__profile-detail:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.sa-recipe__steps.all-done .sa-recipe__steps-progress {
+    font-weight: 700;
+}
+
+.sa-recipe__step-time:focus-visible,
+.sa-recipe__step-check:focus-visible,
+.sa-recipe__method:focus-visible {
+    outline: 2px solid var(--mainColor);
+    outline-offset: 2px;
+}
+
 /* --- 5F. Freshness Badge --- */
 .sa-freshness {
     display: inline-flex;

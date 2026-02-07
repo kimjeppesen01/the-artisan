@@ -228,17 +228,28 @@
             this.timerInterval = setInterval(function () {
                 self.tickTimer();
             }, 1000);
+
+            // Highlight active step
+            if (this.activeStepMethod !== null && this.activeStepIndex !== null) {
+                var step = this.el.root.querySelector(
+                    '.sa-recipe__steps[data-method="' + this.activeStepMethod + '"] .sa-recipe__step[data-step="' + this.activeStepIndex + '"]'
+                );
+                if (step) step.classList.add('sa-recipe__step--active');
+            }
+            if (this.el.timer) this.el.timer.classList.add('sa-recipe__timer--running');
         },
 
         pauseTimer: function () {
             clearInterval(this.timerInterval);
             this.timerPaused = true;
             this.updateTimerControls();
+            if (this.el.timer) this.el.timer.classList.remove('sa-recipe__timer--running');
         },
 
         resumeTimer: function () {
             this.timerPaused = false;
             this.updateTimerControls();
+            if (this.el.timer) this.el.timer.classList.add('sa-recipe__timer--running');
 
             var self = this;
             this.timerInterval = setInterval(function () {
@@ -265,6 +276,12 @@
             var nextBtn = document.getElementById('sa-next-step');
             if (nextBtn) nextBtn.remove();
 
+            // Remove active step highlights
+            this.el.root.querySelectorAll('.sa-recipe__step--active').forEach(function (s) {
+                s.classList.remove('sa-recipe__step--active');
+            });
+            if (this.el.timer) this.el.timer.classList.remove('sa-recipe__timer--running');
+
             this.updateTimerControls();
         },
 
@@ -287,6 +304,7 @@
             if (this.el.timerDisplay) {
                 this.el.timerDisplay.classList.add('sa-recipe__timer-done');
             }
+            if (this.el.timer) this.el.timer.classList.remove('sa-recipe__timer--running');
 
             this.updateTimerControls();
             this.playChime();

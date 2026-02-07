@@ -166,7 +166,7 @@ $s = $strings[ $lang ];
             <span class="sa-recipe__profile-label" data-da="<?php echo esc_attr( $profile['tags_label']['da'] ); ?>" data-en="<?php echo esc_attr( $profile['tags_label']['en'] ); ?>"><?php echo esc_html( $profile['tags_label'][ $lang ] ); ?></span>
             <div class="sa-recipe__profile-tags">
                 <?php foreach ( $profile['tags'] as $tag ) : ?>
-                    <span class="sa-recipe__tag"><?php echo esc_html( $tag ); ?></span>
+                    <span class="sa-recipe__tag" data-da="<?php echo esc_attr( $tag['da'] ); ?>" data-en="<?php echo esc_attr( $tag['en'] ); ?>"><?php echo esc_html( $tag[ $lang ] ); ?></span>
                 <?php endforeach; ?>
             </div>
         </div>
