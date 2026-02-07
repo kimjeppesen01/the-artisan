@@ -603,6 +603,153 @@ add_filter('wp_nav_menu_args', function($args) {
 
 /**
  * ------------------------------------------------------------------------
+ * - Saren Article: Featured Image shortcode [sa_featured_image]
+ *   Pulls the current post's WP featured image into the .sa-hero-image container.
+ *   Attributes:
+ *     size     = WP image size (default: 'full')
+ *     max      = CSS max-height (default: '500px')
+ *     caption  = Custom caption text (default: uses attachment caption)
+ *     post_id  = Explicit post ID (default: current post)
+ *     url      = Manual image URL (overrides featured image)
+ *     alt      = Manual alt text
+ *     lazy     = 'true'/'false' (default: 'true')
+ * ------------------------------------------------------------------------
+ */
+function sa_featured_image_shortcode($atts) {
+    $atts = shortcode_atts([
+        'size'    => 'full',
+        'max'     => '500px',
+        'caption' => '',
+        'post_id' => '',
+        'url'     => '',
+        'alt'     => '',
+        'lazy'    => 'true',
+    ], $atts, 'sa_featured_image');
+
+    $post_id = $atts['post_id'] ? (int) $atts['post_id'] : get_the_ID();
+    $lazy    = ($atts['lazy'] === 'true') ? ' loading="lazy"' : '';
+
+    // Manual URL takes priority
+    if (!empty($atts['url'])) {
+        $img_url = esc_url($atts['url']);
+        $alt     = esc_attr($atts['alt'] ?: get_the_title($post_id));
+        $caption = $atts['caption'];
+    } else {
+        // Get WordPress featured image
+        $thumb_id = get_post_thumbnail_id($post_id);
+        if (!$thumb_id) return '';
+
+        $img_data = wp_get_attachment_image_src($thumb_id, $atts['size']);
+        if (!$img_data) return '';
+
+        $img_url = esc_url($img_data[0]);
+        $alt     = esc_attr($atts['alt'] ?: get_post_meta($thumb_id, '_wp_attachment_image_alt', true) ?: get_the_title($post_id));
+
+        // Caption: shortcode attr > attachment caption > empty
+        $caption = $atts['caption'] ?: wp_get_attachment_caption($thumb_id);
+    }
+
+    $max_height = esc_attr($atts['max']);
+    $caption_html = $caption ? '<figcaption>' . esc_html($caption) . '</figcaption>' : '';
+
+    return '<figure class="sa-hero-image">
+        <img src="' . $img_url . '" alt="' . $alt . '"' . $lazy . ' style="max-height:' . $max_height . '">
+        ' . $caption_html . '
+    </figure>';
+}
+add_shortcode('sa_featured_image', 'sa_featured_image_shortcode');
+
+/**
+ * ------------------------------------------------------------------------
+ * - Saren Article: Full article header [sa_article_header]
+ *   Outputs: breadcrumbs + category + h1 + subtitle + meta + hero image
+ *   Attributes:
+ *     category  = Category badge text (default: first post category)
+ *     subtitle  = Subtitle text (default: post excerpt)
+ *     author    = Author name (default: 'The Artisan')
+ *     date      = Date text (default: post modified date)
+ *     readtime  = Read time text (default: auto-calculated)
+ *     image     = 'true'/'false' — include featured image (default: 'true')
+ *     caption   = Image caption text
+ *     max       = Image max-height (default: '500px')
+ *     post_id   = Explicit post ID
+ * ------------------------------------------------------------------------
+ */
+function sa_article_header_shortcode($atts) {
+    $atts = shortcode_atts([
+        'category' => '',
+        'subtitle' => '',
+        'author'   => 'The Artisan',
+        'date'     => '',
+        'readtime' => '',
+        'image'    => 'true',
+        'caption'  => '',
+        'max'      => '500px',
+        'post_id'  => '',
+    ], $atts, 'sa_article_header');
+
+    $post_id = $atts['post_id'] ? (int) $atts['post_id'] : get_the_ID();
+    $post    = get_post($post_id);
+    if (!$post) return '';
+
+    // Category
+    $cat_text = $atts['category'];
+    if (!$cat_text) {
+        $cats = get_the_category($post_id);
+        $cat_text = $cats ? $cats[0]->name : '';
+    }
+
+    // Subtitle
+    $subtitle = $atts['subtitle'] ?: get_the_excerpt($post_id);
+
+    // Date
+    $date = $atts['date'] ?: 'Opdateret: ' . get_the_modified_date('F Y', $post_id);
+
+    // Read time (auto-calculate from content if not provided)
+    $readtime = $atts['readtime'];
+    if (!$readtime) {
+        $word_count = str_word_count(strip_tags($post->post_content));
+        $minutes    = max(1, ceil($word_count / 200));
+        $readtime   = $minutes . ' min. læsning';
+    }
+
+    // Breadcrumbs
+    $breadcrumbs = do_shortcode('[breadcrumb]');
+
+    ob_start();
+    ?>
+    <header class="sa-header">
+        <?php if ($breadcrumbs) : ?>
+            <div class="sa-breadcrumbs"><?php echo $breadcrumbs; ?></div>
+        <?php endif; ?>
+        <?php if ($cat_text) : ?>
+            <span class="sa-category"><?php echo esc_html($cat_text); ?></span>
+        <?php endif; ?>
+        <h1><?php echo esc_html(get_the_title($post_id)); ?></h1>
+        <?php if ($subtitle) : ?>
+            <p class="sa-subtitle"><?php echo esc_html($subtitle); ?></p>
+        <?php endif; ?>
+        <div class="sa-meta">
+            <span>Af <strong><?php echo esc_html($atts['author']); ?></strong></span>
+            <span class="sa-meta-divider">·</span>
+            <span><?php echo esc_html($date); ?></span>
+            <span class="sa-meta-divider">·</span>
+            <span><?php echo esc_html($readtime); ?></span>
+        </div>
+    </header>
+    <?php
+
+    // Featured image
+    if ($atts['image'] === 'true') {
+        echo do_shortcode('[sa_featured_image post_id="' . $post_id . '" caption="' . esc_attr($atts['caption']) . '" max="' . esc_attr($atts['max']) . '"]');
+    }
+
+    return ob_get_clean();
+}
+add_shortcode('sa_article_header', 'sa_article_header_shortcode');
+
+/**
+ * ------------------------------------------------------------------------
  * - Adds responsive labels, sorting, and search to tables with [data-table]
  * ------------------------------------------------------------------------
  */
@@ -646,3 +793,158 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 <?php
 }, 99);
+
+/**
+ * ------------------------------------------------------------------------
+ * - Product Page SEO: Product Schema shortcode [sa_product_schema]
+ *   Outputs JSON-LD Product structured data from WooCommerce product.
+ *   Attributes:
+ *     id = WooCommerce product ID (default: current post)
+ * ------------------------------------------------------------------------
+ */
+function sa_product_schema_shortcode($atts) {
+    $atts = shortcode_atts(['id' => ''], $atts, 'sa_product_schema');
+    $product_id = $atts['id'] ? (int) $atts['id'] : get_the_ID();
+    $product = wc_get_product($product_id);
+    if (!$product) return '';
+
+    $schema = [
+        '@context' => 'https://schema.org',
+        '@type'    => 'Product',
+        'name'        => $product->get_name(),
+        'description' => wp_strip_all_tags($product->get_short_description()),
+        'sku'         => $product->get_sku(),
+        'brand'       => [
+            '@type' => 'Brand',
+            'name'  => 'The Artisan',
+        ],
+        'offers' => [
+            '@type'         => 'Offer',
+            'url'           => get_permalink($product_id),
+            'priceCurrency' => get_woocommerce_currency(),
+            'price'         => $product->get_price(),
+            'availability'  => $product->is_in_stock()
+                ? 'https://schema.org/InStock'
+                : 'https://schema.org/OutOfStock',
+        ],
+    ];
+
+    // Image
+    $image_id = $product->get_image_id();
+    if ($image_id) {
+        $schema['image'] = wp_get_attachment_url($image_id);
+    }
+
+    // Optional ACF origin field
+    if (function_exists('get_field')) {
+        $origin = get_field('origin_country', $product_id);
+        if ($origin) {
+            $schema['countryOfOrigin'] = [
+                '@type' => 'Country',
+                'name'  => $origin,
+            ];
+        }
+    }
+
+    return '<script type="application/ld+json">' . wp_json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . '</script>';
+}
+add_shortcode('sa_product_schema', 'sa_product_schema_shortcode');
+
+/**
+ * ------------------------------------------------------------------------
+ * - Product Page SEO: FAQ Schema shortcodes
+ *   [sa_faq_schema] ... [/sa_faq_schema]  — wrapper, outputs accordion + JSON-LD
+ *   [sa_faq_item question="..."] answer [/sa_faq_item]  — individual Q&A
+ * ------------------------------------------------------------------------
+ */
+function sa_faq_schema_shortcode($atts, $content = '') {
+    global $sa_faq_items;
+    $sa_faq_items = [];
+    do_shortcode($content);
+
+    if (empty($sa_faq_items)) return '';
+
+    // Build visible accordion HTML
+    $html = '<div class="sa-faq-section">';
+    foreach ($sa_faq_items as $item) {
+        $html .= '<details class="sa-faq__item">';
+        $html .= '<summary>' . esc_html($item['question']) . '</summary>';
+        $html .= '<p>' . wp_kses_post($item['answer']) . '</p>';
+        $html .= '</details>';
+    }
+    $html .= '</div>';
+
+    // Build FAQPage JSON-LD
+    $entities = [];
+    foreach ($sa_faq_items as $item) {
+        $entities[] = [
+            '@type' => 'Question',
+            'name'  => $item['question'],
+            'acceptedAnswer' => [
+                '@type' => 'Answer',
+                'text'  => wp_strip_all_tags($item['answer']),
+            ],
+        ];
+    }
+
+    $schema = [
+        '@context'   => 'https://schema.org',
+        '@type'      => 'FAQPage',
+        'mainEntity' => $entities,
+    ];
+
+    $html .= '<script type="application/ld+json">' . wp_json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . '</script>';
+
+    return $html;
+}
+add_shortcode('sa_faq_schema', 'sa_faq_schema_shortcode');
+
+function sa_faq_item_shortcode($atts, $content = '') {
+    global $sa_faq_items;
+    $atts = shortcode_atts(['question' => ''], $atts, 'sa_faq_item');
+    if ($atts['question']) {
+        $sa_faq_items[] = [
+            'question' => $atts['question'],
+            'answer'   => trim($content),
+        ];
+    }
+    return '';
+}
+add_shortcode('sa_faq_item', 'sa_faq_item_shortcode');
+
+/**
+ * ------------------------------------------------------------------------
+ * - Product Page: Freshness badge shortcode [sa_freshness]
+ *   Shows a pulsing green dot with roast date.
+ *   Attributes:
+ *     id   = Product ID (default: current post)
+ *     date = Manual date string (overrides ACF field)
+ *     text = Custom trailing text (default: 'sendes inden 48 timer')
+ * ------------------------------------------------------------------------
+ */
+function sa_freshness_shortcode($atts) {
+    $atts = shortcode_atts([
+        'id'   => '',
+        'date' => '',
+        'text' => 'sendes inden 48 timer',
+    ], $atts, 'sa_freshness');
+
+    $product_id = $atts['id'] ? (int) $atts['id'] : get_the_ID();
+
+    // Get roast date: manual attr > ACF field > fallback
+    $roast_date = $atts['date'];
+    if (!$roast_date && function_exists('get_field')) {
+        $roast_date = get_field('roast_date', $product_id);
+    }
+    if (!$roast_date) {
+        $roast_date = date_i18n('j. F Y');
+    }
+
+    $trail = esc_html($atts['text']);
+
+    return '<span class="sa-freshness">'
+         . '<span class="sa-freshness__dot"></span>'
+         . '<span class="sa-freshness__text">Ristet <strong>' . esc_html($roast_date) . '</strong> &mdash; ' . $trail . '</span>'
+         . '</span>';
+}
+add_shortcode('sa_freshness', 'sa_freshness_shortcode');
