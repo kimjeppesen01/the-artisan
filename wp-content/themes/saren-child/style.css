@@ -3465,3 +3465,133 @@ Template: saren
     border: 1px solid var(--mainColor);
     border-radius: var(--radius, 7.5px);
 }
+
+/* ========================================
+   Commercial Landing Page Components
+   Used on: /da/kaffe/tilbud and similar
+   Scoped under .sa-product-page
+   ======================================== */
+
+/* --- Page header (replaces .sa-header for commercial pages) --- */
+.sa-page-header {
+    margin-bottom: 2.5rem;
+}
+
+.sa-page-header__badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--mainBackground);
+    background: var(--mainColor);
+    padding: 0.3em 0.8em;
+    border-radius: 3px;
+    margin-bottom: 1rem;
+}
+
+.sa-page-header__title {
+    font-size: clamp(2.2rem, 5vw, 3.5rem);
+    line-height: 1.1;
+    margin: 0 0 1rem;
+    letter-spacing: -0.03em;
+}
+
+.sa-page-header__subtitle {
+    font-size: 1.15rem;
+    color: var(--secondaryColor);
+    line-height: 1.65;
+    margin: 0 0 1.25rem;
+}
+
+.sa-page-header__meta {
+    font-size: 0.8rem;
+    color: var(--secondaryColor);
+    padding-top: 1rem;
+    border-top: 1px solid var(--linesColor);
+}
+
+/* --- Section heading & intro text (commercial pages) --- */
+.sa-section-heading {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    letter-spacing: -0.02em;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--linesColor);
+    margin: 3rem 0 1rem;
+}
+
+.sa-section-heading:first-child {
+    margin-top: 0;
+}
+
+.sa-section-intro {
+    font-size: 1rem;
+    line-height: 1.75;
+    margin-bottom: 1.25em;
+}
+
+.sa-section-intro a {
+    color: var(--mainColor);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.sa-section-intro a:hover {
+    opacity: 0.7;
+}
+
+/* ========================================
+   Offers Page — Product Grid & Badges
+   ======================================== */
+
+/* Offers grid: explicit 2 columns on desktop, stacked on mobile */
+.sa-offers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.sa-offers-grid .sa-coffee-card {
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .sa-offers-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Bordered button fix inside offer cards */
+.sa-offers-grid .pe--button.pb--bordered .pe--button--wrapper a {
+    border: 1px solid var(--mainColor);
+    border-radius: var(--radius, 7.5px);
+}
+
+/* Offer badge */
+.sa-offer-badge {
+    display: inline-block;
+    background: #e74c3c;
+    color: #fff;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.5rem;
+}
+
+/* Price with strikethrough for original price */
+.sa-coffee-card__prices {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.sa-coffee-card__price--old {
+    text-decoration: line-through;
+    opacity: 0.5;
+    font-size: 0.85rem !important;
+    font-weight: 400 !important;
+}
