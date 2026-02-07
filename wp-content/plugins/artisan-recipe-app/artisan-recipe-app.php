@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Artisan Recipe App
  * Description: Interactive coffee brewing guide — mobile-first, QR-scannable universal recipe page.
- * Version:     2.0.0
+ * Version:     2.1.0
  * Author:      The Artisan
  * Text Domain: artisan-recipe
  * Requires PHP: 7.4
@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'SARA_VERSION', '2.0.0' );
+define( 'SARA_VERSION', '2.1.0' );
 define( 'SARA_PLUGIN_FILE', __FILE__ );
 define( 'SARA_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SARA_PLUGIN_URL', plugin_dir_url( __FILE__ ) );

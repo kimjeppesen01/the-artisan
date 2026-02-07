@@ -3504,7 +3504,8 @@ Template: saren
 
 .sa-product-widget .pe--button.pb--bordered .pe--button--wrapper a,
 .sa-hero__product .pe--button.pb--bordered .pe--button--wrapper a,
-.sa-showcase__card .pe--button.pb--bordered .pe--button--wrapper a {
+.sa-showcase__card .pe--button.pb--bordered .pe--button--wrapper a,
+.sa-recipe .pe--button.pb--bordered .pe--button--wrapper a {
     border: 1px solid var(--mainColor);
     border-radius: var(--radius, 7.5px);
 }

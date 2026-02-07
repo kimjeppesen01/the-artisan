@@ -12,7 +12,8 @@ class SARA_Recipe_Shortcode {
         global $post;
         if ( ! $post ) return;
 
-        $found = has_shortcode( $post->post_content, 'sa_recipe' );
+        $content = $post->post_content ?? '';
+        $found = has_shortcode( $content, 'sa_recipe' );
 
         // Elementor stores content in postmeta
         if ( ! $found && class_exists( '\Elementor\Plugin' ) ) {
@@ -43,13 +44,17 @@ class SARA_Recipe_Shortcode {
         $current_path = trim( parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH ), '/' );
         $default_lang = ( strpos( $current_path, 'en' ) === 0 ) ? 'en' : 'da';
 
-        // Pass all data to JS
+        // Only pass what JS needs (method keys + grind positions, strings, lang)
+        $js_methods = [];
+        foreach ( $methods as $key => $m ) {
+            $js_methods[ $key ] = [ 'grind' => $m['grind'] ];
+        }
+
         wp_enqueue_script( 'sa-recipe-app' );
         wp_localize_script( 'sa-recipe-app', 'saRecipeData', [
-            'methods'     => $methods,
+            'methods'     => $js_methods,
             'strings'     => $strings,
             'defaultLang' => $default_lang,
-            'guides'      => $guides,
         ] );
 
         // Make data available to the template

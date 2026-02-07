@@ -29,6 +29,7 @@
             this.updateGrind(saRecipeData.methods[this.currentMethod].grind);
             this.loadState();
             this.updateAllProgress();
+            this.updateTimerControls();
         },
 
         cacheDOM: function () {
@@ -78,7 +79,7 @@
                     return;
                 }
 
-                // Step time pill → start timer
+                // Step time pill -> start timer
                 var timePill = e.target.closest('.sa-recipe__step-time');
                 if (timePill && timePill.dataset.seconds) {
                     var stepEl = timePill.closest('.sa-recipe__step');
@@ -120,7 +121,37 @@
             }
         },
 
-        // ── Method Switching ──
+        // -- Helpers --
+
+        // Update text content while preserving child elements (e.g. .pb__hover inside .pb__main)
+        setTextSafe: function (el, text) {
+            if (el.children.length > 0) {
+                var firstChild = el.childNodes[0];
+                if (firstChild && firstChild.nodeType === 3) {
+                    firstChild.textContent = text;
+                }
+            } else {
+                el.textContent = text;
+            }
+        },
+
+        // Update text in a Saren pe--button anchor (finds .pb__main and .pb__hover)
+        setButtonText: function (anchorEl, text) {
+            if (!anchorEl) return;
+            var mainSpan = anchorEl.querySelector('.pb__main');
+            var hoverSpan = anchorEl.querySelector('.pb__hover');
+            if (mainSpan) {
+                var textNode = mainSpan.childNodes[0];
+                if (textNode && textNode.nodeType === 3) {
+                    textNode.textContent = text;
+                }
+            }
+            if (hoverSpan) {
+                hoverSpan.textContent = text;
+            }
+        },
+
+        // -- Method Switching --
 
         switchMethod: function (methodKey) {
             if (!saRecipeData.methods[methodKey]) return;
@@ -149,7 +180,7 @@
             this.saveState();
         },
 
-        // ── Language Toggle ──
+        // -- Language Toggle --
 
         toggleLang: function () {
             this.currentLang = this.currentLang === 'da' ? 'en' : 'da';
@@ -160,14 +191,16 @@
         updateAllStrings: function () {
             var lang = this.currentLang;
             var strings = saRecipeData.strings[lang];
+            var self = this;
 
-            // data-i18n labels → look up in strings object
+            // data-i18n labels: look up in strings object, preserve child elements
             this.el.root.querySelectorAll('[data-i18n]').forEach(function (el) {
                 var key = el.dataset.i18n;
-                if (strings[key]) el.textContent = strings[key];
+                if (!strings[key]) return;
+                self.setTextSafe(el, strings[key]);
             });
 
-            // data-da / data-en content → swap textContent
+            // data-da / data-en content: swap textContent
             this.el.root.querySelectorAll('[data-da]').forEach(function (el) {
                 el.textContent = el.dataset[lang] || el.dataset.da;
             });
@@ -178,7 +211,7 @@
             });
         },
 
-        // ── Timer System ──
+        // -- Timer System --
 
         startTimer: function (seconds) {
             this.resetTimer();
@@ -255,6 +288,7 @@
                 this.el.timerDisplay.classList.add('sa-recipe__timer-done');
             }
 
+            this.updateTimerControls();
             this.playChime();
             this.vibrate([100, 50, 100]);
             this.showNextStepButton();
@@ -275,24 +309,20 @@
         },
 
         updateTimerControls: function () {
-            if (!this.el.timerStart) return;
+            if (!this.el.timerStartWrap) return;
             var strings = saRecipeData.strings[this.currentLang];
-            var mainSpan = this.el.timerStart.querySelector('.pb__main');
-            var hoverSpan = this.el.timerStart.querySelector('.pb__hover');
 
             if (this.timerRunning && !this.timerPaused) {
                 // Show pause
-                if (mainSpan) mainSpan.firstChild.textContent = strings.timer_pause;
-                if (hoverSpan) hoverSpan.textContent = strings.timer_pause;
-                if (this.el.timerStartWrap) this.el.timerStartWrap.style.display = '';
+                this.setButtonText(this.el.timerStart, strings.timer_pause);
+                this.el.timerStartWrap.style.display = '';
             } else if (this.timerPaused) {
-                // Show resume/start
-                if (mainSpan) mainSpan.firstChild.textContent = strings.timer_start;
-                if (hoverSpan) hoverSpan.textContent = strings.timer_start;
-                if (this.el.timerStartWrap) this.el.timerStartWrap.style.display = '';
+                // Show resume
+                this.setButtonText(this.el.timerStart, strings.timer_start);
+                this.el.timerStartWrap.style.display = '';
             } else {
-                // No timer active — hide start button
-                if (this.el.timerStartWrap) this.el.timerStartWrap.style.display = 'none';
+                // No timer active: hide start button
+                this.el.timerStartWrap.style.display = 'none';
             }
         },
 
@@ -302,7 +332,6 @@
 
             var strings = saRecipeData.strings[this.currentLang];
 
-            // Create using Saren button pattern
             var wrap = document.createElement('div');
             wrap.className = 'pe--button pb--background pb--small sa-recipe__next-step-wrap';
             wrap.id = 'sa-next-step';
@@ -320,7 +349,7 @@
             }
         },
 
-        // ── Steps System ──
+        // -- Steps System --
 
         toggleStep: function (stepEl) {
             stepEl.classList.toggle('completed');
@@ -409,7 +438,7 @@
             });
         },
 
-        // ── Grind Visualizer ──
+        // -- Grind Visualizer --
 
         updateGrind: function (position) {
             if (this.el.grindMarker) {
@@ -436,7 +465,7 @@
             }
         },
 
-        // ── Audio ──
+        // -- Audio --
 
         playChime: function () {
             try {
@@ -473,7 +502,7 @@
             }
         },
 
-        // ── Haptic ──
+        // -- Haptic --
 
         vibrate: function (pattern) {
             if (navigator.vibrate) {
@@ -481,7 +510,7 @@
             }
         },
 
-        // ── Scroll ──
+        // -- Scroll --
 
         scrollToTimer: function () {
             if (this.el.timer) {
@@ -489,7 +518,7 @@
             }
         },
 
-        // ── Local Storage ──
+        // -- Local Storage --
 
         saveState: function () {
             try {
