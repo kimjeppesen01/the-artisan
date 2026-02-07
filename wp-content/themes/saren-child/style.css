@@ -3836,3 +3836,55 @@ Template: saren
     font-size: 0.85rem !important;
     font-weight: 400 !important;
 }
+
+/* ========================================
+   FIX: pe--infobox--title contrast
+   White text on light gray was hard to read
+   ======================================== */
+.pe--infobox--title,
+.pe--infobox--title p {
+    color: var(--mainColor);
+}
+
+/* ========================================
+   FIX: quick-add-to-cart-btn size
+   Button was too small for good tap/click targets
+   ======================================== */
+button.quick-add-to-cart-btn {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0.5em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+button.quick-add-to-cart-btn .card-add-icon,
+button.quick-add-to-cart-btn .card-add-icon svg {
+    width: 1.5em;
+    height: 1.5em;
+}
+button.quick-add-to-cart-btn .card-add-icon svg {
+    fill: var(--mainColor);
+}
+button.quick-add-to-cart-btn svg.cart-loading {
+    width: 1.25em;
+    height: 1.25em;
+}
+
+/* ========================================
+   FIX: product-short-desc visibility
+   Ensure short description displays in product meta
+   ======================================== */
+.saren--product--meta .product-short-desc,
+.saren--product--main .product-short-desc {
+    display: block;
+    width: 100%;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    color: var(--secondaryColor);
+    margin-top: 0.5em;
+}
+.saren--product--meta .product-short-desc:empty,
+.saren--product--main .product-short-desc:empty {
+    display: none;
+}
