@@ -2250,6 +2250,15 @@ Template: saren
     border-radius: 12px;
     margin-top: 0.2rem;
     white-space: nowrap;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.sa-recipe__step-time:hover {
+    border-color: var(--mainColor);
+    background: var(--secondaryBackground);
 }
 
 /* --- 6H. Brew Timer --- */
@@ -2299,6 +2308,58 @@ Template: saren
 .sa-recipe__timer-controls {
     display: flex;
     gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.sa-recipe__timer-btn,
+.sa-recipe__next-step {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--mainColor);
+    padding: 0.35em 1em;
+    background: var(--mainBackground);
+    border: 1px solid var(--linesColor);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    font-family: inherit;
+}
+
+.sa-recipe__timer-btn:hover,
+.sa-recipe__next-step:hover {
+    border-color: var(--mainColor);
+}
+
+.sa-recipe__next-step {
+    background: var(--mainColor);
+    color: var(--mainBackground);
+    border-color: var(--mainColor);
+    animation: sa-fadeIn 0.3s ease;
+}
+
+/* --- 6H-b. Language Toggle --- */
+.sa-recipe__lang-toggle {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.3em 0.9em;
+    border: 1px solid var(--linesColor);
+    border-radius: 20px;
+    background: var(--mainBackground);
+    color: var(--mainColor);
+    cursor: pointer;
+    margin-top: 0.75rem;
+    transition: border-color 0.2s ease;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.sa-recipe__lang-toggle:hover {
+    border-color: var(--mainColor);
 }
 
 /* --- 6I. Pro Tip --- */
