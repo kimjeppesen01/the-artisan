@@ -10,6 +10,22 @@ Template: saren
 /* =Theme customization starts here
 -------------------------------------------------------------- */
 
+/* --- Global Fix: Reset parent-theme button padding on non-form buttons --- */
+/* Saren parent sets `padding: 1em 3em` on all <button> elements (style.css:1147).
+   This distorts circular/icon buttons and custom UI controls. Reset here. */
+.sa-back-to-top,
+.sa-recipe__step-check,
+.sa-recipe__method,
+.sa-feedback-btns button,
+.sa-coffee-table__expand,
+.sa-coffee-table__cart {
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    color: inherit;
+    line-height: inherit;
+}
+
 /* ========================================
    1. Header Menu Element - Hide on Desktop/iPad, Show on Phone Only
    Also fix white text on white container
@@ -2785,5 +2801,331 @@ Template: saren
 
     .sa-story--reverse .sa-story__img-accent {
         left: -0.5rem;
+    }
+}
+
+/* ========================================
+   7. Searchable Coffee Table (.sa-coffee-table)
+   SEO-focused product list with search, expand, quick-add
+   ======================================== */
+
+/* --- 7A. Search Bar --- */
+.sa-coffee-table__search {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.sa-coffee-table__search-icon {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.sa-coffee-table__search-input {
+    width: 100%;
+    padding: 0.7rem 0.85rem 0.7rem 2.5rem;
+    border: 1px solid var(--linesColor);
+    border-radius: var(--radius, 7.5px);
+    background: var(--secondaryBackground);
+    color: var(--mainColor);
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+.sa-coffee-table__search-input:focus {
+    border-color: var(--mainColor);
+}
+
+.sa-coffee-table__search-input::placeholder {
+    color: var(--secondaryColor);
+    opacity: 0.6;
+}
+
+/* --- 7B. Table Header --- */
+.sa-coffee-table__header {
+    display: grid;
+    grid-template-columns: 1fr 120px 90px 80px;
+    gap: 1rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--secondaryColor);
+    border-bottom: 1px solid var(--linesColor);
+}
+
+/* --- 7C. Product Row --- */
+.sa-coffee-table__row {
+    border-bottom: 1px solid var(--linesColor);
+    transition: background 0.15s;
+}
+
+.sa-coffee-table__row:last-child {
+    border-bottom: none;
+}
+
+.sa-coffee-table__row:hover {
+    background: var(--secondaryBackground);
+}
+
+.sa-coffee-table__main {
+    display: grid;
+    grid-template-columns: 1fr 120px 90px 80px;
+    gap: 1rem;
+    align-items: center;
+    padding: 0.75rem 1rem;
+}
+
+/* --- 7D. Product Image --- */
+.sa-coffee-table__image {
+    grid-row: 1;
+    grid-column: 1;
+    float: left;
+    margin-right: 0.75rem;
+}
+
+.sa-coffee-table__image img {
+    width: 52px;
+    height: 52px;
+    object-fit: cover;
+    border-radius: calc(var(--radius, 7.5px) - 2px);
+    display: block;
+    border: 1px solid var(--linesColor);
+}
+
+/* --- 7E. Product Info --- */
+.sa-coffee-table__info {
+    min-width: 0;
+    overflow: hidden;
+}
+
+.sa-coffee-table__name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--mainColor);
+    display: block;
+    line-height: 1.3;
+}
+
+.sa-coffee-table__name:hover {
+    opacity: 0.7;
+}
+
+.sa-coffee-table__desc {
+    font-size: 0.75rem;
+    color: var(--secondaryColor);
+    margin: 0.15rem 0 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.sa-coffee-table__meta {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+    flex-wrap: wrap;
+}
+
+.sa-coffee-table__meta span {
+    font-size: 0.65rem;
+    color: var(--secondaryColor);
+    padding: 0.15em 0.5em;
+    border: 1px solid var(--linesColor);
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+/* --- 7F. Price Column --- */
+.sa-coffee-table__price {
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-align: right;
+}
+
+.sa-coffee-table__price .woocommerce-Price-amount {
+    font-size: 0.8rem;
+}
+
+.sa-coffee-table__price del {
+    font-size: 0.7rem;
+    opacity: 0.5;
+}
+
+/* --- 7G. Actions Column --- */
+.sa-coffee-table__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    justify-content: flex-end;
+}
+
+.sa-coffee-table__expand {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--linesColor);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.3s ease, border-color 0.2s;
+    flex-shrink: 0;
+    padding: 0;
+    background: none;
+    color: var(--mainColor);
+}
+
+.sa-coffee-table__expand:hover {
+    border-color: var(--mainColor);
+}
+
+.sa-coffee-table__row.expanded .sa-coffee-table__expand {
+    transform: rotate(180deg);
+}
+
+.sa-coffee-table__cart {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--mainColor);
+    border-radius: 50%;
+    background: var(--mainColor);
+    color: var(--mainBackground);
+    cursor: pointer;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+    padding: 0;
+}
+
+.sa-coffee-table__cart:hover {
+    opacity: 0.8;
+}
+
+.sa-coffee-table__cart .quick--text {
+    display: none;
+}
+
+.sa-coffee-table__cart .card-add-icon svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}
+
+.sa-coffee-table__cart .cart-loading {
+    display: none;
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+    animation: sa-spin 0.8s linear infinite;
+}
+
+.sa-coffee-table__cart.loading .card-add-icon { display: none; }
+.sa-coffee-table__cart.loading .cart-loading { display: block; }
+
+@keyframes sa-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* --- 7H. Expandable Details --- */
+.sa-coffee-table__details {
+    display: none;
+    padding: 0 1rem 1rem 4.5rem;
+    animation: sa-fadeIn 0.25s ease;
+}
+
+.sa-coffee-table__row.expanded .sa-coffee-table__details {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+}
+
+.sa-coffee-table__highlights {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex: 1;
+}
+
+.sa-coffee-table__highlights li {
+    position: relative;
+    padding-left: 1.4rem;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    margin-bottom: 0.3rem;
+    color: var(--secondaryColor);
+}
+
+.sa-coffee-table__highlights li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.5em;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--mainColor);
+}
+
+.sa-coffee-table__link {
+    flex-shrink: 0;
+}
+
+/* --- 7I. Coffee Table Responsive --- */
+@media (max-width: 768px) {
+    .sa-coffee-table__header {
+        display: none;
+    }
+
+    .sa-coffee-table__main {
+        grid-template-columns: 1fr auto;
+        gap: 0;
+    }
+
+    .sa-coffee-table__info {
+        grid-column: 1 / -1;
+    }
+
+    .sa-coffee-table__image {
+        grid-column: 1 / -1;
+    }
+
+    .sa-coffee-table__price {
+        grid-column: 1;
+        text-align: left;
+        padding-top: 0.35rem;
+    }
+
+    .sa-coffee-table__actions {
+        grid-column: 2;
+        padding-top: 0.35rem;
+    }
+
+    .sa-coffee-table__details {
+        padding-left: 1rem;
+    }
+
+    .sa-coffee-table__row.expanded .sa-coffee-table__details {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .sa-coffee-table__desc {
+        -webkit-line-clamp: 1;
     }
 }
