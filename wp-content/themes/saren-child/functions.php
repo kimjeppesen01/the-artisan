@@ -253,14 +253,25 @@ function custom_breadcrumb() {
 
     // Single posts
     if (is_single()) {
-        // Category (first category only; adjust if you need hierarchy/primary-cat)
-        $category = get_the_category();
-        if ($category) {
-            $cat_link = get_category_link($category[0]->term_id);
-            echo '<span itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">';
-            echo '<a href="' . esc_url($cat_link) . '" itemprop="item"><span itemprop="name">' . esc_html($category[0]->name) . '</span></a>';
-            echo '<meta itemprop="position" content="' . $position++ . '" />';
-            echo '</span>';
+        // Category / taxonomy (posts: category; portfolio: project-categories)
+        if ($post->post_type === 'portfolio') {
+            $terms = get_the_terms($post->ID, 'project-categories');
+            if ($terms && !is_wp_error($terms)) {
+                $term = $terms[0];
+                echo '<span itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">';
+                echo '<a href="' . esc_url(get_term_link($term)) . '" itemprop="item"><span itemprop="name">' . esc_html($term->name) . '</span></a>';
+                echo '<meta itemprop="position" content="' . $position++ . '" />';
+                echo '</span>';
+            }
+        } else {
+            $category = get_the_category();
+            if ($category) {
+                $cat_link = get_category_link($category[0]->term_id);
+                echo '<span itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">';
+                echo '<a href="' . esc_url($cat_link) . '" itemprop="item"><span itemprop="name">' . esc_html($category[0]->name) . '</span></a>';
+                echo '<meta itemprop="position" content="' . $position++ . '" />';
+                echo '</span>';
+            }
         }
 
         // Current post (ACF override if present)
@@ -993,7 +1004,7 @@ function sa_coffee_table_shortcode($atts) {
 
     ob_start();
     ?>
-    <div class="sa-coffee-table">
+    <div class="sa-coffee-table" id="sa-coffee-table">
 
         <div class="sa-coffee-table__search">
             <svg class="sa-coffee-table__search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1307,12 +1318,18 @@ function sa_category_hero_shortcode($atts) {
         ? '<p class="sa-hero__subtitle">' . esc_html($atts['subtitle']) . '</p>'
         : '';
 
+    $breadcrumbs = do_shortcode('[breadcrumb]');
+
     ob_start();
     ?>
     <div class="sa-hero">
         <div class="sa-hero__inner">
-            <div class="sa-hero__text">
-                <h1 class="sa-hero__heading"><?php echo esc_html($heading); ?></h1>
+            <header class="sa-hero__header">
+                <div class="sa-hero__text">
+                    <?php if ($breadcrumbs) : ?>
+                        <div class="sa-breadcrumbs"><?php echo $breadcrumbs; ?></div>
+                    <?php endif; ?>
+                    <h1 class="sa-hero__heading"><?php echo esc_html($heading); ?></h1>
                 <?php echo $subtitle_html; ?>
                 <div class="pe--button pb--background pb--normal sa-hero__cta">
                     <div class="pe--button--wrapper">
@@ -1322,6 +1339,7 @@ function sa_category_hero_shortcode($atts) {
                     </div>
                 </div>
             </div>
+            </header>
             <?php echo $prod_html; ?>
         </div>
     </div>
