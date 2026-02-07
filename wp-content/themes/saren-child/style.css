@@ -734,13 +734,19 @@ Template: saren
 /* --- Image with Caption --- */
 .sa-image {
     margin: 2rem 0;
+    overflow: hidden;
+    border-radius: var(--radius, 7.5px);
+    background: linear-gradient(135deg, var(--secondaryBackground, #f8f8f8) 0%, rgba(0,0,0,0.03) 100%);
+    border: 1px solid var(--linesColor, rgba(0,0,0,0.08));
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
 }
 
 .sa-image img {
     width: 100%;
-    height: auto;
+    max-height: min(50vh, 420px);
+    object-fit: cover;
+    object-position: center;
     display: block;
-    border-radius: var(--radius, 7.5px);
 }
 
 .sa-image figcaption {
@@ -1206,13 +1212,38 @@ Template: saren
     color: var(--mainColor);
 }
 
+.sa-related-card__media {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 4/3;
+    max-height: 220px;
+    border-radius: var(--radius, 7.5px);
+    background: linear-gradient(135deg, var(--secondaryBackground, #f8f8f8) 0%, rgba(0,0,0,0.03) 100%);
+    border: 1px solid var(--linesColor, rgba(0,0,0,0.06));
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+    margin-bottom: 0.6rem;
+}
+
+.sa-related-card__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+
+/* Fallback when img is direct child (no __media wrapper) */
 .sa-related-card img {
     width: 100%;
     aspect-ratio: 4/3;
+    max-height: 220px;
     object-fit: cover;
+    object-position: center;
     border-radius: var(--radius, 7.5px);
     display: block;
     margin-bottom: 0.6rem;
+    border: 1px solid var(--linesColor, rgba(0,0,0,0.06));
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
 }
 
 .sa-related-card__title {
@@ -1564,9 +1595,13 @@ Template: saren
 .sa-coffee-card__image {
     width: 80px;
     height: 80px;
+    min-width: 80px;
+    min-height: 80px;
     border-radius: calc(var(--radius, 7.5px) - 2px);
     object-fit: cover;
     flex-shrink: 0;
+    border: 1px solid var(--linesColor, rgba(0,0,0,0.06));
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
 
 .sa-coffee-card__title {
@@ -3381,6 +3416,11 @@ Template: saren
     flex: 0 0 45%;
     display: block;
     overflow: hidden;
+    aspect-ratio: 4/3;
+    max-height: 320px;
+    border-radius: var(--radius, 7.5px);
+    background: linear-gradient(135deg, var(--secondaryBackground, #f8f8f8) 0%, rgba(0,0,0,0.03) 100%);
+    border: 1px solid var(--linesColor, rgba(0,0,0,0.08));
 }
 
 .sa-hero__product-image img {
