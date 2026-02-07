@@ -218,15 +218,8 @@ Template: saren
 
     .sa-sidebar {
         position: sticky;
-        top: 2rem;
-        align-self: start;
-        max-height: calc(100vh - 4rem);
-        overflow-y: auto;
-        scrollbar-width: none;
-    }
-
-    .sa-sidebar::-webkit-scrollbar {
-        display: none;
+        bottom: 2rem;
+        align-self: end;
     }
 }
 
@@ -790,6 +783,63 @@ Template: saren
 .sa-cta-banner .sa-btn {
     background: var(--mainBackground);
     color: var(--mainColor);
+}
+
+/* --- pe--button Integration (article containers) --- */
+.saren-article .pe--button {
+    display: inline-block;
+}
+
+.saren-article .pe--button.sa-btn--full {
+    display: block;
+    width: 100%;
+}
+
+.saren-article .pe--button.sa-btn--full .pe--button--wrapper {
+    width: 100%;
+}
+
+.saren-article .pe--button.sa-btn--full .pe--button--wrapper a {
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+
+/* CTA Banner: invert pe--button colors on dark background */
+.sa-cta-banner .pe--button.pb--background .pe--button--wrapper a {
+    background: var(--mainBackground);
+    color: var(--mainColor);
+}
+
+.sa-cta-banner .pe--button.pb--background .pe--button--wrapper a::before {
+    background: var(--secondaryBackground);
+}
+
+.sa-cta-banner .pe--button.pb--background .pe--button--wrapper a:hover {
+    color: var(--mainColor);
+}
+
+/* Product widget: button spacing */
+.sa-product-widget .pe--button {
+    margin-top: 0.75rem;
+}
+
+/* Feedback buttons: inline row */
+.sa-feedback-btns {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+/* Sidebar product button */
+.sa-sidebar-widget .saren--product--meta .pe--button {
+    width: 100%;
+}
+
+.sa-sidebar-widget .saren--product--meta .pe--button .pe--button--wrapper a {
+    display: block;
+    width: 100%;
+    text-align: center;
 }
 
 /* --- Tables --- */
@@ -1894,4 +1944,239 @@ Template: saren
     font-size: 0.7rem;
     color: var(--secondaryColor);
     margin-top: 0.15rem;
+}
+
+/* --- 5H. Coffee Card Purchase Button --- */
+.sa-coffee-card__action {
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid var(--linesColor);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.sa-coffee-card__price {
+    font-size: 1.1rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.sa-coffee-card__price small {
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: var(--secondaryColor);
+    display: block;
+    margin-top: 0.1rem;
+}
+
+.sa-coffee-card__action .pe--button {
+    font-size: 0.85em;
+}
+
+.sa-coffee-card__action .pe--button .pe--button--wrapper a {
+    padding: 0.55em 1.4em;
+    border-radius: var(--radius, 7.5px);
+    background: var(--mainColor);
+    color: var(--mainBackground);
+    text-decoration: none;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    display: inline-block;
+    position: relative;
+    overflow: hidden;
+}
+
+.sa-coffee-card__action .pe--button .pe--button--wrapper a:hover {
+    opacity: 0.85;
+    transform: translateY(-1px);
+}
+
+/* --- 5I. Story Section — 2-Column Text + Image --- */
+.sa-story {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+    margin: 3rem 0;
+    padding: 3rem 0;
+    border-top: 1px solid var(--linesColor);
+    border-bottom: 1px solid var(--linesColor);
+}
+
+.sa-story--reverse {
+    direction: rtl;
+}
+
+.sa-story--reverse > * {
+    direction: ltr;
+}
+
+.sa-story__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.sa-story__label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--secondaryColor);
+    margin-bottom: 0.5rem;
+}
+
+.sa-story__title {
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin: 0 0 1rem;
+}
+
+.sa-story__lead {
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: var(--secondaryColor);
+    margin: 0 0 1.5rem;
+}
+
+.sa-story__body {
+    font-size: 0.95rem;
+    line-height: 1.75;
+    margin: 0;
+}
+
+.sa-story__body p {
+    margin: 0 0 1rem;
+}
+
+.sa-story__body strong {
+    color: var(--mainColor);
+    font-weight: 600;
+}
+
+.sa-story__list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0 1.5rem;
+}
+
+.sa-story__list li {
+    position: relative;
+    padding-left: 1.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+    line-height: 1.65;
+}
+
+.sa-story__list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--mainColor);
+}
+
+.sa-story__highlight {
+    background: var(--secondaryBackground);
+    border-left: 3px solid var(--mainColor);
+    padding: 1rem 1.25rem;
+    margin: 1.25rem 0;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    border-radius: 0 var(--radius, 7.5px) var(--radius, 7.5px) 0;
+}
+
+.sa-story__visual {
+    position: relative;
+}
+
+.sa-story__img-wrap {
+    position: relative;
+    border-radius: var(--radius, 7.5px);
+    overflow: hidden;
+}
+
+.sa-story__img-wrap img {
+    width: 100%;
+    height: auto;
+    display: block;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+}
+
+.sa-story__img-accent {
+    position: absolute;
+    bottom: -1rem;
+    right: -1rem;
+    width: 55%;
+    border-radius: var(--radius, 7.5px);
+    overflow: hidden;
+    border: 3px solid var(--mainBackground);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+.sa-story--reverse .sa-story__img-accent {
+    right: auto;
+    left: -1rem;
+}
+
+.sa-story__img-accent img {
+    width: 100%;
+    height: auto;
+    display: block;
+    aspect-ratio: 1;
+    object-fit: cover;
+}
+
+.sa-story__img-badge {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    background: var(--mainColor);
+    color: var(--mainBackground);
+    padding: 0.4em 0.8em;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    z-index: 2;
+}
+
+.sa-story--reverse .sa-story__img-badge {
+    left: auto;
+    right: 1rem;
+}
+
+@media (max-width: 768px) {
+    .sa-story {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        padding: 2rem 0;
+    }
+
+    .sa-story--reverse {
+        direction: ltr;
+    }
+
+    .sa-story__visual {
+        order: -1;
+    }
+
+    .sa-story__img-accent {
+        width: 40%;
+        bottom: -0.75rem;
+        right: -0.5rem;
+    }
+
+    .sa-story--reverse .sa-story__img-accent {
+        left: -0.5rem;
+    }
 }
