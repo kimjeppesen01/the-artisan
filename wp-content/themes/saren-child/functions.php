@@ -675,28 +675,30 @@ add_shortcode('sa_featured_image', 'sa_featured_image_shortcode');
  * - Saren Article: Full article header [sa_article_header]
  *   Outputs: breadcrumbs + category + h1 + subtitle + meta + hero image
  *   Attributes:
- *     category  = Category badge text (default: first post category)
- *     subtitle  = Subtitle text (default: post excerpt)
- *     author    = Author name (default: 'The Artisan')
- *     date      = Date text (default: post modified date)
- *     readtime  = Read time text (default: auto-calculated)
- *     image     = 'true'/'false' — include featured image (default: 'true')
- *     caption   = Image caption text
- *     max       = Image max-height (default: '500px')
- *     post_id   = Explicit post ID
+ *     category   = Category badge text (default: first post category)
+ *     subtitle   = Subtitle text (default: post excerpt)
+ *     author     = Author name (default: 'The Artisan')
+ *     date       = Date text (default: post modified date)
+ *     readtime   = Read time text (default: auto-calculated)
+ *     image      = 'true'/'false' — include featured image (default: 'true')
+ *     breadcrumb = 'true'/'false' — include breadcrumbs (default: 'true'). Set to 'false' if [breadcrumb] is used separately before the header.
+ *     caption    = Image caption text
+ *     max        = Image max-height (default: '500px')
+ *     post_id    = Explicit post ID
  * ------------------------------------------------------------------------
  */
 function sa_article_header_shortcode($atts) {
     $atts = shortcode_atts([
-        'category' => '',
-        'subtitle' => '',
-        'author'   => 'The Artisan',
-        'date'     => '',
-        'readtime' => '',
-        'image'    => 'true',
-        'caption'  => '',
-        'max'      => '500px',
-        'post_id'  => '',
+        'category'   => '',
+        'subtitle'   => '',
+        'author'     => 'The Artisan',
+        'date'       => '',
+        'readtime'   => '',
+        'image'      => 'true',
+        'breadcrumb' => 'true',
+        'caption'    => '',
+        'max'        => '500px',
+        'post_id'    => '',
     ], $atts, 'sa_article_header');
 
     $post_id = $atts['post_id'] ? (int) $atts['post_id'] : get_the_ID();
@@ -724,8 +726,8 @@ function sa_article_header_shortcode($atts) {
         $readtime   = $minutes . ' min. læsning';
     }
 
-    // Breadcrumbs
-    $breadcrumbs = do_shortcode('[breadcrumb]');
+    // Breadcrumbs (omit if breadcrumb="false" — used when [breadcrumb] is placed separately)
+    $breadcrumbs = ($atts['breadcrumb'] === 'true') ? do_shortcode('[breadcrumb]') : '';
 
     ob_start();
     ?>
