@@ -1010,12 +1010,12 @@ function sa_coffee_table_shortcode($atts) {
 
         <div class="sa-coffee-table__search">
             <svg class="sa-coffee-table__search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" class="sa-coffee-table__search-input" id="sa-coffee-search" placeholder="Soeg efter kaffe, oprindelse, proces..." autocomplete="off">
+            <input type="text" class="sa-coffee-table__search-input" id="sa-coffee-search" placeholder="Søg efter kaffe" autocomplete="off">
         </div>
 
         <div class="sa-coffee-table__header">
             <span class="sa-coffee-table__col-product">Kaffe</span>
-            <span class="sa-coffee-table__col-origin">Oprindelse</span>
+            <span class="sa-coffee-table__col-description">Om kaffen</span>
             <span class="sa-coffee-table__col-price">Pris</span>
             <span class="sa-coffee-table__col-actions"></span>
         </div>

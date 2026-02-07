@@ -266,8 +266,8 @@ Template: saren
 
     .sa-sidebar {
         position: sticky;
-        bottom: 2rem;
-        align-self: end;
+        top: 6rem; /* Below sticky header */
+        align-self: start;
     }
 }
 
@@ -3031,7 +3031,7 @@ Template: saren
 
 .sa-coffee-table__search-input {
     width: 100%;
-    padding: 0.7rem 0.85rem 0.7rem 2.5rem;
+    padding: 0.7rem 0.85rem 0.7rem 2.75rem;
     border: 1px solid var(--linesColor);
     border-radius: var(--radius, 7.5px);
     background: var(--secondaryBackground);
@@ -3345,6 +3345,16 @@ Template: saren
     .sa-coffee-table__desc {
         -webkit-line-clamp: 1;
     }
+}
+
+/* --- 7J. Quick Shop Modal: Remove hover on variation rows --- */
+.quick-add-to-cart-popup .variations tr,
+.saren--popup--cart--product .variations tr {
+    transition: none;
+}
+.quick-add-to-cart-popup .variations tr:hover,
+.saren--popup--cart--product .variations tr:hover {
+    background: transparent !important;
 }
 
 /* ========================================
