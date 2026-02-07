@@ -2312,31 +2312,18 @@ Template: saren
     justify-content: center;
 }
 
-.sa-recipe__timer-btn,
-.sa-recipe__next-step {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--mainColor);
-    padding: 0.35em 1em;
-    background: var(--mainBackground);
-    border: 1px solid var(--linesColor);
-    border-radius: 14px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    -webkit-tap-highlight-color: transparent;
-    font-family: inherit;
-}
-
-.sa-recipe__timer-btn:hover,
-.sa-recipe__next-step:hover {
-    border-color: var(--mainColor);
-}
-
-.sa-recipe__next-step {
-    background: var(--mainColor);
-    color: var(--mainBackground);
-    border-color: var(--mainColor);
+.sa-recipe__timer-btn-wrap,
+.sa-recipe__next-step-wrap {
     animation: sa-fadeIn 0.3s ease;
+}
+
+.sa-recipe__next-step-wrap {
+    animation: sa-pulseIn 0.4s cubic-bezier(.19, 1, .22, 1);
+}
+
+@keyframes sa-pulseIn {
+    0%   { opacity: 0; transform: scale(0.9); }
+    100% { opacity: 1; transform: scale(1); }
 }
 
 /* --- 6H-b. Language Toggle --- */

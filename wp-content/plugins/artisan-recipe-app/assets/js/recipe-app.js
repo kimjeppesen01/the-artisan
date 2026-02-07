@@ -3,10 +3,9 @@
 
     if (typeof saRecipeData === 'undefined') return;
 
-    var CIRCUMFERENCE = 339.292; // 2 * PI * 54
+    var CIRCUMFERENCE = 339.29;
 
     var App = {
-        // State
         currentMethod: null,
         currentLang: 'da',
         timerInterval: null,
@@ -17,27 +16,18 @@
         activeStepIndex: null,
         activeStepMethod: null,
         audioCtx: null,
-
-        // DOM cache
         el: {},
 
         init: function () {
             this.cacheDOM();
             if (!this.el.root) return;
 
+            this.currentLang = saRecipeData.defaultLang || 'da';
+            this.currentMethod = Object.keys(saRecipeData.methods)[0];
+
             this.bindEvents();
-
-            // Set first method
-            var firstKey = Object.keys(saRecipeData.methods)[0];
-            this.currentMethod = firstKey;
-
-            // Generate initial grind dots
-            this.updateGrind(saRecipeData.methods[firstKey].grind);
-
-            // Restore saved state
+            this.updateGrind(saRecipeData.methods[this.currentMethod].grind);
             this.loadState();
-
-            // Update progress counters
             this.updateAllProgress();
         },
 
@@ -56,6 +46,7 @@
             this.el.timerDisplay = document.getElementById('sa-timer-display');
             this.el.timerControls = document.getElementById('sa-timer-controls');
             this.el.timerStart = document.getElementById('sa-timer-start');
+            this.el.timerStartWrap = document.getElementById('sa-timer-start-wrap');
             this.el.timerReset = document.getElementById('sa-timer-reset');
             this.el.timer = document.getElementById('sa-recipe-timer');
         },
@@ -77,8 +68,9 @@
                 });
             }
 
-            // Step check buttons
+            // Delegated clicks on recipe card
             this.el.root.addEventListener('click', function (e) {
+                // Step check
                 var checkBtn = e.target.closest('.sa-recipe__step-check');
                 if (checkBtn) {
                     var step = checkBtn.closest('.sa-recipe__step');
@@ -86,7 +78,7 @@
                     return;
                 }
 
-                // Step time pill = start timer for that step
+                // Step time pill → start timer
                 var timePill = e.target.closest('.sa-recipe__step-time');
                 if (timePill && timePill.dataset.seconds) {
                     var stepEl = timePill.closest('.sa-recipe__step');
@@ -101,16 +93,16 @@
                 }
 
                 // Next step button
-                var nextBtn = e.target.closest('#sa-next-step');
-                if (nextBtn) {
+                if (e.target.closest('#sa-next-step')) {
                     self.advanceToNextStep();
                     return;
                 }
             });
 
-            // Timer controls
+            // Timer start/pause
             if (this.el.timerStart) {
-                this.el.timerStart.addEventListener('click', function () {
+                this.el.timerStart.addEventListener('click', function (e) {
+                    e.preventDefault();
                     if (self.timerRunning && !self.timerPaused) {
                         self.pauseTimer();
                     } else if (self.timerPaused) {
@@ -119,8 +111,10 @@
                 });
             }
 
+            // Timer reset
             if (this.el.timerReset) {
-                this.el.timerReset.addEventListener('click', function () {
+                this.el.timerReset.addEventListener('click', function (e) {
+                    e.preventDefault();
                     self.resetTimer();
                 });
             }
@@ -132,32 +126,26 @@
             if (!saRecipeData.methods[methodKey]) return;
             this.currentMethod = methodKey;
 
-            // Toggle .active on method buttons
             this.el.methods.forEach(function (btn) {
-                btn.classList.toggle('active', btn.dataset.method === methodKey);
+                var isActive = btn.dataset.method === methodKey;
+                btn.classList.toggle('active', isActive);
+                btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
             });
 
-            // Toggle .active on params
             this.el.paramsSets.forEach(function (set) {
                 set.classList.toggle('active', set.dataset.method === methodKey);
             });
 
-            // Toggle .active on steps
             this.el.stepsSets.forEach(function (set) {
                 set.classList.toggle('active', set.dataset.method === methodKey);
             });
 
-            // Toggle .active on tips
             this.el.tips.forEach(function (tip) {
                 tip.classList.toggle('active', tip.dataset.method === methodKey);
             });
 
-            // Update grind
             this.updateGrind(saRecipeData.methods[methodKey].grind);
-
-            // Reset timer
             this.resetTimer();
-
             this.saveState();
         },
 
@@ -173,15 +161,20 @@
             var lang = this.currentLang;
             var strings = saRecipeData.strings[lang];
 
-            // data-i18n labels
+            // data-i18n labels → look up in strings object
             this.el.root.querySelectorAll('[data-i18n]').forEach(function (el) {
                 var key = el.dataset.i18n;
                 if (strings[key]) el.textContent = strings[key];
             });
 
-            // data-da / data-en content
+            // data-da / data-en content → swap textContent
             this.el.root.querySelectorAll('[data-da]').forEach(function (el) {
                 el.textContent = el.dataset[lang] || el.dataset.da;
+            });
+
+            // Guide card hrefs
+            this.el.root.querySelectorAll('.sa-recipe__guide-card[data-url-da]').forEach(function (a) {
+                a.href = lang === 'en' ? a.dataset.urlEn : a.dataset.urlDa;
             });
         },
 
@@ -228,14 +221,14 @@
             this.timerTotal = 0;
 
             if (this.el.timerDisplay) {
-                this.el.timerDisplay.textContent = '0:00';
+                this.el.timerDisplay.textContent = '00:00';
                 this.el.timerDisplay.classList.remove('sa-recipe__timer-done');
             }
             if (this.el.timerRing) {
                 this.el.timerRing.style.strokeDashoffset = CIRCUMFERENCE;
             }
 
-            // Remove next-step button if present
+            // Remove next-step button
             var nextBtn = document.getElementById('sa-next-step');
             if (nextBtn) nextBtn.remove();
 
@@ -258,18 +251,12 @@
             clearInterval(this.timerInterval);
             this.timerRunning = false;
 
-            // Flash animation
             if (this.el.timerDisplay) {
                 this.el.timerDisplay.classList.add('sa-recipe__timer-done');
             }
 
-            // Audio chime
             this.playChime();
-
-            // Haptic
             this.vibrate([100, 50, 100]);
-
-            // Show "Next Step" button
             this.showNextStepButton();
         },
 
@@ -277,12 +264,12 @@
             if (!this.el.timerDisplay) return;
             var mins = Math.floor(this.timerSeconds / 60);
             var secs = this.timerSeconds % 60;
-            this.el.timerDisplay.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
+            this.el.timerDisplay.textContent =
+                (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
         },
 
         updateTimerRing: function (progress) {
             if (!this.el.timerRing) return;
-            // progress 0 = empty ring (full dashoffset), 1 = full ring (0 offset)
             var offset = CIRCUMFERENCE * (1 - progress);
             this.el.timerRing.style.strokeDashoffset = offset;
         },
@@ -290,32 +277,46 @@
         updateTimerControls: function () {
             if (!this.el.timerStart) return;
             var strings = saRecipeData.strings[this.currentLang];
+            var mainSpan = this.el.timerStart.querySelector('.pb__main');
+            var hoverSpan = this.el.timerStart.querySelector('.pb__hover');
 
             if (this.timerRunning && !this.timerPaused) {
-                this.el.timerStart.textContent = strings.pause;
-                this.el.timerStart.style.display = '';
+                // Show pause
+                if (mainSpan) mainSpan.firstChild.textContent = strings.timer_pause;
+                if (hoverSpan) hoverSpan.textContent = strings.timer_pause;
+                if (this.el.timerStartWrap) this.el.timerStartWrap.style.display = '';
             } else if (this.timerPaused) {
-                this.el.timerStart.textContent = strings.start;
-                this.el.timerStart.style.display = '';
+                // Show resume/start
+                if (mainSpan) mainSpan.firstChild.textContent = strings.timer_start;
+                if (hoverSpan) hoverSpan.textContent = strings.timer_start;
+                if (this.el.timerStartWrap) this.el.timerStartWrap.style.display = '';
             } else {
-                this.el.timerStart.style.display = 'none';
+                // No timer active — hide start button
+                if (this.el.timerStartWrap) this.el.timerStartWrap.style.display = 'none';
             }
         },
 
         showNextStepButton: function () {
-            // Remove existing if any
             var existing = document.getElementById('sa-next-step');
             if (existing) existing.remove();
 
             var strings = saRecipeData.strings[this.currentLang];
-            var btn = document.createElement('button');
-            btn.type = 'button';
-            btn.id = 'sa-next-step';
-            btn.className = 'sa-recipe__next-step';
-            btn.textContent = strings.next_step;
+
+            // Create using Saren button pattern
+            var wrap = document.createElement('div');
+            wrap.className = 'pe--button pb--background pb--small sa-recipe__next-step-wrap';
+            wrap.id = 'sa-next-step';
+            wrap.innerHTML =
+                '<div class="pe--button--wrapper">' +
+                    '<a href="#" onclick="return false;">' +
+                        '<span class="pb__main">' + strings.next_step +
+                            '<span class="pb__hover">' + strings.next_step + '</span>' +
+                        '</span>' +
+                    '</a>' +
+                '</div>';
 
             if (this.el.timerControls) {
-                this.el.timerControls.appendChild(btn);
+                this.el.timerControls.appendChild(wrap);
             }
         },
 
@@ -329,53 +330,56 @@
         },
 
         advanceToNextStep: function () {
-            // Complete the active step
-            if (this.activeStepMethod !== null && this.activeStepIndex !== null) {
-                var stepsContainer = this.el.root.querySelector(
-                    '.sa-recipe__steps[data-method="' + this.activeStepMethod + '"]'
-                );
-                if (stepsContainer) {
-                    var currentStep = stepsContainer.querySelector(
-                        '.sa-recipe__step[data-step="' + this.activeStepIndex + '"]'
-                    );
-                    if (currentStep && !currentStep.classList.contains('completed')) {
-                        currentStep.classList.add('completed');
-                        this.vibrate([30]);
-                    }
+            if (this.activeStepMethod === null || this.activeStepIndex === null) return;
 
-                    this.updateProgress(stepsContainer);
+            var stepsContainer = this.el.root.querySelector(
+                '.sa-recipe__steps[data-method="' + this.activeStepMethod + '"]'
+            );
+            if (!stepsContainer) return;
 
-                    // Find next uncompleted step
-                    var allSteps = stepsContainer.querySelectorAll('.sa-recipe__step');
-                    var nextStep = null;
-                    for (var i = 0; i < allSteps.length; i++) {
-                        if (!allSteps[i].classList.contains('completed')) {
-                            nextStep = allSteps[i];
-                            break;
-                        }
-                    }
+            // Complete current step
+            var currentStep = stepsContainer.querySelector(
+                '.sa-recipe__step[data-step="' + this.activeStepIndex + '"]'
+            );
+            if (currentStep && !currentStep.classList.contains('completed')) {
+                currentStep.classList.add('completed');
+                this.vibrate([30]);
+            }
 
-                    if (nextStep) {
-                        // Scroll to next step
-                        nextStep.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            this.updateProgress(stepsContainer);
 
-                        // If next step has a timer, auto-start it
-                        var timePill = nextStep.querySelector('.sa-recipe__step-time');
-                        if (timePill && timePill.dataset.seconds) {
-                            this.activeStepIndex = parseInt(nextStep.dataset.step);
-                            this.startTimer(parseInt(timePill.dataset.seconds));
-                        } else {
-                            this.resetTimer();
-                        }
-                    } else {
-                        // All done
-                        this.resetTimer();
-                        var doneStrings = saRecipeData.strings[this.currentLang];
-                        if (this.el.timerDisplay) {
-                            this.el.timerDisplay.textContent = doneStrings.done;
-                        }
-                    }
+            // Find next uncompleted step
+            var allSteps = stepsContainer.querySelectorAll('.sa-recipe__step');
+            var nextStep = null;
+            for (var i = 0; i < allSteps.length; i++) {
+                if (!allSteps[i].classList.contains('completed')) {
+                    nextStep = allSteps[i];
+                    break;
                 }
+            }
+
+            if (nextStep) {
+                nextStep.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                // Auto-start timer if next step has one
+                var timePill = nextStep.querySelector('.sa-recipe__step-time');
+                if (timePill && timePill.dataset.seconds) {
+                    this.activeStepIndex = parseInt(nextStep.dataset.step);
+                    this.startTimer(parseInt(timePill.dataset.seconds));
+                } else {
+                    this.resetTimer();
+                    this.activeStepIndex = parseInt(nextStep.dataset.step);
+                }
+            } else {
+                // All done
+                this.resetTimer();
+                var strings = saRecipeData.strings[this.currentLang];
+                if (this.el.timerDisplay) {
+                    this.el.timerDisplay.textContent = strings.all_done;
+                    this.el.timerDisplay.classList.add('sa-recipe__timer-done');
+                }
+                this.playChime();
+                this.vibrate([100, 50, 100, 50, 100]);
             }
 
             this.saveState();
@@ -389,14 +393,13 @@
             var progressEl = stepsContainer.querySelector('.sa-recipe__steps-progress');
 
             if (progressEl) {
-                progressEl.textContent = completed.length + '/' + allSteps.length;
+                progressEl.textContent = completed.length + ' / ' + allSteps.length;
             }
 
-            if (completed.length === allSteps.length && allSteps.length > 0) {
-                stepsContainer.classList.add('all-done');
-            } else {
-                stepsContainer.classList.remove('all-done');
-            }
+            stepsContainer.classList.toggle(
+                'all-done',
+                completed.length === allSteps.length && allSteps.length > 0
+            );
         },
 
         updateAllProgress: function () {
@@ -421,7 +424,7 @@
             container.innerHTML = '';
 
             var baseSize = 2 + (position / 100) * 8;
-            var dotCount = 7;
+            var dotCount = 8;
 
             for (var i = 0; i < dotCount; i++) {
                 var dot = document.createElement('span');
@@ -443,25 +446,23 @@
                 var ctx = this.audioCtx;
                 var now = ctx.currentTime;
 
-                // First tone
                 var osc1 = ctx.createOscillator();
                 var gain1 = ctx.createGain();
                 osc1.connect(gain1);
                 gain1.connect(ctx.destination);
                 osc1.type = 'sine';
-                osc1.frequency.setValueAtTime(880, now); // A5
+                osc1.frequency.setValueAtTime(880, now);
                 gain1.gain.setValueAtTime(0.3, now);
                 gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
                 osc1.start(now);
                 osc1.stop(now + 0.4);
 
-                // Second tone (slightly delayed)
                 var osc2 = ctx.createOscillator();
                 var gain2 = ctx.createGain();
                 osc2.connect(gain2);
                 gain2.connect(ctx.destination);
                 osc2.type = 'sine';
-                osc2.frequency.setValueAtTime(1108.73, now + 0.15); // C#6
+                osc2.frequency.setValueAtTime(1108.73, now + 0.15);
                 gain2.gain.setValueAtTime(0, now);
                 gain2.gain.setValueAtTime(0.3, now + 0.15);
                 gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
@@ -512,7 +513,7 @@
                     }
                 }
 
-                localStorage.setItem('sa-recipe-' + saRecipeData.productId, JSON.stringify(state));
+                localStorage.setItem('sa-recipe-app', JSON.stringify(state));
             } catch (e) {
                 // Storage unavailable
             }
@@ -520,23 +521,20 @@
 
         loadState: function () {
             try {
-                var raw = localStorage.getItem('sa-recipe-' + saRecipeData.productId);
+                var raw = localStorage.getItem('sa-recipe-app');
                 if (!raw) return;
 
                 var state = JSON.parse(raw);
 
-                // Restore method
                 if (state.method && saRecipeData.methods[state.method]) {
                     this.switchMethod(state.method);
                 }
 
-                // Restore language
                 if (state.lang && (state.lang === 'da' || state.lang === 'en')) {
                     this.currentLang = state.lang;
                     this.updateAllStrings();
                 }
 
-                // Restore completed steps
                 if (state.completed) {
                     var self = this;
                     Object.keys(state.completed).forEach(function (method) {
@@ -556,7 +554,6 @@
         }
     };
 
-    // Boot
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function () { App.init(); });
     } else {
