@@ -15,6 +15,67 @@ function enqueue_parent_theme_style() {
 	wp_enqueue_style( 'saren-parent-style', get_template_directory_uri().'/style.css' );
 }
 
+/**
+ * Defer non-critical CSS to improve LCP (render-blocking reduction)
+ * Keeps saren/style, saren-child/style, plugins.css blocking for above-the-fold layout.
+ * Defers plugin/Elementor/WooCommerce styles that load below fold.
+ */
+function saren_defer_noncritical_css( $tag, $handle, $href, $media ) {
+	// Critical: never defer these (above-the-fold layout)
+	$critical = array(
+		'saren-parent-style',
+		'style',
+		'plugins',
+		'general-sans-font',
+	);
+	if ( in_array( $handle, $critical, true ) ) {
+		return $tag;
+	}
+	// Defer by handle
+	$defer_handles = array(
+		'widget-styles',
+		'elementor-frontend',
+		'elementor-post-',
+		'elementor-widget-spacer',
+		'woo-blocks',
+		'woocommerce-blocks',
+		'woocommerce-layout',
+		'woocommerce-smallscreen',
+		'woocommerce',
+		'material-icons-regular',
+		'mailin-front',
+		'jquery-selectBox',
+		'wc-blocks-style',
+		'yith-wcwl-main',
+		'yith-wcwl-font-awesome',
+		'yith-woocompare-frontend',
+		'pe-compare',
+		'brands',
+		'prettyPhoto',
+		'revslider',
+		'rs6',
+		'elementor-global',
+		'fonts',
+		'robotoslab',
+		'roboto',
+		'playfairdisplay',
+	);
+	foreach ( $defer_handles as $pattern ) {
+		if ( strpos( $handle, $pattern ) !== false ) {
+			return saren_defer_css_tag( $tag ) . '<noscript>' . $tag . '</noscript>';
+		}
+	}
+	// Defer Elementor post-{id}.css (dynamic handles)
+	if ( preg_match( '#/post-\d+\.css#', $href ) ) {
+		return saren_defer_css_tag( $tag ) . '<noscript>' . $tag . '</noscript>';
+	}
+	return $tag;
+}
+function saren_defer_css_tag( $tag ) {
+	return str_replace( array( "media='all'", 'media="all"' ), "media='print' onload=\"this.media='all'\"", $tag );
+}
+add_filter( 'style_loader_tag', 'saren_defer_noncritical_css', 10, 4 );
+
 // Make shipping phone field required at checkout
 add_filter('woocommerce_shipping_fields', 'make_shipping_phone_required', 10, 1);
 function make_shipping_phone_required($fields) {
