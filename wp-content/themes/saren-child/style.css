@@ -3888,3 +3888,33 @@ button.quick-add-to-cart-btn svg.cart-loading {
 .saren--product--main .product-short-desc:empty {
     display: none;
 }
+
+/* ========================================
+   Testimonials grid (anmeldelser pillar)
+   2-col grid for customer reviews
+   ======================================== */
+.sa-testimonials-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin: 2rem 0;
+}
+@media (max-width: 768px) {
+    .sa-testimonials-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Initials avatar for testimonials (when no image) */
+.sa-expert__initials {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--mainColor);
+    color: var(--mainBackground);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
