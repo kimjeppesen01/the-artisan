@@ -228,8 +228,8 @@ class AB2B_Public {
 
         $customer = $this->get_current_customer();
 
-        if (!$customer) {
-            return $this->render_access_denied();
+        if ( ! $customer ) {
+            return $this->render_welcome();
         }
 
         ob_start();
@@ -242,64 +242,36 @@ class AB2B_Public {
      */
     private function render_password_form($customer_slug) {
         $customer = AB2B_Customer::get_by_slug($customer_slug);
-        $company_name = $customer ? $customer->company_name : '';
+        if ( ! $customer ) {
+            return $this->render_welcome();
+        }
+        $company_name = $customer->company_name;
 
         ob_start();
         ?>
-        <div class="ab2b-login-form">
-            <div class="pe--account--login--popup pe--styled--popup">
+        <div class="ab2b-login-wrap">
+            <div class="ab2b-login-form ab2b-login-form--saren">
+                <p class="ab2b-login-title"><?php esc_html_e( 'B2B Portal Login', 'artisan-b2b-portal' ); ?></p>
+                <?php if ( $company_name ) : ?>
+                    <p class="ab2b-login-company"><?php echo esc_html( $company_name ); ?></p>
+                <?php endif; ?>
 
-                <div class="u-columns col2-set saren--login-sec login--active" id="ab2b_customer_login">
+                <form method="post" class="ab2b-password-form" action="">
+                    <?php wp_nonce_field( 'ab2b_customer_login', 'ab2b_login_nonce' ); ?>
+                    <input type="hidden" name="ab2b_customer_slug" value="<?php echo esc_attr( $customer_slug ); ?>">
+                    <input type="hidden" name="ab2b_customer_login" value="1">
 
-                    <div class="u-column1 col-1 login--col">
+                    <p class="form-row form-row-wide">
+                        <label for="ab2b_password"><?php esc_html_e( 'Password', 'artisan-b2b-portal' ); ?> <span class="required">*</span></label>
+                        <input type="password" name="ab2b_password" id="ab2b_password" class="input-text" autocomplete="current-password" required autofocus>
+                    </p>
 
-                        <p><?php esc_html_e('B2B Portal Login', 'artisan-b2b-portal'); ?></p>
+                    <p class="form-row">
+                        <button type="submit" class="ab2b-btn ab2b-btn-primary" name="login"><?php esc_html_e( 'Log in', 'artisan-b2b-portal' ); ?></button>
+                    </p>
+                </form>
 
-                        <?php if ($company_name) : ?>
-                            <p class="ab2b-login-company"><?php echo esc_html($company_name); ?></p>
-                        <?php endif; ?>
-
-                        <form method="post" class="woocommerce-form woocommerce-form-login login ab2b-password-form">
-                            <?php wp_nonce_field('ab2b_customer_login', 'ab2b_login_nonce'); ?>
-                            <input type="hidden" name="ab2b_customer_slug" value="<?php echo esc_attr($customer_slug); ?>">
-                            <input type="hidden" name="ab2b_customer_login" value="1">
-
-                            <p class="form-row form-row-wide">
-                                <label for="ab2b_password">
-                                    <?php esc_html_e('Password', 'artisan-b2b-portal'); ?>
-                                    <span class="required">*</span>
-                                </label>
-                                <input
-                                    class="input-text woocommerce-Input"
-                                    type="password"
-                                    name="ab2b_password"
-                                    id="ab2b_password"
-                                    autocomplete="current-password"
-                                    required
-                                    autofocus
-                                />
-                            </p>
-
-                            <p class="form-row">
-                                <button
-                                    type="submit"
-                                    class="woocommerce-form-login__submit woocommerce-button button"
-                                    name="login"
-                                    value="<?php esc_attr_e('Login', 'artisan-b2b-portal'); ?>"
-                                >
-                                    <?php esc_html_e('Login', 'artisan-b2b-portal'); ?>
-                                </button>
-                            </p>
-                        </form>
-
-                        <div class="login--form--heading lost--password-heading">
-                            <p><?php esc_html_e('Forgot your password? Contact your account manager.', 'artisan-b2b-portal'); ?></p>
-                        </div>
-
-                    </div>
-
-                </div>
-
+                <p class="ab2b-login-help"><?php esc_html_e( 'Forgot your password? Contact your account manager.', 'artisan-b2b-portal' ); ?></p>
             </div>
         </div>
         <?php
@@ -312,8 +284,8 @@ class AB2B_Public {
     public function render_shop($atts) {
         $customer = $this->get_current_customer();
 
-        if (!$customer) {
-            return $this->render_access_denied();
+        if ( ! $customer ) {
+            return $this->render_welcome();
         }
 
         ob_start();
@@ -327,8 +299,8 @@ class AB2B_Public {
     public function render_cart($atts) {
         $customer = $this->get_current_customer();
 
-        if (!$customer) {
-            return $this->render_access_denied();
+        if ( ! $customer ) {
+            return $this->render_welcome();
         }
 
         ob_start();
@@ -342,8 +314,8 @@ class AB2B_Public {
     public function render_orders($atts) {
         $customer = $this->get_current_customer();
 
-        if (!$customer) {
-            return $this->render_access_denied();
+        if ( ! $customer ) {
+            return $this->render_welcome();
         }
 
         ob_start();
@@ -352,17 +324,19 @@ class AB2B_Public {
     }
 
     /**
-     * Render access denied message
+     * Render welcome / landing message when no customer is found (e.g. /b2b-portal with no key/slug).
      */
-    private function render_access_denied() {
+    private function render_welcome() {
         ob_start();
         ?>
-        <div class="ab2b-access-denied">
-            <div class="ab2b-access-denied-content">
-                <span class="ab2b-access-icon">🔒</span>
-                <h2><?php esc_html_e('Access Required', 'artisan-b2b-portal'); ?></h2>
-                <p><?php esc_html_e('Please use the link provided by your account manager to access the B2B portal.', 'artisan-b2b-portal'); ?></p>
-                <p><?php esc_html_e('If you believe you should have access, please contact us.', 'artisan-b2b-portal'); ?></p>
+        <div class="ab2b-welcome">
+            <div class="ab2b-welcome__inner">
+                <div class="ab2b-welcome__icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="64" height="64"><path d="M0-240v-63q0-43 44-70t116-27q13 0 25 .5t23 2.5q-14 21-21 44t-7 50v53H0Zm240 0v-63q0-44 24.5-74.5T307-410q32-11 65-17.5t68-6.5q34 0 67 6.5t65 17.5q37 16 61.5 46.5T724-303v63H240Zm540 0v-53q0-26-6.5-49T753-386q11-2 22.5-2.5t23.5-.5q72 0 116 26.5t44 70.5v63H780ZM307-490q-66 0-108-42t-42-108q0-66 42-108t108-42q66 0 108 42t42 108q0 66-42 108t-108 42Zm346 0q-66 0-108-42t-42-108q0-66 42-108t108-42q66 0 108 42t42 108q0 66-42 108t-108 42ZM0-120v-63q0-44 44-71t116-27q13 0 25 1t24 3q-15 20-23 42.5T182-183H0Zm240 0v-63q0-45 24.5-75.5T307-410q32-11 65-17t68-6q34 0 67 6t65 17q37 15 61.5 46t24.5 75v63H240Zm540 0v-63q0-45-24.5-75.5T653-410q-32-11-65-17t-68-6q-34 0-67 6t-65 17q-37 15-61.5 46T246-183v63h534Zm-99-360q66 0 108-42t42-108q0-66-42-108t-108-42q-66 0-108 42t-42 108q0 66 42 108t108 42ZM154-440q-72 0-116-26.5T-6-537v-63q0-43 44-70t116-27q13 0 25 .5t23 2.5q-14 21-21 44t-7 50v53H154Zm652 0v-53q0-26 6.5-49t20.5-44q-11-2-22.5-2.5T779-590q-72 0-116 26.5T619-483v63h187Zm-326-40q-23 0-38.5-15.5T426-534q0-23 15.5-38.5T480-588q23 0 38.5 15.5T534-534q0 23-15.5 38.5T480-480Z" fill="currentColor"/></svg>
+                </div>
+                <h1 class="ab2b-welcome__title"><?php esc_html_e( 'B2B Portal', 'artisan-b2b-portal' ); ?></h1>
+                <p class="ab2b-welcome__lead"><?php esc_html_e( 'Welcome. Use the personal link from your account manager to sign in and place orders.', 'artisan-b2b-portal' ); ?></p>
+                <p class="ab2b-welcome__note"><?php esc_html_e( 'If you don’t have a link or need access, please contact us.', 'artisan-b2b-portal' ); ?></p>
             </div>
         </div>
         <?php

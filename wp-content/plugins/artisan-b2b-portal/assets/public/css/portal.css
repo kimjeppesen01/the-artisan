@@ -1493,7 +1493,16 @@ body.ab2b-modal-open {
 
 /* ========================================
    Login Form (Password Protected Access)
+   Saren-style: uses theme vars when available
    ======================================== */
+
+.ab2b-login-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+    padding: 2rem;
+}
 
 .ab2b-login-form {
     display: flex;
@@ -1503,68 +1512,135 @@ body.ab2b-modal-open {
     padding: 2rem;
 }
 
-.ab2b-login-content {
+.ab2b-login-form--saren {
+    width: 100%;
+    max-width: 420px;
+    min-height: 0;
+    padding: 2.5rem;
     background: var(--ab2b-card-bg);
     border: 1px solid var(--ab2b-border);
     border-radius: var(--ab2b-radius);
-    padding: 2.5rem;
-    width: 100%;
-    max-width: 400px;
     text-align: center;
 }
 
-.ab2b-login-icon {
-    font-size: 3rem;
-    display: block;
-    margin-bottom: 1rem;
-}
-
-.ab2b-login-content h2 {
-    margin: 0 0 0.5rem;
-    font-size: 1.5rem;
-}
-
-.ab2b-login-company {
+.ab2b-login-form--saren .ab2b-login-title {
+    margin: 0 0 0.25rem;
+    font-size: 1.25rem;
     font-weight: 600;
-    font-size: 1.1rem;
+    text-transform: uppercase;
     color: var(--ab2b-primary);
+}
+
+.ab2b-login-form--saren .ab2b-login-company {
+    margin: 0 0 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ab2b-primary);
+}
+
+.ab2b-login-form--saren .ab2b-password-form {
+    text-align: left;
     margin: 0 0 1rem;
 }
 
-.ab2b-login-content > p {
-    color: var(--ab2b-secondary);
-    margin-bottom: 1.5rem;
-}
-
-.ab2b-password-form {
-    text-align: left;
-}
-
-.ab2b-password-form .ab2b-form-group {
+.ab2b-login-form--saren .form-row {
     margin-bottom: 1.25rem;
 }
 
-.ab2b-password-form label {
+.ab2b-login-form--saren .form-row-wide label {
     display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
+    margin-bottom: 0.35rem;
+    font-size: 0.75rem;
+    color: var(--ab2b-secondary);
+    text-transform: uppercase;
 }
 
-.ab2b-password-form input[type="password"] {
+.ab2b-login-form--saren .form-row-wide .input-text {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    padding: 0.75rem 1rem;
+    background: var(--secondaryBackground, var(--ab2b-card-bg));
+    border: 1px solid var(--ab2b-border);
+    border-radius: 7px;
+    font-size: 1rem;
+    color: var(--ab2b-primary);
+}
+
+.ab2b-login-form--saren .form-row-wide .input-text:focus {
+    outline: none;
+    border-color: var(--mainColor, var(--ab2b-primary));
+}
+
+.ab2b-login-form--saren .ab2b-btn-primary {
+    display: block;
     width: 100%;
     padding: 0.75rem 1rem;
-    border: 1px solid var(--ab2b-border);
-    border-radius: var(--ab2b-radius);
+    background: var(--mainColor, var(--ab2b-primary)) !important;
+    color: var(--secondaryBackground, #fff) !important;
+    border: none;
+    border-radius: 5px;
     font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
 }
 
-.ab2b-password-form input[type="password"]:focus {
-    outline: none;
-    border-color: var(--ab2b-primary);
+.ab2b-login-form--saren .ab2b-btn-primary:hover {
+    opacity: 0.9;
 }
 
-.ab2b-login-help {
-    margin-top: 1.5rem;
-    font-size: 0.85rem;
+.ab2b-login-form--saren .ab2b-login-help {
+    margin: 0;
+    font-size: 0.8rem;
     color: var(--ab2b-secondary);
+}
+
+/* ========================================
+   Welcome / Landing (no customer id)
+   ======================================== */
+
+.ab2b-welcome {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    padding: 3rem 2rem;
+    text-align: center;
+}
+
+.ab2b-welcome__inner {
+    max-width: 480px;
+}
+
+.ab2b-welcome__icon {
+    margin-bottom: 1.5rem;
+    color: var(--mainColor, var(--ab2b-primary));
+}
+
+.ab2b-welcome__icon svg {
+    display: inline-block;
+    fill: currentColor;
+}
+
+.ab2b-welcome__title {
+    margin: 0 0 1rem;
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--ab2b-primary);
+    letter-spacing: 0.02em;
+}
+
+.ab2b-welcome__lead {
+    margin: 0 0 1rem;
+    font-size: 1.1rem;
+    line-height: 1.5;
+    color: var(--ab2b-secondary);
+}
+
+.ab2b-welcome__note {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--ab2b-secondary);
+    opacity: 0.9;
 }
