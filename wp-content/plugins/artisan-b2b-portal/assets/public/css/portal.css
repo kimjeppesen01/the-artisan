@@ -1498,6 +1498,7 @@ body.ab2b-modal-open {
 
 .ab2b-login-wrap {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     min-height: 60vh;
@@ -1506,6 +1507,7 @@ body.ab2b-modal-open {
 
 .ab2b-login-form {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     min-height: 60vh;
@@ -1594,6 +1596,12 @@ body.ab2b-modal-open {
     margin: 0;
     font-size: 0.8rem;
     color: var(--ab2b-secondary);
+}
+
+@media (max-width: 576px) {
+    .ab2b-login-form--saren .form-row-wide .input-text {
+        background-color: #f2f2f2;
+    }
 }
 
 /* ========================================
