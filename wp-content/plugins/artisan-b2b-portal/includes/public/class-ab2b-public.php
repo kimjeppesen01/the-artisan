@@ -247,30 +247,59 @@ class AB2B_Public {
         ob_start();
         ?>
         <div class="ab2b-login-form">
-            <div class="ab2b-login-content">
-                <span class="ab2b-login-icon">🔐</span>
-                <h2><?php esc_html_e('B2B Portal Login', 'artisan-b2b-portal'); ?></h2>
-                <?php if ($company_name) : ?>
-                    <p class="ab2b-login-company"><?php echo esc_html($company_name); ?></p>
-                <?php endif; ?>
-                <p><?php esc_html_e('Please enter your password to access the portal.', 'artisan-b2b-portal'); ?></p>
+            <div class="pe--account--login--popup pe--styled--popup">
 
-                <form method="post" class="ab2b-password-form">
-                    <?php wp_nonce_field('ab2b_customer_login', 'ab2b_login_nonce'); ?>
-                    <input type="hidden" name="ab2b_customer_slug" value="<?php echo esc_attr($customer_slug); ?>">
-                    <input type="hidden" name="ab2b_customer_login" value="1">
+                <div class="u-columns col2-set saren--login-sec login--active" id="ab2b_customer_login">
 
-                    <div class="ab2b-form-group">
-                        <label for="ab2b_password"><?php esc_html_e('Password', 'artisan-b2b-portal'); ?></label>
-                        <input type="password" id="ab2b_password" name="ab2b_password" required autofocus>
+                    <div class="u-column1 col-1 login--col">
+
+                        <p><?php esc_html_e('B2B Portal Login', 'artisan-b2b-portal'); ?></p>
+
+                        <?php if ($company_name) : ?>
+                            <p class="ab2b-login-company"><?php echo esc_html($company_name); ?></p>
+                        <?php endif; ?>
+
+                        <form method="post" class="woocommerce-form woocommerce-form-login login ab2b-password-form">
+                            <?php wp_nonce_field('ab2b_customer_login', 'ab2b_login_nonce'); ?>
+                            <input type="hidden" name="ab2b_customer_slug" value="<?php echo esc_attr($customer_slug); ?>">
+                            <input type="hidden" name="ab2b_customer_login" value="1">
+
+                            <p class="form-row form-row-wide">
+                                <label for="ab2b_password">
+                                    <?php esc_html_e('Password', 'artisan-b2b-portal'); ?>
+                                    <span class="required">*</span>
+                                </label>
+                                <input
+                                    class="input-text woocommerce-Input"
+                                    type="password"
+                                    name="ab2b_password"
+                                    id="ab2b_password"
+                                    autocomplete="current-password"
+                                    required
+                                    autofocus
+                                />
+                            </p>
+
+                            <p class="form-row">
+                                <button
+                                    type="submit"
+                                    class="woocommerce-form-login__submit woocommerce-button button"
+                                    name="login"
+                                    value="<?php esc_attr_e('Login', 'artisan-b2b-portal'); ?>"
+                                >
+                                    <?php esc_html_e('Login', 'artisan-b2b-portal'); ?>
+                                </button>
+                            </p>
+                        </form>
+
+                        <div class="login--form--heading lost--password-heading">
+                            <p><?php esc_html_e('Forgot your password? Contact your account manager.', 'artisan-b2b-portal'); ?></p>
+                        </div>
+
                     </div>
 
-                    <button type="submit" class="ab2b-btn ab2b-btn-primary ab2b-btn-full">
-                        <?php esc_html_e('Login', 'artisan-b2b-portal'); ?>
-                    </button>
-                </form>
+                </div>
 
-                <p class="ab2b-login-help"><?php esc_html_e('Forgot your password? Contact your account manager.', 'artisan-b2b-portal'); ?></p>
             </div>
         </div>
         <?php
