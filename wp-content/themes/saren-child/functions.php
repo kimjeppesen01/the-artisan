@@ -1544,3 +1544,59 @@ function sa_product_showcase_shortcode($atts) {
     return ob_get_clean();
 }
 add_shortcode('sa_product_showcase', 'sa_product_showcase_shortcode');
+
+/**
+ * Replace breadcrumb home link text (Forside/Home) with a house SVG icon.
+ */
+function saren_breadcrumb_home_svg( $html, $crumbs, $breadcrumbs ) {
+	if ( empty( $crumbs ) ) {
+		return $html;
+	}
+	$home_label = isset( $crumbs[0][0] ) ? $crumbs[0][0] : '';
+	$home_url   = isset( $crumbs[0][1] ) ? $crumbs[0][1] : home_url( '/' );
+	if ( empty( $home_label ) ) {
+		return $html;
+	}
+	$home_svg = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
+
+	// Replace first home link: <a href="...">LABEL</a> or <a href="..."><span ...>LABEL</span></a>
+	$label_escaped = preg_quote( $home_label, '#' );
+	$patterns      = array(
+		'#<a\s+href="[^"]*"[^>]*>\s*<span[^>]*>' . $label_escaped . '</span>\s*</a>#iu',
+		'#<a\s+href="[^"]*"[^>]*>\s*' . $label_escaped . '\s*</a>#iu',
+	);
+	$replacement = '<a href="' . esc_url( $home_url ) . '" aria-label="' . esc_attr( $home_label ) . '">' . $home_svg . '</a>';
+	foreach ( $patterns as $pattern ) {
+		$new_html = preg_replace( $pattern, $replacement, $html, 1 );
+		if ( $new_html !== $html ) {
+			return $new_html;
+		}
+	}
+	return $html;
+}
+add_filter( 'rank_math/frontend/breadcrumb/html', 'saren_breadcrumb_home_svg', 10, 3 );
+
+/**
+ * Allow SVG elements in breadcrumb output (for house icon) so wp_kses_post preserves it.
+ */
+function saren_kses_allow_breadcrumb_svg( $allowed_tags, $context ) {
+	if ( 'post' !== $context ) {
+		return $allowed_tags;
+	}
+	$allowed_tags['svg'] = array(
+		'xmlns'       => true,
+		'width'       => true,
+		'height'      => true,
+		'viewbox'     => true,
+		'fill'        => true,
+		'stroke'      => true,
+		'stroke-width' => true,
+		'stroke-linecap' => true,
+		'stroke-linejoin' => true,
+		'aria-hidden' => true,
+	);
+	$allowed_tags['path']    = array( 'd' => true );
+	$allowed_tags['polyline'] = array( 'points' => true );
+	return $allowed_tags;
+}
+add_filter( 'wp_kses_allowed_html', 'saren_kses_allow_breadcrumb_svg', 10, 2 );

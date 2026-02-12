@@ -10,6 +10,36 @@ Template: saren
 /* =Theme customization starts here
 -------------------------------------------------------------- */
 
+/* --- Global Fix: Mobile tap highlight — use brand green instead of default black --- */
+/* On touch devices, -webkit-tap-highlight-color controls the tap flash. Default is gray/black. */
+a,
+button,
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+.pe--button--wrapper a,
+.sa-btn,
+.sa-feedback-btns button,
+.saren--cart--form,
+.sa-recipe__method,
+.sa-recipe__step-check,
+.sa-recipe__step-time,
+.sa-recipe__lang-toggle,
+.sa-recipe__guide-card,
+.sa-coffee-table__expand,
+.sa-coffee-table__cart,
+.woocommerce-message a.button,
+.sa-share-links a,
+.select-items div,
+[role="button"],
+#place_order,
+.sidebar-box .woocommerce-shipping-methods label,
+.single_add_to_cart_button,
+.quick-add-to-cart-btn {
+    -webkit-tap-highlight-color: var(--mainColor);
+    -webkit-tap-highlight-color: color-mix(in srgb, var(--mainColor) 30%, transparent);
+}
+
 /* --- Global Fix: Reset parent-theme button padding on non-form buttons --- */
 /* Saren parent sets `padding: 1em 3em` on all <button> elements (style.css:1147).
    This distorts circular/icon buttons and custom UI controls. Reset here. */
@@ -181,6 +211,13 @@ Template: saren
 .sa-hero .sa-breadcrumbs span,
 .project-hero .sa-breadcrumbs span {
     opacity: 0.85;
+}
+
+/* Breadcrumb home icon (house SVG) */
+.rank-math-breadcrumb a:first-of-type svg,
+.sa-breadcrumbs a:first-of-type svg {
+    display: inline-block;
+    vertical-align: middle;
 }
 
 .sa-category {
@@ -1531,26 +1568,27 @@ Template: saren
     color: var(--secondaryColor);
 }
 
-/* Product description — section + feature list (paste HTML with these classes) */
-.product-description .product-desc-section {
+/* Product description — section + feature list (paste HTML with these classes)
+   Broad selectors so styles apply on product pages regardless of wrapper */
+.product-desc-section {
     margin-bottom: 1.25em;
 }
-.product-description .product-desc-section h2 {
+.product-desc-section h2 {
     font-size: 0.9rem;
     font-weight: 600;
     margin: 0 0 0.5em;
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
-.product-description .product-desc-feature {
+.product-desc-feature {
     margin: 0.5em 0;
 }
-.product-description .product-desc-feature dt {
+.product-desc-feature dt {
     font-weight: 600;
     font-size: 0.85em;
     margin-bottom: 0.15em;
 }
-.product-description .product-desc-feature dd {
+.product-desc-feature dd {
     margin: 0 0 0.5em;
     padding-left: 0;
     font-size: 0.9em;
@@ -2061,7 +2099,6 @@ Template: saren
     position: relative;
     overflow: hidden;
     color: var(--mainColor);
-    -webkit-tap-highlight-color: transparent;
 }
 
 .sa-recipe__method::after {
@@ -2290,7 +2327,6 @@ Template: saren
     margin-top: 0.15rem;
     position: relative;
     transition: all 0.2s ease;
-    -webkit-tap-highlight-color: transparent;
 }
 
 .sa-recipe__step-check:hover {
@@ -2347,7 +2383,6 @@ Template: saren
     cursor: pointer;
     transition: border-color 0.2s ease, background 0.2s ease;
     font-family: inherit;
-    -webkit-tap-highlight-color: transparent;
 }
 
 .sa-recipe__step-time:hover {
@@ -2436,7 +2471,6 @@ Template: saren
     margin-top: 0.75rem;
     transition: border-color 0.2s ease;
     font-family: inherit;
-    -webkit-tap-highlight-color: transparent;
 }
 
 .sa-recipe__lang-toggle:hover {
@@ -3940,6 +3974,15 @@ button.quick-add-to-cart-btn svg.cart-loading {
 }
 .woocommerce-message a.button.saren--woo--button.saren-view-cart:hover svg {
     fill: var(--mainBackground);
+}
+
+/* ========================================
+   Cart count — dark blue on mobile (< 765px)
+   ======================================== */
+@media (max-width: 765px) {
+    .cart--count {
+        color: var(--mainColor) !important;
+    }
 }
 
 /* ========================================
