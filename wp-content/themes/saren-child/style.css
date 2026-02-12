@@ -3841,34 +3841,42 @@ Template: saren
    FIX: pe--infobox--title contrast
    White text on light gray was hard to read
    ======================================== */
+.pe--info--box .pe--infobox--title,
 .pe--infobox--title,
 .pe--infobox--title p {
-    color: var(--mainColor);
+    color: var(--mainColor) !important;
 }
 
 /* ========================================
-   FIX: quick-add-to-cart-btn size
-   Button was too small for good tap/click targets
+   FIX: pe--button pb--background / pb--bordered text contrast
+   Default state: dark text on light gray container (pb__main / pb__hover)
    ======================================== */
-button.quick-add-to-cart-btn {
-    min-width: 44px;
-    min-height: 44px;
-    padding: 0.5em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.pe--button.pb--background .pe--button--wrapper a,
+.pe--button.pb--bordered .pe--button--wrapper a {
+    color: var(--mainColor);
 }
+.pe--button.pb--background .pe--button--wrapper a .pb__main,
+.pe--button.pb--background .pe--button--wrapper a .pb__hover,
+.pe--button.pb--bordered .pe--button--wrapper a .pb__main,
+.pe--button.pb--bordered .pe--button--wrapper a .pb__hover {
+    color: inherit;
+}
+
+/* ========================================
+   FIX: quick-add-to-cart-btn — revert overdimensioned height
+   Keep icon sizing; remove min-height/min-width that made button too large
+   ======================================== */
 button.quick-add-to-cart-btn .card-add-icon,
 button.quick-add-to-cart-btn .card-add-icon svg {
-    width: 1.5em;
-    height: 1.5em;
+    width: 1.1em;
+    height: 1.1em;
 }
 button.quick-add-to-cart-btn .card-add-icon svg {
     fill: var(--mainColor);
 }
 button.quick-add-to-cart-btn svg.cart-loading {
-    width: 1.25em;
-    height: 1.25em;
+    width: 1.1em;
+    height: 1.1em;
 }
 
 /* ========================================
@@ -3887,6 +3895,24 @@ button.quick-add-to-cart-btn svg.cart-loading {
 .saren--product--meta .product-short-desc:empty,
 .saren--product--main .product-short-desc:empty {
     display: none;
+}
+
+/* ========================================
+   FIX: VIEW CART button contrast on hover
+   Default: green on light container. Hover was light gray on light = invisible.
+   Hover: darker green, keeps contrast.
+   ======================================== */
+.woocommerce-message a.button.saren--woo--button.saren-view-cart {
+    border: 1px solid transparent;
+}
+.woocommerce-message a.button.saren--woo--button.saren-view-cart:hover {
+    background: var(--mainColor);
+    background: color-mix(in srgb, var(--mainColor) 80%, black);
+    color: var(--mainBackground);
+    border-color: transparent;
+}
+.woocommerce-message a.button.saren--woo--button.saren-view-cart:hover svg {
+    fill: var(--mainBackground);
 }
 
 /* ========================================
