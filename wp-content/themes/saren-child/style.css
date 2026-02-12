@@ -1531,6 +1531,33 @@ Template: saren
     color: var(--secondaryColor);
 }
 
+/* Product description — section + feature list (paste HTML with these classes) */
+.product-description .product-desc-section {
+    margin-bottom: 1.25em;
+}
+.product-description .product-desc-section h2 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 0 0 0.5em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.product-description .product-desc-feature {
+    margin: 0.5em 0;
+}
+.product-description .product-desc-feature dt {
+    font-weight: 600;
+    font-size: 0.85em;
+    margin-bottom: 0.15em;
+}
+.product-description .product-desc-feature dd {
+    margin: 0 0 0.5em;
+    padding-left: 0;
+    font-size: 0.9em;
+    line-height: 1.5;
+    color: var(--secondaryColor);
+}
+
 /* --- 4F. Responsive --- */
 @media (max-width: 1023px) and (min-width: 577px) {
     .sa-product-page .saren--products-grid {
