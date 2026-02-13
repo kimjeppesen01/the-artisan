@@ -22,6 +22,8 @@ class AB2B_Public {
         add_action('init', [$this, 'register_shortcodes']);
         add_action('init', [$this, 'handle_password_login']);
         add_action('init', [$this, 'handle_password_reset']);
+        add_action('init', [$this, 'handle_email_login']);
+        add_action('init', [$this, 'handle_forgot_password_by_email']);
         add_action('template_redirect', [$this, 'check_portal_access']);
     }
 
@@ -63,6 +65,70 @@ class AB2B_Public {
 
         // Password incorrect – stay on login page and show error
         $this->login_error = __('Incorrect password. Please try again.', 'artisan-b2b-portal');
+    }
+
+    /**
+     * Handle email-based login – user enters email + password, no URL slug needed
+     */
+    public function handle_email_login() {
+        if (!isset($_POST['ab2b_email_login'])) {
+            return;
+        }
+
+        if (!isset($_POST['ab2b_email_login_nonce']) || !wp_verify_nonce($_POST['ab2b_email_login_nonce'], 'ab2b_email_login')) {
+            return;
+        }
+
+        $email = sanitize_email($_POST['ab2b_email'] ?? '');
+        $password = $_POST['ab2b_password'] ?? '';
+
+        if (empty($email) || empty($password)) {
+            $this->login_error = __('Please enter your email and password.', 'artisan-b2b-portal');
+            return;
+        }
+
+        if (!is_email($email)) {
+            $this->login_error = __('Please enter a valid email address.', 'artisan-b2b-portal');
+            return;
+        }
+
+        $customer = AB2B_Customer::get_by_email($email);
+        if (!$customer || !$customer->is_active) {
+            $this->login_error = __('No account found with this email. Please check your details or contact your account manager.', 'artisan-b2b-portal');
+            return;
+        }
+
+        if (empty($customer->password_hash)) {
+            $this->login_error = __('This account uses a link-based login. Please use the personal link from your account manager.', 'artisan-b2b-portal');
+            return;
+        }
+
+        if (!AB2B_Customer::verify_password($customer->id, $password)) {
+            $this->login_error = __('Incorrect password. Please try again.', 'artisan-b2b-portal');
+            return;
+        }
+
+        // Ensure customer has url_slug – auto-generate from company name if missing
+        $customer_slug = $customer->url_slug;
+        if (empty($customer_slug) && !empty($customer->company_name)) {
+            $customer_slug = AB2B_Helpers::create_slug($customer->company_name);
+            if (!empty($customer_slug)) {
+                $existing = AB2B_Customer::get_by_slug($customer_slug);
+                if ($existing && $existing->id != $customer->id) {
+                    $customer_slug = $customer_slug . '-' . $customer->id;
+                }
+                AB2B_Customer::set_url_slug($customer->id, $customer_slug);
+            }
+        }
+        if (empty($customer_slug)) {
+            $customer_slug = 'c' . $customer->id;
+            AB2B_Customer::set_url_slug($customer->id, $customer_slug);
+        }
+
+        setcookie('ab2b_access_key', $customer->access_key, time() + (30 * DAY_IN_SECONDS), COOKIEPATH, COOKIE_DOMAIN, is_ssl(), true);
+        $portal_url = AB2B_Helpers::get_portal_url(null, $customer_slug);
+        wp_safe_redirect($portal_url);
+        exit;
     }
 
     /**
@@ -295,7 +361,7 @@ class AB2B_Public {
         $customer = $this->get_current_customer();
 
         if ( ! $customer ) {
-            return $this->render_welcome();
+            return $this->render_email_login_form();
         }
 
         ob_start();
@@ -410,6 +476,104 @@ class AB2B_Public {
         ob_start();
         include AB2B_PLUGIN_DIR . 'templates/portal/orders.php';
         return ob_get_clean();
+    }
+
+    /**
+     * Render email + password login form – single entry point, no URL/slug required
+     */
+    private function render_email_login_form() {
+        $reset_sent = isset($_GET['ab2b_reset_sent']) && $_GET['ab2b_reset_sent'] === '1';
+        $has_notice = $reset_sent || $this->login_error;
+
+        ob_start();
+        ?>
+        <div class="ab2b-login-wrap" id="ab2b-login-wrap">
+            <div class="ab2b-login-form ab2b-login-form--saren ab2b-login-form--email<?php echo $has_notice ? ' ab2b-login-form--has-notice' : ''; ?>">
+                <p class="ab2b-login-title"><?php esc_html_e( 'B2B Portal', 'artisan-b2b-portal' ); ?></p>
+                <p class="ab2b-login-subtitle"><?php esc_html_e( 'Sign in with your email and password', 'artisan-b2b-portal' ); ?></p>
+
+                <?php if ( $this->login_error ) : ?>
+                    <p class="ab2b-login-notice ab2b-login-notice--error"><?php echo esc_html( $this->login_error ); ?></p>
+                <?php endif; ?>
+
+                <?php if ( $reset_sent ) : ?>
+                    <p class="ab2b-login-notice ab2b-login-notice--success"><?php esc_html_e( 'A new password has been sent to your email. Check your inbox and sign in below.', 'artisan-b2b-portal' ); ?></p>
+                <?php endif; ?>
+
+                <form method="post" class="ab2b-password-form ab2b-email-login-form" action="">
+                    <?php wp_nonce_field( 'ab2b_email_login', 'ab2b_email_login_nonce' ); ?>
+                    <input type="hidden" name="ab2b_email_login" value="1">
+
+                    <p class="form-row form-row-wide">
+                        <label for="ab2b_login_email"><?php esc_html_e( 'Email', 'artisan-b2b-portal' ); ?> <span class="required">*</span></label>
+                        <input type="email" name="ab2b_email" id="ab2b_login_email" class="input-text" value="<?php echo esc_attr( isset($_POST['ab2b_email']) ? sanitize_email($_POST['ab2b_email']) : '' ); ?>" autocomplete="email" required autofocus>
+                    </p>
+
+                    <p class="form-row form-row-wide">
+                        <label for="ab2b_password"><?php esc_html_e( 'Password', 'artisan-b2b-portal' ); ?> <span class="required">*</span></label>
+                        <input type="password" name="ab2b_password" id="ab2b_password" class="input-text" autocomplete="current-password" required>
+                    </p>
+
+                    <p class="form-row">
+                        <button type="submit" class="ab2b-btn ab2b-btn-primary" name="login"><?php esc_html_e( 'Sign in', 'artisan-b2b-portal' ); ?></button>
+                    </p>
+                </form>
+
+                <div class="ab2b-login-reset">
+                    <p class="ab2b-login-help"><?php esc_html_e( 'Forgot your password?', 'artisan-b2b-portal' ); ?></p>
+                    <form method="post" class="ab2b-reset-form ab2b-forgot-email-form" action="">
+                        <?php wp_nonce_field( 'ab2b_forgot_password_email', 'ab2b_forgot_email_nonce' ); ?>
+                        <input type="hidden" name="ab2b_forgot_password_email" value="1">
+                        <input type="email" name="ab2b_forgot_email" placeholder="<?php esc_attr_e( 'Enter your email', 'artisan-b2b-portal' ); ?>" class="input-text ab2b-forgot-email-input" required>
+                        <button type="submit" class="ab2b-btn ab2b-btn-link"><?php esc_html_e( 'Email me a new password', 'artisan-b2b-portal' ); ?></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    /**
+     * Handle forgot password from email login page – no slug needed
+     */
+    public function handle_forgot_password_by_email() {
+        if (!isset($_POST['ab2b_forgot_password_email'])) {
+            return;
+        }
+
+        if (!isset($_POST['ab2b_forgot_email_nonce']) || !wp_verify_nonce($_POST['ab2b_forgot_email_nonce'], 'ab2b_forgot_password_email')) {
+            return;
+        }
+
+        $email = sanitize_email($_POST['ab2b_forgot_email'] ?? '');
+        if (empty($email) || !is_email($email)) {
+            $this->login_error = __('Please enter a valid email address.', 'artisan-b2b-portal');
+            return;
+        }
+
+        $customer = AB2B_Customer::get_by_email($email);
+        if (!$customer || !$customer->is_active || empty($customer->email)) {
+            $this->login_error = __('No account found with this email.', 'artisan-b2b-portal');
+            return;
+        }
+
+        if (empty($customer->password_hash)) {
+            $this->login_error = __('This account uses a link-based login. Please use the personal link from your account manager.', 'artisan-b2b-portal');
+            return;
+        }
+
+        $new_password = wp_generate_password(12, true, false);
+        $result = AB2B_Customer::set_password($customer->id, $new_password);
+
+        if ($result !== false) {
+            AB2B_Email::send_password_reset($customer, $new_password);
+        }
+
+        $portal_url = AB2B_Helpers::get_portal_url();
+        $portal_url = add_query_arg('ab2b_reset_sent', '1', $portal_url);
+        wp_safe_redirect($portal_url);
+        exit;
     }
 
     /**

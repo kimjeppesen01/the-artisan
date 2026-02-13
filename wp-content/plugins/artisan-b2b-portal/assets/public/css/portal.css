@@ -1744,11 +1744,33 @@ body > .ab2b-message {
 }
 
 .ab2b-login-reset {
-    margin-top: 0.5rem;
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--ab2b-border);
 }
 
 .ab2b-login-reset .ab2b-login-help {
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.5rem;
+}
+
+.ab2b-login-form--email .ab2b-login-subtitle {
+    margin: 0 0 1.5rem;
+    font-size: 0.95rem;
+    color: var(--ab2b-secondary);
+}
+
+.ab2b-forgot-email-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.ab2b-forgot-email-form .ab2b-forgot-email-input {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    box-sizing: border-box;
 }
 
 .ab2b-reset-form {
