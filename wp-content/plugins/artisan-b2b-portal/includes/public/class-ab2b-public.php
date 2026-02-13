@@ -12,6 +12,7 @@ class AB2B_Public {
     private $customer = null;
     private $needs_password = false;
     private $password_customer_slug = null;
+    private $login_error = null;
 
     /**
      * Constructor
@@ -59,6 +60,9 @@ class AB2B_Public {
             wp_safe_redirect($portal_url);
             exit;
         }
+
+        // Password incorrect – stay on login page and show error
+        $this->login_error = __('Incorrect password. Please try again.', 'artisan-b2b-portal');
     }
 
     /**
@@ -310,14 +314,19 @@ class AB2B_Public {
         $company_name = $customer->company_name;
         $reset_sent = isset($_GET['ab2b_reset_sent']) && $_GET['ab2b_reset_sent'] === '1';
         $can_reset = !empty($customer->password_hash) && !empty($customer->email);
+        $has_notice = $reset_sent || $this->login_error;
 
         ob_start();
         ?>
-        <div class="ab2b-login-wrap">
-            <div class="ab2b-login-form ab2b-login-form--saren<?php echo $reset_sent ? ' ab2b-login-form--has-notice' : ''; ?>">
+        <div class="ab2b-login-wrap" id="ab2b-login-wrap">
+            <div class="ab2b-login-form ab2b-login-form--saren<?php echo $has_notice ? ' ab2b-login-form--has-notice' : ''; ?>">
                 <p class="ab2b-login-title"><?php esc_html_e( 'B2B Portal Login', 'artisan-b2b-portal' ); ?></p>
                 <?php if ( $company_name ) : ?>
                     <p class="ab2b-login-company"><?php echo esc_html( $company_name ); ?></p>
+                <?php endif; ?>
+
+                <?php if ( $this->login_error ) : ?>
+                    <p class="ab2b-login-notice ab2b-login-notice--error"><?php echo esc_html( $this->login_error ); ?></p>
                 <?php endif; ?>
 
                 <?php if ( $reset_sent ) : ?>

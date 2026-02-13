@@ -1286,6 +1286,10 @@
     });
 
     $(document).ready(function() {
+        // Login page: scroll to top so form is visible
+        if ($('#ab2b-login-wrap').length) {
+            window.scrollTo(0, 0);
+        }
         AB2B_Portal.init();
     });
 
