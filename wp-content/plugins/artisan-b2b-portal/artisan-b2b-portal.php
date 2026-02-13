@@ -155,4 +155,18 @@ function ab2b_maybe_migrate() {
 
         update_option('ab2b_db_version', '2.1.0');
     }
+
+    if (version_compare($db_version, '2.2.0', '<')) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'ab2b_customers';
+        $cols = ['city', 'postcode', 'cvr_number', 'delivery_company', 'delivery_contact', 'delivery_address', 'delivery_city', 'delivery_postcode'];
+        foreach ($cols as $col) {
+            $exists = $wpdb->get_results($wpdb->prepare("SHOW COLUMNS FROM {$table} LIKE %s", $col));
+            if (empty($exists)) {
+                $def = ($col === 'delivery_address') ? "TEXT" : "VARCHAR(255) DEFAULT ''";
+                $wpdb->query("ALTER TABLE {$table} ADD COLUMN {$col} {$def}");
+            }
+        }
+        update_option('ab2b_db_version', '2.2.0');
+    }
 }

@@ -127,6 +127,94 @@ if (!defined('ABSPATH')) exit;
                         <p class="description"><?php esc_html_e('Logo URL for email headers.', 'artisan-b2b-portal'); ?></p>
                     </td>
                 </tr>
+                <tr>
+                    <th><label for="company_address"><?php esc_html_e('Company Address (footer)', 'artisan-b2b-portal'); ?></label></th>
+                    <td>
+                        <input type="text" name="company_address" id="company_address" class="large-text"
+                               value="<?php echo esc_attr($settings['company_address'] ?? ''); ?>"
+                               placeholder="Fredensgade 1, st. 2200 Kbh N">
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="company_cvr"><?php esc_html_e('Company CVR', 'artisan-b2b-portal'); ?></label></th>
+                    <td>
+                        <input type="text" name="company_cvr" id="company_cvr" class="regular-text"
+                               value="<?php echo esc_attr($settings['company_cvr'] ?? ''); ?>">
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="company_contact_email"><?php esc_html_e('Contact Email', 'artisan-b2b-portal'); ?></label></th>
+                    <td>
+                        <input type="email" name="company_contact_email" id="company_contact_email" class="regular-text"
+                               value="<?php echo esc_attr($settings['company_contact_email'] ?? ''); ?>"
+                               placeholder="info@theartisan.dk">
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="company_phone"><?php esc_html_e('Contact Phone', 'artisan-b2b-portal'); ?></label></th>
+                    <td>
+                        <input type="text" name="company_phone" id="company_phone" class="regular-text"
+                               value="<?php echo esc_attr($settings['company_phone'] ?? ''); ?>"
+                               placeholder="+45 53 57 58 02">
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="ab2b-form-card">
+            <h2><?php esc_html_e('Customer Email Template', 'artisan-b2b-portal'); ?></h2>
+            <p class="description" style="margin-bottom: 15px;"><?php esc_html_e('Used in order confirmation and status emails sent to customers.', 'artisan-b2b-portal'); ?></p>
+            <table class="form-table">
+                <tr>
+                    <th><label for="account_manager_name"><?php esc_html_e('Account Manager Name', 'artisan-b2b-portal'); ?></label></th>
+                    <td>
+                        <input type="text" name="account_manager_name" id="account_manager_name" class="regular-text"
+                               value="<?php echo esc_attr($settings['account_manager_name'] ?? ''); ?>">
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="account_manager_email"><?php esc_html_e('Account Manager Email', 'artisan-b2b-portal'); ?></label></th>
+                    <td>
+                        <input type="email" name="account_manager_email" id="account_manager_email" class="regular-text"
+                               value="<?php echo esc_attr($settings['account_manager_email'] ?? ''); ?>">
+                        <p class="description"><?php esc_html_e('Fallback: admin email.', 'artisan-b2b-portal'); ?></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="account_manager_phone"><?php esc_html_e('Account Manager Phone', 'artisan-b2b-portal'); ?></label></th>
+                    <td>
+                        <input type="text" name="account_manager_phone" id="account_manager_phone" class="regular-text"
+                               value="<?php echo esc_attr($settings['account_manager_phone'] ?? ''); ?>">
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="payment_terms"><?php esc_html_e('Payment Terms', 'artisan-b2b-portal'); ?></label></th>
+                    <td>
+                        <input type="text" name="payment_terms" id="payment_terms" class="regular-text"
+                               value="<?php echo esc_attr($settings['payment_terms'] ?? __('Net 14 days', 'artisan-b2b-portal')); ?>">
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="bank_name"><?php esc_html_e('Bank Name', 'artisan-b2b-portal'); ?></label></th>
+                    <td>
+                        <input type="text" name="bank_name" id="bank_name" class="regular-text"
+                               value="<?php echo esc_attr($settings['bank_name'] ?? ''); ?>">
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="bank_reg_nr"><?php esc_html_e('Bank Reg. nr.', 'artisan-b2b-portal'); ?></label></th>
+                    <td>
+                        <input type="text" name="bank_reg_nr" id="bank_reg_nr" class="small-text"
+                               value="<?php echo esc_attr($settings['bank_reg_nr'] ?? ''); ?>">
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="bank_account_nr"><?php esc_html_e('Bank Konto', 'artisan-b2b-portal'); ?></label></th>
+                    <td>
+                        <input type="text" name="bank_account_nr" id="bank_account_nr" class="small-text"
+                               value="<?php echo esc_attr($settings['bank_account_nr'] ?? ''); ?>">
+                    </td>
+                </tr>
             </table>
         </div>
 

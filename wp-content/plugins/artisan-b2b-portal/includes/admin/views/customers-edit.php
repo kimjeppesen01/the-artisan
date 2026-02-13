@@ -53,9 +53,61 @@ $page_title = $is_edit ? __('Edit Customer', 'artisan-b2b-portal') : __('Add New
                             </td>
                         </tr>
                         <tr>
-                            <th><label for="address"><?php esc_html_e('Address', 'artisan-b2b-portal'); ?></label></th>
+                            <th><label for="address"><?php esc_html_e('Bill To – Address', 'artisan-b2b-portal'); ?></label></th>
                             <td>
-                                <textarea name="address" id="address" rows="3" class="large-text"><?php echo $is_edit ? esc_textarea($customer->address) : ''; ?></textarea>
+                                <textarea name="address" id="address" rows="2" class="large-text" placeholder="<?php esc_attr_e('Street address', 'artisan-b2b-portal'); ?>"><?php echo $is_edit ? esc_textarea($customer->address ?? '') : ''; ?></textarea>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label for="city"><?php esc_html_e('Bill To – City', 'artisan-b2b-portal'); ?></label></th>
+                            <td>
+                                <input type="text" name="city" id="city" class="regular-text" value="<?php echo $is_edit ? esc_attr($customer->city ?? '') : ''; ?>">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label for="postcode"><?php esc_html_e('Bill To – Postcode', 'artisan-b2b-portal'); ?></label></th>
+                            <td>
+                                <input type="text" name="postcode" id="postcode" class="regular-text" value="<?php echo $is_edit ? esc_attr($customer->postcode ?? '') : ''; ?>">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label for="cvr_number"><?php esc_html_e('CVR Number', 'artisan-b2b-portal'); ?></label></th>
+                            <td>
+                                <input type="text" name="cvr_number" id="cvr_number" class="regular-text" value="<?php echo $is_edit ? esc_attr($customer->cvr_number ?? '') : ''; ?>">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th colspan="2" style="padding-top: 1.5em;"><strong><?php esc_html_e('Deliver To', 'artisan-b2b-portal'); ?></strong></th>
+                        </tr>
+                        <tr>
+                            <th><label for="delivery_company"><?php esc_html_e('Delivery – Company', 'artisan-b2b-portal'); ?></label></th>
+                            <td>
+                                <input type="text" name="delivery_company" id="delivery_company" class="regular-text" value="<?php echo $is_edit ? esc_attr($customer->delivery_company ?? '') : ''; ?>">
+                                <p class="description"><?php esc_html_e('Leave blank to use billing details.', 'artisan-b2b-portal'); ?></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label for="delivery_contact"><?php esc_html_e('Delivery – Contact', 'artisan-b2b-portal'); ?></label></th>
+                            <td>
+                                <input type="text" name="delivery_contact" id="delivery_contact" class="regular-text" value="<?php echo $is_edit ? esc_attr($customer->delivery_contact ?? '') : ''; ?>">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label for="delivery_address"><?php esc_html_e('Delivery – Address', 'artisan-b2b-portal'); ?></label></th>
+                            <td>
+                                <textarea name="delivery_address" id="delivery_address" rows="2" class="large-text"><?php echo $is_edit ? esc_textarea($customer->delivery_address ?? '') : ''; ?></textarea>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label for="delivery_city"><?php esc_html_e('Delivery – City', 'artisan-b2b-portal'); ?></label></th>
+                            <td>
+                                <input type="text" name="delivery_city" id="delivery_city" class="regular-text" value="<?php echo $is_edit ? esc_attr($customer->delivery_city ?? '') : ''; ?>">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label for="delivery_postcode"><?php esc_html_e('Delivery – Postcode', 'artisan-b2b-portal'); ?></label></th>
+                            <td>
+                                <input type="text" name="delivery_postcode" id="delivery_postcode" class="regular-text" value="<?php echo $is_edit ? esc_attr($customer->delivery_postcode ?? '') : ''; ?>">
                             </td>
                         </tr>
                         <tr>
@@ -174,7 +226,12 @@ $page_title = $is_edit ? __('Edit Customer', 'artisan-b2b-portal') : __('Add New
             </div>
 
             <div class="ab2b-form-sidebar">
-                <?php if ($is_edit) : ?>
+                <?php
+                // Show Portal Access (key-based URL) only when NOT using custom URL + password.
+                // When both url_slug and password are set, customers use the custom URL instead.
+                $has_custom_login = $is_edit && !empty($customer->url_slug) && !empty($customer->password_hash);
+                ?>
+                <?php if ($is_edit && !$has_custom_login) : ?>
                     <div class="ab2b-form-card">
                         <h2><?php esc_html_e('Portal Access', 'artisan-b2b-portal'); ?></h2>
 

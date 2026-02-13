@@ -402,6 +402,75 @@ class AB2B_Order {
     }
 
     /**
+     * Full update of a pending order (items, delivery_date, delivery_method, special_instructions)
+     */
+    public static function update_full($id, $data) {
+        global $wpdb;
+        $table = $wpdb->prefix . self::$table;
+        $items_table = $wpdb->prefix . self::$items_table;
+
+        $order = self::get($id, true);
+        if (!$order) {
+            return new WP_Error('not_found', __('Order not found.', 'artisan-b2b-portal'));
+        }
+        if ($order->status !== 'pending') {
+            return new WP_Error('order_confirmed', __('Only pending orders can be edited.', 'artisan-b2b-portal'), ['status' => 400]);
+        }
+
+        if (empty($data['items']) || !is_array($data['items'])) {
+            return new WP_Error('invalid_items', __('Order items are required.', 'artisan-b2b-portal'), ['status' => 400]);
+        }
+
+        $delivery_date = isset($data['delivery_date']) ? sanitize_text_field($data['delivery_date']) : $order->delivery_date;
+        $delivery_method = isset($data['delivery_method']) ? sanitize_text_field($data['delivery_method']) : $order->delivery_method;
+        if (!in_array($delivery_method, ['shipping', 'international', 'pickup'])) {
+            $delivery_method = 'shipping';
+        }
+        $special_instructions = isset($data['special_instructions']) ? sanitize_textarea_field($data['special_instructions']) : $order->special_instructions;
+
+        $min_days = ab2b_get_option('min_days_before', 2);
+        if (!AB2B_Helpers::is_valid_friday($delivery_date, $min_days)) {
+            return new WP_Error('invalid_date', __('Invalid delivery date.', 'artisan-b2b-portal'), ['status' => 400]);
+        }
+
+        $subtotal = 0;
+        foreach ($data['items'] as $item) {
+            $line_total = (float) ($item['unit_price'] ?? 0) * (int) ($item['quantity'] ?? 0);
+            $subtotal += $line_total;
+        }
+        $shipping_cost = self::calculate_shipping_cost($delivery_method, $data['items']);
+        $total = $subtotal + $shipping_cost;
+
+        $wpdb->delete($items_table, ['order_id' => $id], ['%d']);
+        foreach ($data['items'] as $item) {
+            self::add_item($id, $item);
+        }
+
+        $result = $wpdb->update($table, [
+            'delivery_date'        => $delivery_date,
+            'delivery_method'      => $delivery_method,
+            'special_instructions' => $special_instructions,
+            'shipping_cost'        => $shipping_cost,
+            'subtotal'             => $subtotal,
+            'total'                => $total,
+        ], ['id' => $id], ['%s', '%s', '%s', '%f', '%f', '%f'], ['%d']);
+
+        if ($result === false) {
+            return new WP_Error('db_error', __('Failed to update order.', 'artisan-b2b-portal'));
+        }
+
+        do_action('ab2b_order_updated', $id);
+        return true;
+    }
+
+    /**
+     * Cancel order (soft delete - sets status to cancelled)
+     */
+    public static function cancel($id) {
+        return self::update_status($id, 'cancelled');
+    }
+
+    /**
      * Delete order
      */
     public static function delete($id) {

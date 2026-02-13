@@ -12,6 +12,8 @@
         categories: [],
         activeCategory: 'all',
         viewMode: 'grid',
+        editingOrderId: null,
+        editingOrderData: null,
 
         init: function() {
             if (!ab2b_portal.is_authenticated) {
@@ -50,10 +52,14 @@
             // Remove from cart
             $(document).on('click', '.ab2b-cart-item-remove', this.removeFromCart.bind(this));
 
-            // Place order
-            $(document).on('click', '.ab2b-place-order-btn', this.placeOrder.bind(this));
+            // Place order / Update order
+            $(document).on('click', '.ab2b-place-order-btn, .ab2b-update-order-btn', this.placeOrder.bind(this));
 
-            // View order details
+            // Edit / Delete order (stop propagation so card click doesn't fire)
+            $(document).on('click', '.ab2b-order-edit-btn', this.editOrder.bind(this));
+            $(document).on('click', '.ab2b-order-delete-btn', this.deleteOrder.bind(this));
+
+            // View order details (card click, but not when clicking edit/delete)
             $(document).on('click', '.ab2b-order-card', this.viewOrderDetails.bind(this));
 
             // Modal close
@@ -73,6 +79,9 @@
 
             // View toggle (grid/list)
             $(document).on('click', '.ab2b-view-btn', this.switchView.bind(this));
+
+            // Account profile form
+            $(document).on('submit', '#ab2b-profile-form', this.saveCustomerProfile.bind(this));
         },
 
         /**
@@ -580,13 +589,20 @@
             });
 
             const minDate = this.getNextFriday();
+            const editData = this.editingOrderData || {};
+            const defaultMethod = editData.delivery_method || 'shipping';
+            const defaultDate = editData.delivery_date ? editData.delivery_date : minDate;
+            const defaultInstructions = editData.special_instructions || '';
 
-            const defaultMethod = 'shipping';
             const shippingCost = this.getShippingCost(defaultMethod);
             const domesticCost = this.getShippingCost('shipping');
             const intlCost = this.getShippingCost('international');
-            const vat = (total + shippingCost) * 0.25;
+            const isInternational = defaultMethod === 'international';
+            const vat = isInternational ? 0 : (total + shippingCost) * 0.25;
             const grandTotal = total + shippingCost + vat;
+            const vatRowHtml = isInternational
+                ? `<div class="ab2b-cart-reverse-vat"><span>${ab2b_portal.strings.reverse_vat || 'Reverse VAT applies'}</span><span>—</span></div>`
+                : `<div class="ab2b-cart-vat"><span>VAT 25%</span><span id="ab2b-vat">${this.formatPrice(vat)}</span></div>`;
 
             $cart.html(`
                 <div class="ab2b-cart-items">
@@ -596,22 +612,22 @@
                     <div class="ab2b-delivery-method">
                         <label class="ab2b-delivery-method-label">Delivery Method</label>
                         <div class="ab2b-delivery-options">
-                            <label class="ab2b-delivery-option ab2b-delivery-option-active">
-                                <input type="radio" name="delivery_method" value="shipping" checked>
+                            <label class="ab2b-delivery-option ${defaultMethod === 'shipping' ? 'ab2b-delivery-option-active' : ''}">
+                                <input type="radio" name="delivery_method" value="shipping" ${defaultMethod === 'shipping' ? 'checked' : ''}>
                                 <span class="ab2b-delivery-option-content">
                                     <span class="ab2b-delivery-option-name">Shipping</span>
                                     <span class="ab2b-delivery-option-price">${this.formatPrice(domesticCost)} ex. VAT</span>
                                 </span>
                             </label>
-                            <label class="ab2b-delivery-option">
-                                <input type="radio" name="delivery_method" value="international">
+                            <label class="ab2b-delivery-option ${defaultMethod === 'international' ? 'ab2b-delivery-option-active' : ''}">
+                                <input type="radio" name="delivery_method" value="international" ${defaultMethod === 'international' ? 'checked' : ''}>
                                 <span class="ab2b-delivery-option-content">
                                     <span class="ab2b-delivery-option-name">International</span>
                                     <span class="ab2b-delivery-option-price">${this.formatPrice(intlCost)} ex. VAT</span>
                                 </span>
                             </label>
-                            <label class="ab2b-delivery-option">
-                                <input type="radio" name="delivery_method" value="pickup">
+                            <label class="ab2b-delivery-option ${defaultMethod === 'pickup' ? 'ab2b-delivery-option-active' : ''}">
+                                <input type="radio" name="delivery_method" value="pickup" ${defaultMethod === 'pickup' ? 'checked' : ''}>
                                 <span class="ab2b-delivery-option-content">
                                     <span class="ab2b-delivery-option-name">Pick up</span>
                                     <span class="ab2b-delivery-option-price">Free</span>
@@ -628,10 +644,7 @@
                             <span>Shipping</span>
                             <span id="ab2b-shipping-cost">${this.formatPrice(shippingCost)}</span>
                         </div>
-                        <div class="ab2b-cart-vat">
-                            <span>VAT 25%</span>
-                            <span id="ab2b-vat">${this.formatPrice(vat)}</span>
-                        </div>
+                        <div id="ab2b-cart-vat-row">${vatRowHtml}</div>
                         <div class="ab2b-cart-total">
                             <span>${ab2b_portal.strings.total}</span>
                             <span id="ab2b-grand-total">${this.formatPrice(grandTotal)}</span>
@@ -639,18 +652,28 @@
                     </div>
                     <div class="ab2b-delivery-picker">
                         <label for="ab2b-delivery-date" id="ab2b-delivery-date-label">${ab2b_portal.strings.delivery_date}</label>
-                        <input type="date" id="ab2b-delivery-date" min="${minDate}" value="${minDate}" required>
+                        <input type="date" id="ab2b-delivery-date" min="${minDate}" value="${defaultDate}" required>
                         <p class="ab2b-friday-note">${ab2b_portal.strings.friday_only}</p>
                     </div>
                     <div class="ab2b-special-instructions">
                         <label for="ab2b-instructions">${ab2b_portal.strings.special_instructions}</label>
-                        <textarea id="ab2b-instructions" rows="2" placeholder="Optional"></textarea>
+                        <textarea id="ab2b-instructions" rows="2" placeholder="Optional">${defaultInstructions}</textarea>
                     </div>
+                    ${this.editingOrderId ? `
+                    <button type="button" class="ab2b-btn ab2b-btn-primary ab2b-btn-full ab2b-update-order-btn">
+                        ${ab2b_portal.strings.update_order || 'Update Order'}
+                    </button>
+                    ` : `
                     <button type="button" class="ab2b-btn ab2b-btn-primary ab2b-btn-full ab2b-place-order-btn">
                         ${ab2b_portal.strings.place_order}
                     </button>
+                    `}
                 </div>
             `);
+
+            if (this.cart.length > 0 && editData.delivery_method) {
+                this.updateDeliveryDateLabel(editData.delivery_method);
+            }
         },
 
         /**
@@ -684,12 +707,18 @@
                 subtotal += item.unit_price * item.quantity;
             });
 
-            const vat = (subtotal + shippingCost) * 0.25;
+            const isInternational = method === 'international';
+            const vat = isInternational ? 0 : (subtotal + shippingCost) * 0.25;
             const grandTotal = subtotal + shippingCost + vat;
+
+            // Update VAT row for international (reverse charge – no VAT)
+            const vatRowHtml = isInternational
+                ? `<div class="ab2b-cart-reverse-vat"><span>${ab2b_portal.strings.reverse_vat || 'Reverse VAT applies'}</span><span>—</span></div>`
+                : `<div class="ab2b-cart-vat"><span>VAT 25%</span><span id="ab2b-vat">${this.formatPrice(vat)}</span></div>`;
+            $('#ab2b-cart-vat-row').html(vatRowHtml);
 
             // Update UI
             $('#ab2b-shipping-cost').text(shippingCost > 0 ? this.formatPrice(shippingCost) : 'Free');
-            $('#ab2b-vat').text(this.formatPrice(vat));
             $('#ab2b-grand-total').text(this.formatPrice(grandTotal));
 
             // Update date label for Pick up vs Delivery
@@ -708,6 +737,7 @@
 
             const self = this;
             const $btn = $(e.currentTarget);
+            const isUpdate = !!this.editingOrderId;
             const deliveryDate = $('#ab2b-delivery-date').val();
             const instructions = $('#ab2b-instructions').val();
             const deliveryMethod = $('input[name="delivery_method"]:checked').val() || 'shipping';
@@ -724,7 +754,8 @@
                 return;
             }
 
-            $btn.prop('disabled', true).text(ab2b_portal.strings.placing_order);
+            const btnLabel = isUpdate ? (ab2b_portal.strings.updating_order || 'Updating...') : ab2b_portal.strings.placing_order;
+            $btn.prop('disabled', true).text(btnLabel);
 
             const items = this.cart.map(function(item) {
                 return {
@@ -734,28 +765,112 @@
                 };
             });
 
-            this.api('/orders', 'POST', {
+            const payload = {
                 items: items,
                 delivery_date: deliveryDate,
                 delivery_method: deliveryMethod,
                 special_instructions: instructions
-            }).done(function(response) {
+            };
+
+            const endpoint = isUpdate ? '/orders/' + this.editingOrderId : '/orders';
+            const method = isUpdate ? 'PUT' : 'POST';
+
+            this.api(endpoint, method, payload).done(function(response) {
                 self.cart = [];
+                self.editingOrderId = null;
+                self.editingOrderData = null;
                 self.saveCart();
                 self.updateCartUI();
-                self.showMessage(ab2b_portal.strings.order_success, 'success');
+                self.showMessage(isUpdate ? (ab2b_portal.strings.order_updated || 'Order updated.') : ab2b_portal.strings.order_success, 'success');
 
                 // Switch to orders tab
                 setTimeout(function() {
                     self.loadOrders();
                     $('.ab2b-tab[data-tab="orders"]').click();
+                    self.renderCart();
                 }, 1500);
 
             }).fail(function(xhr) {
                 const msg = xhr.responseJSON?.message || ab2b_portal.strings.error;
                 self.showMessage(msg, 'error');
             }).always(function() {
-                $btn.prop('disabled', false).text(ab2b_portal.strings.place_order);
+                $btn.prop('disabled', false).text(isUpdate ? (ab2b_portal.strings.update_order || 'Update Order') : ab2b_portal.strings.place_order);
+            });
+        },
+
+        /**
+         * Edit order – load into cart and switch to cart tab
+         */
+        editOrder: function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const orderId = $(e.currentTarget).data('order-id');
+            const self = this;
+
+            this.api('/orders/' + orderId).done(function(order) {
+                if (order.status !== 'pending' || !order.items || order.items.length === 0) {
+                    self.showMessage(ab2b_portal.strings.error || 'Unable to edit this order.', 'error');
+                    return;
+                }
+
+                const cartItems = order.items.map(function(item) {
+                    const product = self.products.find(p => p.id === item.product_id);
+                    const weight = product ? product.weights.find(w => w.id === item.weight_id) : null;
+                    return {
+                        product_id: item.product_id,
+                        weight_id: item.weight_id,
+                        product_name: item.product_name,
+                        product_image: product ? product.image : null,
+                        weight_label: item.weight_label,
+                        weight_value: weight ? (weight.value || 0) : 0,
+                        weight_unit: weight ? (weight.unit || 'g') : 'g',
+                        unit: weight ? (weight.unit || 'g') : 'g',
+                        unit_price: item.unit_price,
+                        unit_price_formatted: item.unit_price_formatted || self.formatPrice(item.unit_price),
+                        quantity: item.quantity
+                    };
+                });
+
+                self.cart = cartItems;
+                self.editingOrderId = orderId;
+                self.editingOrderData = {
+                    delivery_date: order.delivery_date,
+                    delivery_method: order.delivery_method || 'shipping',
+                    special_instructions: order.special_instructions || ''
+                };
+                self.saveCart();
+                self.updateCartUI();
+                self.closeModal();
+                self.renderCart();
+                $('.ab2b-tab[data-tab="cart"]').click();
+            }).fail(function() {
+                self.showMessage(ab2b_portal.strings.error || 'Failed to load order.', 'error');
+            });
+        },
+
+        /**
+         * Delete (cancel) pending order
+         */
+        deleteOrder: function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const orderId = $(e.currentTarget).data('order-id');
+            const self = this;
+            const confirmMsg = ab2b_portal.strings.delete_order_confirm || 'Are you sure you want to delete this order?';
+
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+
+            this.api('/orders/' + orderId, 'DELETE').done(function() {
+                self.closeModal();
+                self.loadOrders();
+                self.showMessage(ab2b_portal.strings.order_deleted || 'Order deleted.', 'success');
+            }).fail(function(xhr) {
+                const msg = xhr.responseJSON?.message || ab2b_portal.strings.error;
+                self.showMessage(msg, 'error');
             });
         },
 
@@ -789,6 +904,13 @@
             let html = '<div class="ab2b-orders-list">';
 
             orders.forEach(function(order) {
+                const isPending = order.status === 'pending';
+                const actionBtns = isPending ? `
+                    <div class="ab2b-order-actions">
+                        <button type="button" class="ab2b-order-edit-btn" data-order-id="${order.id}" title="${ab2b_portal.strings.edit_order || 'Edit'}">${ab2b_portal.strings.edit_order || 'Edit'}</button>
+                        <button type="button" class="ab2b-order-delete-btn" data-order-id="${order.id}" title="${ab2b_portal.strings.delete_order || 'Delete'}">${ab2b_portal.strings.delete_order || 'Delete'}</button>
+                    </div>
+                ` : '';
                 html += `
                     <div class="ab2b-order-card" data-order-id="${order.id}">
                         <div class="ab2b-order-left">
@@ -801,6 +923,7 @@
                         <div class="ab2b-order-right">
                             <div class="ab2b-order-total">${order.total_formatted}</div>
                             <div class="ab2b-order-date">${order.created_at_formatted}</div>
+                            ${actionBtns}
                         </div>
                     </div>
                 `;
@@ -897,6 +1020,12 @@
                             </tfoot>
                         </table>
                         ${order.special_instructions ? `<p><strong>Special Instructions:</strong> ${order.special_instructions}</p>` : ''}
+                        ${order.status === 'pending' ? `
+                        <div class="ab2b-order-detail-actions">
+                            <button type="button" class="ab2b-btn ab2b-btn-primary ab2b-order-edit-btn" data-order-id="${order.id}">${ab2b_portal.strings.edit_order || 'Edit Order'}</button>
+                            <button type="button" class="ab2b-btn ab2b-btn-outline ab2b-order-delete-btn" data-order-id="${order.id}">${ab2b_portal.strings.delete_order || 'Delete Order'}</button>
+                        </div>
+                        ` : ''}
                     </div>
                 `;
 
@@ -917,12 +1046,82 @@
             if (tab === 'cart') {
                 this.renderCart();
             }
+            if (tab === 'account') {
+                this.loadCustomerProfile();
+            }
 
             $('.ab2b-tab').removeClass('active');
             $('.ab2b-tab[data-tab="' + tab + '"]').addClass('active');
 
             $('.ab2b-tab-content').removeClass('active');
             $('#tab-' + tab).addClass('active');
+        },
+
+        /**
+         * Load customer profile for Account tab
+         */
+        loadCustomerProfile: function() {
+            const self = this;
+            $('#ab2b-profile-form').hide();
+            $('#ab2b-account-loading').show();
+
+            this.api('/customer').done(function(customer) {
+                $('#profile-company_name').val(customer.company_name || '');
+                $('#profile-contact_name').val(customer.contact_name || '');
+                $('#profile-address').val(customer.address || '');
+                $('#profile-city').val(customer.city || '');
+                $('#profile-postcode').val(customer.postcode || '');
+                $('#profile-cvr_number').val(customer.cvr_number || '');
+                $('#profile-delivery_company').val(customer.delivery_company || '');
+                $('#profile-delivery_contact').val(customer.delivery_contact || '');
+                $('#profile-delivery_address').val(customer.delivery_address || '');
+                $('#profile-delivery_city').val(customer.delivery_city || '');
+                $('#profile-delivery_postcode').val(customer.delivery_postcode || '');
+                $('#profile-email').val(customer.email || '');
+                $('#profile-phone').val(customer.phone || '');
+                $('#ab2b-account-loading').hide();
+                $('#ab2b-profile-form').show();
+            }).fail(function() {
+                $('#ab2b-account-loading').hide();
+                $('#ab2b-profile-form').show();
+                self.showMessage(ab2b_portal.strings.error || 'Failed to load profile.', 'error');
+            });
+        },
+
+        /**
+         * Save customer profile
+         */
+        saveCustomerProfile: function(e) {
+            e.preventDefault();
+            const self = this;
+            const $btn = $('#ab2b-profile-form button[type="submit"]');
+
+            const data = {
+                company_name: $('#profile-company_name').val(),
+                contact_name: $('#profile-contact_name').val(),
+                address: $('#profile-address').val(),
+                city: $('#profile-city').val(),
+                postcode: $('#profile-postcode').val(),
+                cvr_number: $('#profile-cvr_number').val(),
+                delivery_company: $('#profile-delivery_company').val(),
+                delivery_contact: $('#profile-delivery_contact').val(),
+                delivery_address: $('#profile-delivery_address').val(),
+                delivery_city: $('#profile-delivery_city').val(),
+                delivery_postcode: $('#profile-delivery_postcode').val(),
+                email: $('#profile-email').val(),
+                phone: $('#profile-phone').val()
+            };
+
+            $btn.prop('disabled', true).text(ab2b_portal.strings.saving || 'Saving...');
+
+            this.api('/customer', 'PUT', data).done(function(response) {
+                self.showMessage(response.message || (ab2b_portal.strings.profile_updated || 'Your details have been updated.'), 'success');
+            }).fail(function(xhr) {
+                const msg = xhr.responseJSON?.message || ab2b_portal.strings.error;
+                self.showMessage(msg, 'error');
+            }).always(function() {
+                $btn.prop('disabled', false).text(ab2b_portal.strings.save_changes || 'Save Changes');
+            });
         },
 
         /**

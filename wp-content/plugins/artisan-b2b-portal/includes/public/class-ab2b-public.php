@@ -19,8 +19,41 @@ class AB2B_Public {
     public function __construct() {
         add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);
         add_action('init', [$this, 'register_shortcodes']);
+        add_action('init', [$this, 'register_rewrite_rules']);
+        add_filter('query_vars', [$this, 'add_query_vars']);
         add_action('init', [$this, 'handle_password_login']);
         add_action('template_redirect', [$this, 'check_portal_access']);
+    }
+
+    /**
+     * Register rewrite rules for clean customer URLs: /b2b-portal/company-name/
+     */
+    public function register_rewrite_rules() {
+        $page_id = get_option('ab2b_portal_page_id');
+        if (!$page_id) {
+            $slug = 'b2b-portal';
+        } else {
+            $page = get_post($page_id);
+            $slug = $page ? $page->post_name : 'b2b-portal';
+        }
+        add_rewrite_rule(
+            $slug . '/([^/]+)/?$',
+            'index.php?pagename=' . $slug . '&ab2b_customer=$matches[1]',
+            'top'
+        );
+
+        if (!get_option('ab2b_path_url_flushed')) {
+            flush_rewrite_rules();
+            update_option('ab2b_path_url_flushed', true);
+        }
+    }
+
+    /**
+     * Add ab2b_customer to allowed query vars
+     */
+    public function add_query_vars($vars) {
+        $vars[] = 'ab2b_customer';
+        return $vars;
     }
 
     /**
@@ -93,8 +126,11 @@ class AB2B_Public {
             }
         }
 
-        // Check for custom URL slug (password-protected access)
-        $customer_slug = isset($_GET['customer']) ? sanitize_text_field($_GET['customer']) : '';
+        // Check for custom URL slug: path-based (/b2b-portal/company-name/) or legacy ?customer=
+        $customer_slug = get_query_var('ab2b_customer', '');
+        if (empty($customer_slug)) {
+            $customer_slug = isset($_GET['customer']) ? sanitize_text_field($_GET['customer']) : '';
+        }
 
         if ($customer_slug) {
             $customer = AB2B_Customer::get_by_slug($customer_slug);
@@ -210,7 +246,7 @@ class AB2B_Public {
                 'delivery_date'         => __('Delivery Date', 'artisan-b2b-portal'),
                 'available_from_date'   => __('Available from date', 'artisan-b2b-portal'),
                 'friday_only'           => __('Delivery available on Fridays only.', 'artisan-b2b-portal'),
-                'friday_only_pickup'    => __('Available on Fridays only.', 'artisan-b2b-portal'),
+                'friday_only_pickup'    => __('Ready for pick up from the selected Friday.', 'artisan-b2b-portal'),
                 'place_order'      => __('Place Order', 'artisan-b2b-portal'),
                 'placing_order'    => __('Placing Order...', 'artisan-b2b-portal'),
                 'order_success'    => __('Order placed successfully!', 'artisan-b2b-portal'),
@@ -221,6 +257,17 @@ class AB2B_Public {
                 'remove'           => __('Remove', 'artisan-b2b-portal'),
                 'total'            => __('Total', 'artisan-b2b-portal'),
                 'special_instructions' => __('Special Instructions', 'artisan-b2b-portal'),
+                'edit_order'           => __('Edit Order', 'artisan-b2b-portal'),
+                'delete_order'         => __('Delete Order', 'artisan-b2b-portal'),
+                'delete_order_confirm' => __('Are you sure you want to delete this order?', 'artisan-b2b-portal'),
+                'update_order'         => __('Update Order', 'artisan-b2b-portal'),
+                'updating_order'       => __('Updating...', 'artisan-b2b-portal'),
+                'order_updated'        => __('Order updated successfully!', 'artisan-b2b-portal'),
+                'order_deleted'        => __('Order deleted.', 'artisan-b2b-portal'),
+                'reverse_vat'          => __('Reverse VAT applies', 'artisan-b2b-portal'),
+                'saving'               => __('Saving...', 'artisan-b2b-portal'),
+                'profile_updated'      => __('Your details have been updated.', 'artisan-b2b-portal'),
+                'save_changes'         => __('Save Changes', 'artisan-b2b-portal'),
             ],
         ]);
     }

@@ -48,6 +48,14 @@ if (!defined('ABSPATH')) exit;
             </span>
             <?php esc_html_e('Orders', 'artisan-b2b-portal'); ?>
         </button>
+        <button class="ab2b-tab" data-tab="account">
+            <span class="ab2b-tab-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="20" height="20">
+                    <path d="M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Z"/>
+                </svg>
+            </span>
+            <?php esc_html_e('Account', 'artisan-b2b-portal'); ?>
+        </button>
     </div>
 
     <div class="ab2b-portal-content">
@@ -95,6 +103,85 @@ if (!defined('ABSPATH')) exit;
                     <span class="ab2b-spinner"></span>
                     <?php esc_html_e('Loading orders...', 'artisan-b2b-portal'); ?>
                 </div>
+            </div>
+        </div>
+
+        <!-- Account Tab -->
+        <div class="ab2b-tab-content" id="tab-account">
+            <div class="ab2b-account" id="ab2b-account">
+                <div class="ab2b-loading" id="ab2b-account-loading">
+                    <span class="ab2b-spinner"></span>
+                    <?php esc_html_e('Loading...', 'artisan-b2b-portal'); ?>
+                </div>
+                <form id="ab2b-profile-form" class="ab2b-profile-form" style="display: none;">
+                    <div class="ab2b-profile-section">
+                        <h3><?php esc_html_e('Bill To', 'artisan-b2b-portal'); ?></h3>
+                        <div class="ab2b-form-row">
+                            <label for="profile-company_name"><?php esc_html_e('Company Name', 'artisan-b2b-portal'); ?> *</label>
+                            <input type="text" id="profile-company_name" name="company_name" required>
+                        </div>
+                        <div class="ab2b-form-row">
+                            <label for="profile-contact_name"><?php esc_html_e('Contact Name', 'artisan-b2b-portal'); ?></label>
+                            <input type="text" id="profile-contact_name" name="contact_name">
+                        </div>
+                        <div class="ab2b-form-row">
+                            <label for="profile-address"><?php esc_html_e('Address', 'artisan-b2b-portal'); ?></label>
+                            <textarea id="profile-address" name="address" rows="2"></textarea>
+                        </div>
+                        <div class="ab2b-form-row ab2b-form-row-inline">
+                            <div>
+                                <label for="profile-city"><?php esc_html_e('City', 'artisan-b2b-portal'); ?></label>
+                                <input type="text" id="profile-city" name="city">
+                            </div>
+                            <div>
+                                <label for="profile-postcode"><?php esc_html_e('Postcode', 'artisan-b2b-portal'); ?></label>
+                                <input type="text" id="profile-postcode" name="postcode">
+                            </div>
+                        </div>
+                        <div class="ab2b-form-row">
+                            <label for="profile-cvr_number"><?php esc_html_e('CVR Number', 'artisan-b2b-portal'); ?></label>
+                            <input type="text" id="profile-cvr_number" name="cvr_number">
+                        </div>
+                    </div>
+                    <div class="ab2b-profile-section">
+                        <h3><?php esc_html_e('Deliver To', 'artisan-b2b-portal'); ?></h3>
+                        <p class="ab2b-profile-hint"><?php esc_html_e('Leave blank to use billing details.', 'artisan-b2b-portal'); ?></p>
+                        <div class="ab2b-form-row">
+                            <label for="profile-delivery_company"><?php esc_html_e('Company', 'artisan-b2b-portal'); ?></label>
+                            <input type="text" id="profile-delivery_company" name="delivery_company">
+                        </div>
+                        <div class="ab2b-form-row">
+                            <label for="profile-delivery_contact"><?php esc_html_e('Contact', 'artisan-b2b-portal'); ?></label>
+                            <input type="text" id="profile-delivery_contact" name="delivery_contact">
+                        </div>
+                        <div class="ab2b-form-row">
+                            <label for="profile-delivery_address"><?php esc_html_e('Address', 'artisan-b2b-portal'); ?></label>
+                            <textarea id="profile-delivery_address" name="delivery_address" rows="2"></textarea>
+                        </div>
+                        <div class="ab2b-form-row ab2b-form-row-inline">
+                            <div>
+                                <label for="profile-delivery_city"><?php esc_html_e('City', 'artisan-b2b-portal'); ?></label>
+                                <input type="text" id="profile-delivery_city" name="delivery_city">
+                            </div>
+                            <div>
+                                <label for="profile-delivery_postcode"><?php esc_html_e('Postcode', 'artisan-b2b-portal'); ?></label>
+                                <input type="text" id="profile-delivery_postcode" name="delivery_postcode">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ab2b-profile-section">
+                        <h3><?php esc_html_e('Contact', 'artisan-b2b-portal'); ?></h3>
+                        <div class="ab2b-form-row">
+                            <label for="profile-email"><?php esc_html_e('Email', 'artisan-b2b-portal'); ?> *</label>
+                            <input type="email" id="profile-email" name="email" required>
+                        </div>
+                        <div class="ab2b-form-row">
+                            <label for="profile-phone"><?php esc_html_e('Phone', 'artisan-b2b-portal'); ?></label>
+                            <input type="tel" id="profile-phone" name="phone">
+                        </div>
+                    </div>
+                    <button type="submit" class="ab2b-btn ab2b-btn-primary"><?php esc_html_e('Save Changes', 'artisan-b2b-portal'); ?></button>
+                </form>
             </div>
         </div>
     </div>

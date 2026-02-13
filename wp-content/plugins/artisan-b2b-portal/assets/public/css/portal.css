@@ -663,6 +663,34 @@
     text-align: right;
 }
 
+.ab2b-order-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+}
+
+.ab2b-order-actions .ab2b-order-edit-btn,
+.ab2b-order-actions .ab2b-order-delete-btn {
+    padding: 0.25rem 0.6rem;
+    font-size: 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid var(--ab2b-border, #ddd);
+    background: var(--ab2b-card-bg, #fff);
+    color: var(--ab2b-secondary, #666);
+}
+
+.ab2b-order-actions .ab2b-order-edit-btn:hover,
+.ab2b-order-actions .ab2b-order-delete-btn:hover {
+    background: var(--ab2b-bg, #f5f5f5);
+}
+
+.ab2b-order-actions .ab2b-order-delete-btn:hover {
+    border-color: var(--ab2b-danger, #dc3545);
+    color: var(--ab2b-danger, #dc3545);
+}
+
 .ab2b-order-total {
     font-weight: 600;
     font-size: 1.1rem;
@@ -753,6 +781,17 @@
 
 .ab2b-btn-secondary:hover {
     border-color: var(--ab2b-primary);
+}
+
+.ab2b-btn-outline {
+    background: transparent;
+    color: var(--ab2b-secondary);
+    border: 1px solid var(--ab2b-border);
+}
+
+.ab2b-btn-outline:hover {
+    border-color: var(--ab2b-danger);
+    color: var(--ab2b-danger);
 }
 
 .ab2b-btn-full {
@@ -1020,6 +1059,14 @@ body.ab2b-modal-open {
     border-bottom: none;
 }
 
+.ab2b-order-detail-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--ab2b-border);
+}
+
 /* Access Denied */
 .ab2b-access-denied {
     display: flex;
@@ -1172,7 +1219,7 @@ body.ab2b-modal-open {
 }
 
 .ab2b-badge-exclusive {
-    background: #6f42c1;
+    background: #00bfbf;
     color: #fff;
 }
 
@@ -1652,4 +1699,61 @@ body.ab2b-modal-open {
     font-size: 0.95rem;
     color: var(--ab2b-secondary);
     opacity: 0.9;
+}
+
+/* Account / Profile Tab */
+.ab2b-profile-form {
+    max-width: 540px;
+}
+
+.ab2b-profile-form .ab2b-profile-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--ab2b-border, #eee);
+}
+
+.ab2b-profile-form .ab2b-profile-section:last-of-type {
+    border-bottom: none;
+}
+
+.ab2b-profile-form h3 {
+    margin: 0 0 1rem;
+    font-size: 1.1rem;
+    color: var(--ab2b-primary, #333);
+}
+
+.ab2b-profile-hint {
+    font-size: 0.85rem;
+    color: var(--ab2b-secondary, #666);
+    margin: -0.5rem 0 1rem;
+}
+
+.ab2b-profile-form .ab2b-form-row {
+    margin-bottom: 1rem;
+}
+
+.ab2b-profile-form .ab2b-form-row label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 0.35rem;
+    font-size: 0.9rem;
+}
+
+.ab2b-profile-form .ab2b-form-row input,
+.ab2b-profile-form .ab2b-form-row textarea {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--ab2b-border, #ddd);
+    border-radius: 6px;
+    font-size: 0.95rem;
+}
+
+.ab2b-profile-form .ab2b-form-row-inline {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.ab2b-profile-form .ab2b-btn {
+    margin-top: 0.5rem;
 }

@@ -45,9 +45,16 @@ class AB2B_Rest_Api {
 
         // Customer info
         register_rest_route($this->namespace, '/customer', [
-            'methods'             => WP_REST_Server::READABLE,
-            'callback'            => [$this, 'get_customer'],
-            'permission_callback' => [$this, 'check_customer_permission'],
+            [
+                'methods'             => WP_REST_Server::READABLE,
+                'callback'            => [$this, 'get_customer'],
+                'permission_callback' => [$this, 'check_customer_permission'],
+            ],
+            [
+                'methods'             => 'PUT',
+                'callback'            => [$this, 'update_customer'],
+                'permission_callback' => [$this, 'check_customer_permission'],
+            ],
         ]);
 
         // Orders
@@ -65,15 +72,43 @@ class AB2B_Rest_Api {
         ]);
 
         register_rest_route($this->namespace, '/orders/(?P<id>\d+)', [
-            'methods'             => WP_REST_Server::READABLE,
-            'callback'            => [$this, 'get_order'],
-            'permission_callback' => [$this, 'check_customer_permission'],
-            'args'                => [
-                'id' => [
-                    'required'          => true,
-                    'validate_callback' => function($param) {
-                        return is_numeric($param);
-                    },
+            [
+                'methods'             => WP_REST_Server::READABLE,
+                'callback'            => [$this, 'get_order'],
+                'permission_callback' => [$this, 'check_customer_permission'],
+                'args'                => [
+                    'id' => [
+                        'required'          => true,
+                        'validate_callback' => function($param) {
+                            return is_numeric($param);
+                        },
+                    ],
+                ],
+            ],
+            [
+                'methods'             => 'PUT',
+                'callback'            => [$this, 'update_order'],
+                'permission_callback' => [$this, 'check_customer_permission'],
+                'args'                => [
+                    'id' => [
+                        'required'          => true,
+                        'validate_callback' => function($param) {
+                            return is_numeric($param);
+                        },
+                    ],
+                ],
+            ],
+            [
+                'methods'             => 'DELETE',
+                'callback'            => [$this, 'delete_order'],
+                'permission_callback' => [$this, 'check_customer_permission'],
+                'args'                => [
+                    'id' => [
+                        'required'          => true,
+                        'validate_callback' => function($param) {
+                            return is_numeric($param);
+                        },
+                    ],
                 ],
             ],
         ]);
@@ -316,12 +351,80 @@ class AB2B_Rest_Api {
         $customer = $request->get_param('_customer');
 
         return rest_ensure_response([
-            'id'           => (int) $customer->id,
-            'company_name' => $customer->company_name,
-            'contact_name' => $customer->contact_name,
-            'email'        => $customer->email,
-            'phone'        => $customer->phone,
-            'address'      => $customer->address,
+            'id'                 => (int) $customer->id,
+            'company_name'       => $customer->company_name,
+            'contact_name'       => $customer->contact_name,
+            'email'              => $customer->email,
+            'phone'              => $customer->phone,
+            'address'            => $customer->address ?? '',
+            'city'               => $customer->city ?? '',
+            'postcode'           => $customer->postcode ?? '',
+            'cvr_number'         => $customer->cvr_number ?? '',
+            'delivery_company'   => $customer->delivery_company ?? '',
+            'delivery_contact'   => $customer->delivery_contact ?? '',
+            'delivery_address'   => $customer->delivery_address ?? '',
+            'delivery_city'      => $customer->delivery_city ?? '',
+            'delivery_postcode'  => $customer->delivery_postcode ?? '',
+        ]);
+    }
+
+    /**
+     * Update current customer (self-service from portal)
+     */
+    public function update_customer($request) {
+        $customer = $request->get_param('_customer');
+        $body = $request->get_json_params() ?: $request->get_body_params();
+
+        $allowed = [
+            'company_name', 'contact_name', 'email', 'phone',
+            'address', 'city', 'postcode', 'cvr_number',
+            'delivery_company', 'delivery_contact', 'delivery_address',
+            'delivery_city', 'delivery_postcode',
+        ];
+        $data = [];
+        foreach ($allowed as $key) {
+            if (isset($body[$key])) {
+                if (in_array($key, ['address', 'delivery_address'])) {
+                    $data[$key] = sanitize_textarea_field($body[$key]);
+                } else {
+                    $data[$key] = sanitize_text_field($body[$key]);
+                }
+            }
+        }
+        if (isset($data['email']) && !is_email($data['email'])) {
+            return new WP_Error('invalid_email', __('Invalid email address.', 'artisan-b2b-portal'), ['status' => 400]);
+        }
+
+        if (empty($data)) {
+            return new WP_Error('no_changes', __('No valid fields to update.', 'artisan-b2b-portal'), ['status' => 400]);
+        }
+
+        $result = AB2B_Customer::update($customer->id, $data);
+
+        if (is_wp_error($result)) {
+            return $result;
+        }
+
+        $updated = AB2B_Customer::get($customer->id);
+        return rest_ensure_response([
+            'success' => true,
+            'message' => __('Your details have been updated.', 'artisan-b2b-portal'),
+            'customer' => [
+                'id'                 => (int) $updated->id,
+                'company_name'       => $updated->company_name,
+                'contact_name'       => $updated->contact_name,
+                'email'              => $updated->email,
+                'phone'              => $updated->phone,
+                'address'            => $updated->address ?? '',
+                'city'               => $updated->city ?? '',
+                'postcode'           => $updated->postcode ?? '',
+                'cvr_number'         => $updated->cvr_number ?? '',
+                'delivery_company'   => $updated->delivery_company ?? '',
+                'delivery_contact'   => $updated->delivery_contact ?? '',
+                'delivery_address'   => $updated->delivery_address ?? '',
+                'delivery_city'      => $updated->delivery_city ?? '',
+                'delivery_postcode'  => $updated->delivery_postcode ?? '',
+            ],
         ]);
     }
 
@@ -463,6 +566,145 @@ class AB2B_Rest_Api {
     }
 
     /**
+     * Update pending order
+     */
+    public function update_order($request) {
+        $customer = $request->get_param('_customer');
+        $order_id = (int) $request->get_param('id');
+        $order = AB2B_Order::get($order_id);
+
+        if (!$order || $order->customer_id != $customer->id) {
+            return new WP_Error(
+                'order_not_found',
+                __('Order not found.', 'artisan-b2b-portal'),
+                ['status' => 404]
+            );
+        }
+
+        $items = $request->get_param('items');
+        $delivery_date = sanitize_text_field($request->get_param('delivery_date'));
+        $delivery_method = sanitize_text_field($request->get_param('delivery_method'));
+        $special_instructions = sanitize_textarea_field($request->get_param('special_instructions'));
+
+        if (empty($items) || !is_array($items)) {
+            return new WP_Error(
+                'invalid_items',
+                __('Order items are required.', 'artisan-b2b-portal'),
+                ['status' => 400]
+            );
+        }
+
+        $price_map = AB2B_Customer_Pricing::get_customer_price_map($customer->id);
+        $customer_products = AB2B_Customer_Pricing::get_customer_products($customer->id);
+        $customer_product_map = [];
+        foreach ($customer_products as $cp) {
+            $customer_product_map[$cp->product_id] = $cp;
+        }
+
+        $order_items = [];
+        foreach ($items as $item) {
+            if (empty($item['product_id']) || empty($item['weight_id']) || empty($item['quantity'])) {
+                continue;
+            }
+
+            $product = AB2B_Product::get($item['product_id']);
+            $weight = AB2B_Product::get_weight($item['weight_id']);
+
+            if (!$product || !$weight || $weight->product_id != $product->id) {
+                continue;
+            }
+
+            if (!AB2B_Customer_Pricing::customer_has_product_access($customer->id, $product->id)) {
+                continue;
+            }
+
+            $unit_price = isset($price_map[$weight->id])
+                ? (float) $price_map[$weight->id]
+                : (float) $weight->price;
+
+            $product_name = (isset($customer_product_map[$product->id]) && !empty($customer_product_map[$product->id]->custom_name))
+                ? $customer_product_map[$product->id]->custom_name
+                : $product->name;
+
+            $order_items[] = [
+                'product_id'        => (int) $product->id,
+                'product_weight_id' => (int) $weight->id,
+                'product_name'      => $product_name,
+                'weight_label'      => $weight->weight_label,
+                'quantity'          => (int) $item['quantity'],
+                'unit_price'        => $unit_price,
+            ];
+        }
+
+        if (empty($order_items)) {
+            return new WP_Error(
+                'no_valid_items',
+                __('No valid items in order.', 'artisan-b2b-portal'),
+                ['status' => 400]
+            );
+        }
+
+        if (!in_array($delivery_method, ['shipping', 'international', 'pickup'])) {
+            $delivery_method = 'shipping';
+        }
+
+        $result = AB2B_Order::update_full($order_id, [
+            'items'                => $order_items,
+            'delivery_date'        => $delivery_date,
+            'delivery_method'      => $delivery_method,
+            'special_instructions' => $special_instructions,
+        ]);
+
+        if (is_wp_error($result)) {
+            return $result;
+        }
+
+        $order = AB2B_Order::get($order_id);
+
+        return rest_ensure_response([
+            'success' => true,
+            'message' => __('Order updated successfully!', 'artisan-b2b-portal'),
+            'order'   => $this->format_order($order, true),
+        ]);
+    }
+
+    /**
+     * Delete/cancel pending order
+     */
+    public function delete_order($request) {
+        $customer = $request->get_param('_customer');
+        $order_id = (int) $request->get_param('id');
+        $order = AB2B_Order::get($order_id);
+
+        if (!$order || $order->customer_id != $customer->id) {
+            return new WP_Error(
+                'order_not_found',
+                __('Order not found.', 'artisan-b2b-portal'),
+                ['status' => 404]
+            );
+        }
+
+        if ($order->status !== 'pending') {
+            return new WP_Error(
+                'order_confirmed',
+                __('Only pending orders can be deleted.', 'artisan-b2b-portal'),
+                ['status' => 400]
+            );
+        }
+
+        $result = AB2B_Order::cancel($order_id);
+
+        if (is_wp_error($result)) {
+            return $result;
+        }
+
+        return rest_ensure_response([
+            'success' => true,
+            'message' => __('Order deleted.', 'artisan-b2b-portal'),
+        ]);
+    }
+
+    /**
      * Format order for API response
      */
     private function format_order($order, $include_items = false) {
@@ -492,6 +734,8 @@ class AB2B_Rest_Api {
         if ($include_items && !empty($order->items)) {
             $data['items'] = array_map(function($item) {
                 return [
+                    'product_id'     => (int) $item->product_id,
+                    'weight_id'      => (int) $item->product_weight_id,
                     'product_name'   => $item->product_name,
                     'weight_label'   => $item->weight_label,
                     'quantity'       => (int) $item->quantity,

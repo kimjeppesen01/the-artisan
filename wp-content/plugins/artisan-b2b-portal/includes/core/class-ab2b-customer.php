@@ -281,6 +281,46 @@ class AB2B_Customer {
             $format[] = '%s';
         }
 
+        if (array_key_exists('city', $data)) {
+            $update_data['city'] = sanitize_text_field($data['city']);
+            $format[] = '%s';
+        }
+
+        if (array_key_exists('postcode', $data)) {
+            $update_data['postcode'] = sanitize_text_field($data['postcode']);
+            $format[] = '%s';
+        }
+
+        if (array_key_exists('cvr_number', $data)) {
+            $update_data['cvr_number'] = sanitize_text_field($data['cvr_number']);
+            $format[] = '%s';
+        }
+
+        if (array_key_exists('delivery_company', $data)) {
+            $update_data['delivery_company'] = sanitize_text_field($data['delivery_company']);
+            $format[] = '%s';
+        }
+
+        if (array_key_exists('delivery_contact', $data)) {
+            $update_data['delivery_contact'] = sanitize_text_field($data['delivery_contact']);
+            $format[] = '%s';
+        }
+
+        if (isset($data['delivery_address'])) {
+            $update_data['delivery_address'] = sanitize_textarea_field($data['delivery_address']);
+            $format[] = '%s';
+        }
+
+        if (array_key_exists('delivery_city', $data)) {
+            $update_data['delivery_city'] = sanitize_text_field($data['delivery_city']);
+            $format[] = '%s';
+        }
+
+        if (array_key_exists('delivery_postcode', $data)) {
+            $update_data['delivery_postcode'] = sanitize_text_field($data['delivery_postcode']);
+            $format[] = '%s';
+        }
+
         if (isset($data['is_active'])) {
             $update_data['is_active'] = (int) $data['is_active'];
             $format[] = '%d';
@@ -299,6 +339,10 @@ class AB2B_Customer {
 
         if ($result === false) {
             return new WP_Error('db_error', __('Failed to update customer.', 'artisan-b2b-portal'));
+        }
+
+        if ($result > 0) {
+            do_action('ab2b_customer_updated', $id, $update_data);
         }
 
         return true;
