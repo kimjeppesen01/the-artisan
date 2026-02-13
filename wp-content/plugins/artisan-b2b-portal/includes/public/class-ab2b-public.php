@@ -22,6 +22,7 @@ class AB2B_Public {
         add_action('init', [$this, 'register_rewrite_rules']);
         add_filter('query_vars', [$this, 'add_query_vars']);
         add_action('init', [$this, 'handle_password_login']);
+        add_action('init', [$this, 'handle_password_reset']);
         add_action('template_redirect', [$this, 'check_portal_access']);
     }
 
@@ -91,6 +92,45 @@ class AB2B_Public {
             wp_safe_redirect($portal_url);
             exit;
         }
+    }
+
+    /**
+     * Handle password reset request – generate new password and email to customer
+     */
+    public function handle_password_reset() {
+        if (!isset($_POST['ab2b_password_reset'])) {
+            return;
+        }
+
+        if (!isset($_POST['ab2b_reset_nonce']) || !wp_verify_nonce($_POST['ab2b_reset_nonce'], 'ab2b_password_reset')) {
+            return;
+        }
+
+        $customer_slug = sanitize_text_field($_POST['ab2b_customer_slug'] ?? '');
+        if (empty($customer_slug)) {
+            return;
+        }
+
+        $customer = AB2B_Customer::get_by_slug($customer_slug);
+        if (!$customer || empty($customer->email)) {
+            return;
+        }
+
+        if (empty($customer->password_hash)) {
+            return;
+        }
+
+        $new_password = wp_generate_password(12, true, false);
+        $result = AB2B_Customer::set_password($customer->id, $new_password);
+
+        if ($result !== false) {
+            AB2B_Email::send_password_reset($customer, $new_password);
+        }
+
+        $portal_url = AB2B_Helpers::get_portal_url(null, $customer_slug);
+        $portal_url = add_query_arg('ab2b_reset_sent', '1', $portal_url);
+        wp_safe_redirect($portal_url);
+        exit;
     }
 
     /**
@@ -301,6 +341,8 @@ class AB2B_Public {
             return $this->render_welcome();
         }
         $company_name = $customer->company_name;
+        $reset_sent = isset($_GET['ab2b_reset_sent']) && $_GET['ab2b_reset_sent'] === '1';
+        $can_reset = !empty($customer->password_hash) && !empty($customer->email);
 
         ob_start();
         ?>
@@ -309,6 +351,10 @@ class AB2B_Public {
                 <p class="ab2b-login-title"><?php esc_html_e( 'B2B Portal Login', 'artisan-b2b-portal' ); ?></p>
                 <?php if ( $company_name ) : ?>
                     <p class="ab2b-login-company"><?php echo esc_html( $company_name ); ?></p>
+                <?php endif; ?>
+
+                <?php if ( $reset_sent ) : ?>
+                    <p class="ab2b-login-notice ab2b-login-notice--success"><?php esc_html_e( 'A new password has been sent to the email on file. Check your inbox and log in below.', 'artisan-b2b-portal' ); ?></p>
                 <?php endif; ?>
 
                 <form method="post" class="ab2b-password-form" action="">
@@ -326,7 +372,19 @@ class AB2B_Public {
                     </p>
                 </form>
 
+                <?php if ( $can_reset ) : ?>
+                <div class="ab2b-login-reset">
+                    <p class="ab2b-login-help"><?php esc_html_e( 'Forgot your password?', 'artisan-b2b-portal' ); ?></p>
+                    <form method="post" class="ab2b-reset-form" action="">
+                        <?php wp_nonce_field( 'ab2b_password_reset', 'ab2b_reset_nonce' ); ?>
+                        <input type="hidden" name="ab2b_customer_slug" value="<?php echo esc_attr( $customer_slug ); ?>">
+                        <input type="hidden" name="ab2b_password_reset" value="1">
+                        <button type="submit" class="ab2b-btn ab2b-btn-link"><?php esc_html_e( 'Email me a new password', 'artisan-b2b-portal' ); ?></button>
+                    </form>
+                </div>
+                <?php else : ?>
                 <p class="ab2b-login-help"><?php esc_html_e( 'Forgot your password? Contact your account manager.', 'artisan-b2b-portal' ); ?></p>
+                <?php endif; ?>
             </div>
         </div>
         <?php

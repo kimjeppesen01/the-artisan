@@ -130,6 +130,97 @@ class AB2B_Email {
     }
 
     /**
+     * Send password reset email with new temporary password
+     *
+     * @param object $customer Customer object
+     * @param string $new_password The new unhashed password to send
+     */
+    public static function send_password_reset($customer, $new_password) {
+        $company_name = ab2b_get_option('company_name', get_bloginfo('name'));
+        $company_logo = ab2b_get_option('company_logo', '');
+        $portal_url = AB2B_Helpers::get_portal_url(null, $customer->url_slug ?: '');
+
+        $subject = sprintf(__('Your New Portal Password - %s', 'artisan-b2b-portal'), $company_name);
+
+        ob_start();
+        ?>
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+                <tr>
+                    <td style="padding: 40px 30px; text-align: center; background: linear-gradient(135deg, #333 0%, #1a1a1a 100%);">
+                        <?php if ($company_logo) : ?>
+                            <img src="<?php echo esc_url($company_logo); ?>" alt="<?php echo esc_attr($company_name); ?>" style="max-width: 200px; height: auto;">
+                        <?php else : ?>
+                            <h1 style="color: #ffffff; margin: 0; font-size: 24px;"><?php echo esc_html($company_name); ?></h1>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 40px 30px;">
+                        <h2 style="margin: 0 0 20px; color: #333; font-size: 22px;">
+                            <?php esc_html_e('Your New Portal Password', 'artisan-b2b-portal'); ?>
+                        </h2>
+
+                        <p style="color: #666; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
+                            <?php printf(esc_html__('Hello %s,', 'artisan-b2b-portal'), esc_html($customer->contact_name ?: $customer->company_name)); ?>
+                        </p>
+
+                        <p style="color: #666; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
+                            <?php esc_html_e('A new password has been generated for your B2B portal account. Use the details below to log in.', 'artisan-b2b-portal'); ?>
+                        </p>
+
+                        <div style="background-color: #f8f8f8; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                            <p style="color: #333; font-weight: bold; margin: 0 0 10px;">
+                                <?php esc_html_e('Your New Password:', 'artisan-b2b-portal'); ?>
+                            </p>
+                            <p style="color: #1a1068; font-size: 18px; font-weight: 600; margin: 0 0 15px; font-family: monospace; letter-spacing: 2px;">
+                                <?php echo esc_html($new_password); ?>
+                            </p>
+                            <p style="color: #666; margin: 5px 0 0;">
+                                <strong><?php esc_html_e('Portal URL:', 'artisan-b2b-portal'); ?></strong><br>
+                                <a href="<?php echo esc_url($portal_url); ?>" style="color: #333;"><?php echo esc_url($portal_url); ?></a>
+                            </p>
+                        </div>
+
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="<?php echo esc_url($portal_url); ?>" style="display: inline-block; padding: 15px 30px; background-color: #333; color: #ffffff; text-decoration: none; font-weight: bold; border-radius: 5px; font-size: 16px;">
+                                <?php esc_html_e('Log In to Portal', 'artisan-b2b-portal'); ?>
+                            </a>
+                        </div>
+
+                        <p style="color: #999; font-size: 13px; line-height: 1.6; margin: 20px 0 0; padding-top: 20px; border-top: 1px solid #eee;">
+                            <?php esc_html_e('We recommend changing this password after logging in via your Account settings.', 'artisan-b2b-portal'); ?>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 20px 30px; background-color: #f8f8f8; text-align: center;">
+                        <p style="color: #999; font-size: 12px; margin: 0;">
+                            &copy; <?php echo date('Y'); ?> <?php echo esc_html($company_name); ?>
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
+        <?php
+        $message = ob_get_clean();
+
+        $headers = [
+            'Content-Type: text/html; charset=UTF-8',
+            'From: ' . $company_name . ' <' . get_option('admin_email') . '>',
+        ];
+
+        return wp_mail($customer->email, $subject, $message, $headers);
+    }
+
+    /**
      * Send order acknowledgement to customer (professional template)
      */
     public static function send_order_acknowledgement($order_id) {
@@ -185,6 +276,13 @@ class AB2B_Email {
 
         $bill_city_postcode = trim(trim($c->city ?? '') . ', ' . trim($c->postcode ?? ''), ', ');
         $bill_cvr = !empty($c->cvr_number) ? 'CVR: ' . $c->cvr_number : '';
+        $address_line = trim(($c->address ?? '') . ($bill_city_postcode ? ', ' . $bill_city_postcode : ''), ', ');
+        $billing_parts = array_filter([
+            $c->company_name ?? '',
+            $bill_cvr,
+            $address_line,
+        ]);
+        $billing_line = implode(' · ', $billing_parts);
         $del_company = $c->delivery_company ?? $c->company_name ?? '';
         $del_contact = $c->delivery_contact ?? $c->contact_name ?? '';
         $del_addr = $c->delivery_address ?? $c->address ?? '';
@@ -301,6 +399,17 @@ class AB2B_Email {
               </td>
             </tr>
           </table>
+
+          <?php if ($billing_line) : ?>
+          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top:16px;background-color:#f9f7f4;border-left:3px solid #1db8c2;border-radius:0 4px 4px 0;">
+            <tr>
+              <td style="padding:12px 18px;">
+                <p style="font-family:'DM Sans',Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#1db8c2;margin:0 0 4px;"><?php esc_html_e('Billing', 'artisan-b2b-portal'); ?></p>
+                <p style="font-family:'DM Sans',Arial,sans-serif;font-size:13px;font-weight:400;color:#333;margin:0;line-height:1.5;word-break:break-word;"><?php echo esc_html($billing_line); ?></p>
+              </td>
+            </tr>
+          </table>
+          <?php endif; ?>
         </td>
       </tr>
 
@@ -590,6 +699,13 @@ class AB2B_Email {
                             $bill_city_postcode,
                             !empty($c->cvr_number) ? 'CVR: ' . ($c->cvr_number) : '',
                         ]);
+                        $admin_address_line = trim(($c->address ?? '') . ($bill_city_postcode ? ', ' . $bill_city_postcode : ''), ', ');
+                        $admin_billing_parts = array_filter([
+                            $c->company_name ?? '',
+                            !empty($c->cvr_number) ? 'CVR: ' . $c->cvr_number : '',
+                            $admin_address_line,
+                        ]);
+                        $admin_billing_line = implode(' · ', $admin_billing_parts);
                         $del_city_postcode = trim(trim($c->delivery_city ?? $c->city ?? '') . ', ' . trim($c->delivery_postcode ?? $c->postcode ?? ''), ', ');
                         $del_lines = array_filter([
                             $c->delivery_company ?? $c->company_name ?? '',
@@ -601,6 +717,9 @@ class AB2B_Email {
                         <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px; background: #f9f9f9; border-radius: 6px; overflow: hidden;">
                             <tr><td colspan="2" style="padding: 8px 12px; background: #eee; font-weight: 600;"><?php esc_html_e('Bill To', 'artisan-b2b-portal'); ?></td></tr>
                             <tr><td colspan="2" style="padding: 10px 12px; line-height: 1.5; white-space: pre-line;"><?php echo esc_html(implode("\n", $bill_lines) ?: '—'); ?></td></tr>
+                            <?php if (!empty($admin_billing_line)) : ?>
+                            <tr><td colspan="2" style="padding: 6px 12px 10px; border-top: 1px solid #e0e0e0; font-size: 13px; color: #333;"><strong><?php esc_html_e('Billing', 'artisan-b2b-portal'); ?>:</strong> <?php echo esc_html($admin_billing_line); ?></td></tr>
+                            <?php endif; ?>
                             <tr><td colspan="2" style="padding: 8px 12px; background: #eee; font-weight: 600;"><?php esc_html_e('Deliver To', 'artisan-b2b-portal'); ?></td></tr>
                             <tr><td colspan="2" style="padding: 10px 12px; line-height: 1.5; white-space: pre-line;"><?php echo esc_html(implode("\n", $del_lines) ?: '—'); ?></td></tr>
                         </table>

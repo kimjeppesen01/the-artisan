@@ -1646,6 +1646,43 @@ body.ab2b-modal-open {
     color: var(--ab2b-secondary);
 }
 
+.ab2b-login-notice--success {
+    margin: 0 0 1rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    color: #155724;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    border-radius: 4px;
+}
+
+.ab2b-login-reset {
+    margin-top: 0.5rem;
+}
+
+.ab2b-login-reset .ab2b-login-help {
+    margin-bottom: 0.35rem;
+}
+
+.ab2b-reset-form {
+    display: inline;
+    margin: 0;
+}
+
+.ab2b-btn-link {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.8rem;
+    color: var(--ab2b-secondary, #1db8c2);
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.ab2b-btn-link:hover {
+    color: var(--mainColor, var(--ab2b-primary));
+}
+
 @media (max-width: 576px) {
     .ab2b-login-form--saren .form-row-wide .input-text {
         background-color: #f2f2f2;
