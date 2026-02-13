@@ -386,8 +386,6 @@ class AB2B_Rest_Api {
             if (isset($body[$key])) {
                 if (in_array($key, ['address', 'delivery_address'])) {
                     $data[$key] = sanitize_textarea_field($body[$key]);
-                } elseif ($key === 'email') {
-                    $data[$key] = sanitize_email($body[$key]);
                 } else {
                     $data[$key] = sanitize_text_field($body[$key]);
                 }
@@ -396,6 +394,7 @@ class AB2B_Rest_Api {
         if (isset($data['email']) && !is_email($data['email'])) {
             return new WP_Error('invalid_email', __('Invalid email address.', 'artisan-b2b-portal'), ['status' => 400]);
         }
+
         if (empty($data)) {
             return new WP_Error('no_changes', __('No valid fields to update.', 'artisan-b2b-portal'), ['status' => 400]);
         }
