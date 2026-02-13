@@ -5,6 +5,9 @@
 
 /* Use Saren theme CSS variables */
 .ab2b-portal {
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
     --ab2b-primary: var(--mainColor, #0f0f0f);
     --ab2b-secondary: var(--secondaryColor, #8E9194);
     --ab2b-bg: var(--mainBackground, #f1f1f1);
@@ -846,6 +849,23 @@ body.ab2b-modal-open {
 
 .ab2b-modal-wide {
     max-width: 900px;
+}
+
+.ab2b-modal-small {
+    max-width: 400px;
+}
+
+.ab2b-modal-confirm .ab2b-modal-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.ab2b-confirm-message {
+    margin: 0;
+    font-size: 1rem;
+    text-align: center;
 }
 
 @keyframes ab2b-modal-in {
@@ -1739,8 +1759,14 @@ body.ab2b-modal-open {
 }
 
 /* Account / Profile Tab */
+.ab2b-account {
+    max-width: 100%;
+    min-width: 0;
+}
+
 .ab2b-profile-form {
     max-width: 540px;
+    min-width: 0;
 }
 
 .ab2b-profile-form .ab2b-profile-section {

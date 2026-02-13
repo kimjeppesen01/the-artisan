@@ -1103,7 +1103,7 @@
         saveCustomerProfile: function(e) {
             e.preventDefault();
             const self = this;
-            const $btn = $('#ab2b-profile-form button[type="submit"]');
+            const $btn = $('#ab2b-profile-save-btn');
 
             const data = {
                 company_name: $('#profile-company_name').val(),
@@ -1161,8 +1161,8 @@
             };
 
             this.api('/customer/password', 'POST', data).done(function(response) {
-                self.showMessage(response.message || 'Your password has been updated.', 'success');
                 $('#profile-current_password, #profile-new_password, #profile-confirm_password').val('');
+                self.showPasswordSuccessModal(response.message || 'Your password has been updated.');
             }).fail(function(xhr) {
                 const msg = xhr.responseJSON?.message || ab2b_portal.strings.error;
                 self.showMessage(msg, 'error');
@@ -1251,8 +1251,19 @@
                     $(this).remove();
                 });
             }, 3000);
+        },
+
+        showPasswordSuccessModal: function(message) {
+            $('#ab2b-password-success-msg').text(message);
+            $('#ab2b-password-success-modal').addClass('active');
+            $('body').addClass('ab2b-modal-open');
         }
     };
+
+    $(document).on('click', '#ab2b-password-success-ok, #ab2b-password-success-modal .ab2b-modal-overlay', function() {
+        $('#ab2b-password-success-modal').removeClass('active');
+        $('body').removeClass('ab2b-modal-open');
+    });
 
     $(document).ready(function() {
         AB2B_Portal.init();
