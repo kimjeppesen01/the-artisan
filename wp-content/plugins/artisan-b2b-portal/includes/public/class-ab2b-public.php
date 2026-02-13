@@ -272,6 +272,9 @@ class AB2B_Public {
                 'saving'               => __('Saving...', 'artisan-b2b-portal'),
                 'profile_updated'      => __('Your details have been updated.', 'artisan-b2b-portal'),
                 'save_changes'         => __('Save Changes', 'artisan-b2b-portal'),
+                'update_password'      => __('Update Password', 'artisan-b2b-portal'),
+                'password_mismatch'    => __('New passwords do not match.', 'artisan-b2b-portal'),
+                'password_too_short'   => __('Password must be at least 8 characters.', 'artisan-b2b-portal'),
             ],
         ]);
     }

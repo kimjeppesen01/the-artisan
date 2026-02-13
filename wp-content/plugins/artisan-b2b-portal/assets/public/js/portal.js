@@ -82,6 +82,9 @@
 
             // Account profile form
             $(document).on('submit', '#ab2b-profile-form', this.saveCustomerProfile.bind(this));
+
+            // Password change form
+            $(document).on('submit', '#ab2b-password-form', this.saveCustomerPassword.bind(this));
         },
 
         /**
@@ -1078,7 +1081,13 @@
                 $('#profile-delivery_city').val(customer.delivery_city || '');
                 $('#profile-delivery_postcode').val(customer.delivery_postcode || '');
                 $('#profile-email').val(customer.email || '');
+                $('#profile-billing_email').val(customer.billing_email || '');
                 $('#profile-phone').val(customer.phone || '');
+                if (customer.can_change_password) {
+                    $('#ab2b-password-section').show();
+                } else {
+                    $('#ab2b-password-section').hide();
+                }
                 $('#ab2b-account-loading').hide();
                 $('#ab2b-profile-form').show();
             }).fail(function() {
@@ -1109,6 +1118,7 @@
                 delivery_city: $('#profile-delivery_city').val(),
                 delivery_postcode: $('#profile-delivery_postcode').val(),
                 email: $('#profile-email').val(),
+                billing_email: $('#profile-billing_email').val(),
                 phone: $('#profile-phone').val()
             };
 
@@ -1121,6 +1131,43 @@
                 self.showMessage(msg, 'error');
             }).always(function() {
                 $btn.prop('disabled', false).text(ab2b_portal.strings.save_changes || 'Save Changes');
+            });
+        },
+
+        /**
+         * Save customer password
+         */
+        saveCustomerPassword: function(e) {
+            e.preventDefault();
+            const self = this;
+            const newPass = $('#profile-new_password').val();
+            const confirmPass = $('#profile-confirm_password').val();
+
+            if (newPass !== confirmPass) {
+                self.showMessage(ab2b_portal.strings.password_mismatch || 'New passwords do not match.', 'error');
+                return;
+            }
+            if (newPass.length < 8) {
+                self.showMessage(ab2b_portal.strings.password_too_short || 'Password must be at least 8 characters.', 'error');
+                return;
+            }
+
+            const $btn = $('#ab2b-password-btn');
+            $btn.prop('disabled', true).text(ab2b_portal.strings.saving || 'Saving...');
+
+            const data = {
+                current_password: $('#profile-current_password').val(),
+                new_password: newPass
+            };
+
+            this.api('/customer/password', 'POST', data).done(function(response) {
+                self.showMessage(response.message || 'Your password has been updated.', 'success');
+                $('#profile-current_password, #profile-new_password, #profile-confirm_password').val('');
+            }).fail(function(xhr) {
+                const msg = xhr.responseJSON?.message || ab2b_portal.strings.error;
+                self.showMessage(msg, 'error');
+            }).always(function() {
+                $btn.prop('disabled', false).text(ab2b_portal.strings.update_password || 'Update Password');
             });
         },
 

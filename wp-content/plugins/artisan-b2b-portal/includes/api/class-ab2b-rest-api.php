@@ -57,6 +57,13 @@ class AB2B_Rest_Api {
             ],
         ]);
 
+        // Customer password change
+        register_rest_route($this->namespace, '/customer/password', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'update_customer_password'],
+            'permission_callback' => [$this, 'check_customer_permission'],
+        ]);
+
         // Orders
         register_rest_route($this->namespace, '/orders', [
             [
@@ -355,7 +362,9 @@ class AB2B_Rest_Api {
             'company_name'       => $customer->company_name,
             'contact_name'       => $customer->contact_name,
             'email'              => $customer->email,
+            'billing_email'      => $customer->billing_email ?? '',
             'phone'              => $customer->phone,
+            'can_change_password' => !empty($customer->password_hash),
             'address'            => $customer->address ?? '',
             'city'               => $customer->city ?? '',
             'postcode'           => $customer->postcode ?? '',
@@ -376,7 +385,7 @@ class AB2B_Rest_Api {
         $body = $request->get_json_params() ?: $request->get_body_params();
 
         $allowed = [
-            'company_name', 'contact_name', 'email', 'phone',
+            'company_name', 'contact_name', 'email', 'billing_email', 'phone',
             'address', 'city', 'postcode', 'cvr_number',
             'delivery_company', 'delivery_contact', 'delivery_address',
             'delivery_city', 'delivery_postcode',
@@ -386,6 +395,8 @@ class AB2B_Rest_Api {
             if (isset($body[$key])) {
                 if (in_array($key, ['address', 'delivery_address'])) {
                     $data[$key] = sanitize_textarea_field($body[$key]);
+                } elseif (in_array($key, ['email', 'billing_email'])) {
+                    $data[$key] = sanitize_email($body[$key]);
                 } else {
                     $data[$key] = sanitize_text_field($body[$key]);
                 }
@@ -393,6 +404,9 @@ class AB2B_Rest_Api {
         }
         if (isset($data['email']) && !is_email($data['email'])) {
             return new WP_Error('invalid_email', __('Invalid email address.', 'artisan-b2b-portal'), ['status' => 400]);
+        }
+        if (isset($data['billing_email']) && !empty($data['billing_email']) && !is_email($data['billing_email'])) {
+            return new WP_Error('invalid_billing_email', __('Invalid billing email address.', 'artisan-b2b-portal'), ['status' => 400]);
         }
 
         if (empty($data)) {
@@ -414,6 +428,7 @@ class AB2B_Rest_Api {
                 'company_name'       => $updated->company_name,
                 'contact_name'       => $updated->contact_name,
                 'email'              => $updated->email,
+                'billing_email'      => $updated->billing_email ?? '',
                 'phone'              => $updated->phone,
                 'address'            => $updated->address ?? '',
                 'city'               => $updated->city ?? '',
@@ -425,6 +440,43 @@ class AB2B_Rest_Api {
                 'delivery_city'      => $updated->delivery_city ?? '',
                 'delivery_postcode'  => $updated->delivery_postcode ?? '',
             ],
+        ]);
+    }
+
+    /**
+     * Update customer password (for password-protected accounts)
+     */
+    public function update_customer_password($request) {
+        $customer = $request->get_param('_customer');
+        $body = $request->get_json_params() ?: $request->get_body_params();
+
+        if (empty($customer->password_hash)) {
+            return new WP_Error('no_password', __('Your account uses a link-based login. Password change is not available.', 'artisan-b2b-portal'), ['status' => 400]);
+        }
+
+        $current = $body['current_password'] ?? '';
+        $new_pass = $body['new_password'] ?? '';
+
+        if (empty($current) || empty($new_pass)) {
+            return new WP_Error('missing_fields', __('Current password and new password are required.', 'artisan-b2b-portal'), ['status' => 400]);
+        }
+
+        if (strlen($new_pass) < 8) {
+            return new WP_Error('weak_password', __('New password must be at least 8 characters.', 'artisan-b2b-portal'), ['status' => 400]);
+        }
+
+        if (!AB2B_Customer::verify_password($customer->id, $current)) {
+            return new WP_Error('wrong_password', __('Current password is incorrect.', 'artisan-b2b-portal'), ['status' => 400]);
+        }
+
+        $result = AB2B_Customer::set_password($customer->id, $new_pass);
+        if ($result === false) {
+            return new WP_Error('db_error', __('Failed to update password.', 'artisan-b2b-portal'), ['status' => 500]);
+        }
+
+        return rest_ensure_response([
+            'success' => true,
+            'message' => __('Your password has been updated.', 'artisan-b2b-portal'),
         ]);
     }
 

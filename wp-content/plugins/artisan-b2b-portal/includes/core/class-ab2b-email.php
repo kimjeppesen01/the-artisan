@@ -25,6 +25,9 @@ class AB2B_Email {
     public static function send_portal_link($customer) {
         $company_name = ab2b_get_option('company_name', get_bloginfo('name'));
         $company_logo = ab2b_get_option('company_logo', '');
+        $company_address = ab2b_get_option('company_address', '');
+        $company_cvr = ab2b_get_option('company_cvr', '');
+        $company_contact = ab2b_get_option('company_contact_email', '') ?: get_option('admin_email');
 
         // Determine which URL to use: custom slug (with password) or access key
         $has_custom_url = !empty($customer->url_slug) && !empty($customer->password_hash);
@@ -39,88 +42,155 @@ class AB2B_Email {
 
         ob_start();
         ?>
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        </head>
-        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
-                <tr>
-                    <td style="padding: 40px 30px; text-align: center; background: linear-gradient(135deg, #333 0%, #1a1a1a 100%);">
-                        <?php if ($company_logo) : ?>
-                            <img src="<?php echo esc_url($company_logo); ?>" alt="<?php echo esc_attr($company_name); ?>" style="max-width: 200px; height: auto;">
-                        <?php else : ?>
-                            <h1 style="color: #ffffff; margin: 0; font-size: 24px;"><?php echo esc_html($company_name); ?></h1>
-                        <?php endif; ?>
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title><?php esc_attr_e('Welcome to Your B2B Portal', 'artisan-b2b-portal'); ?> — <?php echo esc_attr($company_name); ?></title>
+  <style>
+    body, table, td, a { -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; }
+    table, td { mso-table-lspace:0pt; mso-table-rspace:0pt; }
+    img { -ms-interpolation-mode:bicubic; border:0; outline:none; text-decoration:none; max-width:100%; height:auto; }
+    body { margin:0!important; padding:0!important; background-color:#eceae6; font-family:'DM Sans',Arial,sans-serif; }
+    @media only screen and (max-width: 620px) {
+      .wrapper { width: 100% !important; max-width: 100% !important; padding: 16px !important; }
+      .inner { width: 100% !important; }
+    }
+  </style>
+</head>
+<body style="margin:0;padding:0;background-color:#eceae6;font-family:'DM Sans',Arial,sans-serif;">
+
+<div style="display:none;font-size:1px;color:#eceae6;line-height:1px;max-height:0;opacity:0;overflow:hidden;">
+  <?php esc_html_e('Welcome to your B2B portal', 'artisan-b2b-portal'); ?>
+</div>
+
+<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#eceae6;">
+  <tr><td align="center" style="padding:32px 16px;">
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" class="inner" style="max-width:600px;width:100%;">
+
+      <!-- Header -->
+      <tr>
+        <td style="background-color:#1a1068;padding:32px 40px 28px;border-radius:4px 4px 0 0;">
+          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+              <td valign="middle">
+                <?php if ($company_logo) : ?>
+                <img src="<?php echo esc_url($company_logo); ?>" alt="<?php echo esc_attr($company_name); ?>" width="140" style="display:block;max-width:140px;height:auto;filter:brightness(0) invert(1);" />
+                <?php else : ?>
+                <span style="font-family:'DM Sans',Arial,sans-serif;font-size:24px;font-weight:600;color:#ffffff;"><?php echo esc_html($company_name); ?></span>
+                <?php endif; ?>
+              </td>
+              <td valign="middle" align="right">
+                <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="background-color:#1db8c2;border-radius:3px;padding:7px 16px;">
+                      <span style="font-family:'DM Sans',Arial,sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#ffffff;">&#10003;&nbsp; <?php esc_html_e('Portal Access', 'artisan-b2b-portal'); ?></span>
                     </td>
-                </tr>
-                <tr>
-                    <td style="padding: 40px 30px;">
-                        <h2 style="margin: 0 0 20px; color: #333; font-size: 22px;">
-                            <?php esc_html_e('Welcome to Your B2B Portal', 'artisan-b2b-portal'); ?>
-                        </h2>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr><td style="background-color:#1db8c2;height:4px;font-size:0;line-height:0;">&nbsp;</td></tr>
 
-                        <p style="color: #666; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
-                            <?php printf(esc_html__('Hello %s,', 'artisan-b2b-portal'), esc_html($customer->contact_name ?: $customer->company_name)); ?>
-                        </p>
+      <!-- Content -->
+      <tr>
+        <td style="background-color:#ffffff;padding:36px 40px 28px;">
+          <p style="font-family:'DM Sans',Arial,sans-serif;font-size:22px;font-weight:500;color:#1a1068;margin:0 0 10px;line-height:1.3;">
+            <?php esc_html_e('Welcome to Your B2B Portal', 'artisan-b2b-portal'); ?>
+          </p>
+          <p style="font-family:'DM Sans',Arial,sans-serif;font-size:14px;font-weight:300;color:#555;margin:0 0 20px;line-height:1.75;">
+            <?php printf(esc_html__('Hello %s,', 'artisan-b2b-portal'), esc_html($customer->contact_name ?: $customer->company_name)); ?>
+          </p>
+          <p style="font-family:'DM Sans',Arial,sans-serif;font-size:14px;font-weight:300;color:#555;margin:0 0 24px;line-height:1.75;">
+            <?php esc_html_e('You can now access your B2B ordering portal using the link below. From there you can browse products, place orders, and track your order history.', 'artisan-b2b-portal'); ?>
+          </p>
 
-                        <p style="color: #666; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
-                            <?php esc_html_e('You can now access your B2B ordering portal using the link below. From there you can browse products, place orders, and track your order history.', 'artisan-b2b-portal'); ?>
-                        </p>
+          <?php if ($has_custom_url) : ?>
+          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border:1px solid #e4e0d8;border-radius:4px;overflow:hidden;margin-bottom:20px;">
+            <tr>
+              <td style="padding:18px 22px;background-color:#f9f7f4;">
+                <p style="font-family:'DM Sans',Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#1db8c2;margin:0 0 8px;"><?php esc_html_e('Your Login Details', 'artisan-b2b-portal'); ?></p>
+                <p style="font-family:'DM Sans',Arial,sans-serif;font-size:13px;font-weight:500;color:#1a1068;margin:0 0 4px;"><?php esc_html_e('Portal URL:', 'artisan-b2b-portal'); ?></p>
+                <p style="font-family:'DM Sans',Arial,sans-serif;font-size:13px;font-weight:300;color:#555;margin:0 0 12px;word-break:break-all;">
+                  <a href="<?php echo esc_url($portal_url); ?>" style="color:#1db8c2;text-decoration:none;"><?php echo esc_html($portal_url); ?></a>
+                </p>
+                <p style="font-family:'DM Sans',Arial,sans-serif;font-size:13px;font-weight:500;color:#1a1068;margin:0;"><?php esc_html_e('Password:', 'artisan-b2b-portal'); ?></p>
+                <p style="font-family:'DM Sans',Arial,sans-serif;font-size:13px;font-weight:300;color:#555;margin:0;"><?php esc_html_e('Use the password provided by your account manager.', 'artisan-b2b-portal'); ?></p>
+              </td>
+            </tr>
+          </table>
+          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#fff8e6;border-left:4px solid #e6a800;border-radius:0 4px 4px 0;margin-bottom:24px;">
+            <tr>
+              <td style="padding:14px 18px;">
+                <p style="font-family:'DM Sans',Arial,sans-serif;font-size:14px;font-weight:600;color:#333;margin:0;line-height:1.6;">
+                  <?php esc_html_e('Please log in immediately. After logging in, you can set your own password in the Account section for a more secure login.', 'artisan-b2b-portal'); ?>
+                </p>
+              </td>
+            </tr>
+          </table>
+          <?php endif; ?>
 
-                        <?php if ($has_custom_url) : ?>
-                            <div style="background-color: #f8f8f8; border-radius: 8px; padding: 20px; margin: 20px 0;">
-                                <p style="color: #333; font-weight: bold; margin: 0 0 10px;">
-                                    <?php esc_html_e('Your Login Details:', 'artisan-b2b-portal'); ?>
-                                </p>
-                                <p style="color: #666; margin: 5px 0;">
-                                    <strong><?php esc_html_e('Portal URL:', 'artisan-b2b-portal'); ?></strong><br>
-                                    <a href="<?php echo esc_url($portal_url); ?>" style="color: #333;"><?php echo esc_url($portal_url); ?></a>
-                                </p>
-                                <p style="color: #666; margin: 5px 0;">
-                                    <strong><?php esc_html_e('Password:', 'artisan-b2b-portal'); ?></strong>
-                                    <?php esc_html_e('Use the password provided by your account manager.', 'artisan-b2b-portal'); ?>
-                                </p>
-                            </div>
-                            <p style="color: #333; font-size: 15px; font-weight: 600; margin: 0 0 20px; padding: 12px 16px; background-color: #fff8e6; border-left: 4px solid #e6a800; border-radius: 0 4px 4px 0;">
-                                <?php esc_html_e('Please log in immediately. If you wish to use your own password, use "Forgot password?" on the login page to receive a new one by email.', 'artisan-b2b-portal'); ?>
-                            </p>
-                        <?php endif; ?>
+          <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center">
+            <tr>
+              <td style="background-color:#1a1068;border-radius:4px;padding:14px 32px;">
+                <a href="<?php echo esc_url($portal_url); ?>" style="font-family:'DM Sans',Arial,sans-serif;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;display:inline-block;">
+                  <?php echo $has_custom_url ? esc_html__('Log in Now', 'artisan-b2b-portal') : esc_html__('Access Your Portal', 'artisan-b2b-portal'); ?>
+                </a>
+              </td>
+            </tr>
+          </table>
 
-                        <div style="text-align: center; margin: 30px 0;">
-                            <a href="<?php echo esc_url($portal_url); ?>" style="display: inline-block; padding: 15px 30px; background-color: #333; color: #ffffff; text-decoration: none; font-weight: bold; border-radius: 5px; font-size: 16px;">
-                                <?php echo $has_custom_url ? esc_html__('Log in Now', 'artisan-b2b-portal') : esc_html__('Access Your Portal', 'artisan-b2b-portal'); ?>
-                            </a>
-                        </div>
+          <p style="font-family:'DM Sans',Arial,sans-serif;font-size:12px;font-weight:300;color:#888;margin:24px 0 8px;line-height:1.6;">
+            <?php esc_html_e('If the button doesn\'t work, copy this link into your browser:', 'artisan-b2b-portal'); ?>
+          </p>
+          <p style="font-family:'DM Sans',Arial,sans-serif;font-size:12px;font-weight:400;color:#555;margin:0 0 24px;word-break:break-all;line-height:1.5;">
+            <?php echo esc_url($portal_url); ?>
+          </p>
 
-                        <p style="color: #999; font-size: 14px; line-height: 1.6; margin: 20px 0 0;">
-                            <?php esc_html_e('If the button above doesn\'t work, copy and paste this link into your browser:', 'artisan-b2b-portal'); ?>
-                        </p>
-                        <p style="color: #666; font-size: 14px; word-break: break-all; margin: 5px 0 20px;">
-                            <?php echo esc_url($portal_url); ?>
-                        </p>
+          <p style="font-family:'DM Sans',Arial,sans-serif;font-size:12px;font-weight:300;color:#888;margin:0;padding-top:20px;border-top:1px solid #e4e0d8;line-height:1.6;">
+            <?php if ($has_custom_url) : ?>
+              <?php esc_html_e('Keep your password secure and do not share it with others.', 'artisan-b2b-portal'); ?>
+            <?php else : ?>
+              <?php esc_html_e('This link is unique to your account. Please do not share it with others.', 'artisan-b2b-portal'); ?>
+            <?php endif; ?>
+          </p>
+        </td>
+      </tr>
 
-                        <p style="color: #999; font-size: 13px; line-height: 1.6; margin: 20px 0 0; padding-top: 20px; border-top: 1px solid #eee;">
-                            <?php if ($has_custom_url) : ?>
-                                <?php esc_html_e('Keep your password secure and do not share it with others.', 'artisan-b2b-portal'); ?>
-                            <?php else : ?>
-                                <?php esc_html_e('This link is unique to your account. Please do not share it with others.', 'artisan-b2b-portal'); ?>
-                            <?php endif; ?>
-                        </p>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 20px 30px; background-color: #f8f8f8; text-align: center;">
-                        <p style="color: #999; font-size: 12px; margin: 0;">
-                            &copy; <?php echo date('Y'); ?> <?php echo esc_html($company_name); ?>
-                        </p>
-                    </td>
-                </tr>
-            </table>
-        </body>
-        </html>
+      <!-- Footer -->
+      <tr><td style="background-color:#1db8c2;height:4px;font-size:0;line-height:0;">&nbsp;</td></tr>
+      <tr>
+        <td style="background-color:#1a1068;padding:24px 40px;border-radius:0 0 4px 4px;">
+          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+              <td valign="middle">
+                <?php if ($company_logo) : ?>
+                <img src="<?php echo esc_url($company_logo); ?>" alt="<?php echo esc_attr($company_name); ?>" width="80" style="display:block;max-width:80px;height:auto;filter:brightness(0) invert(1);opacity:.7;" />
+                <?php else : ?>
+                <span style="font-family:'DM Sans',Arial,sans-serif;font-size:16px;font-weight:600;color:rgba(255,255,255,.7);"><?php echo esc_html($company_name); ?></span>
+                <?php endif; ?>
+              </td>
+              <td valign="middle" align="right">
+                <p style="font-family:'DM Sans',Arial,sans-serif;font-size:11px;font-weight:300;color:rgba(255,255,255,.5);margin:0;line-height:1.6;text-align:right;">
+                  <?php if ($company_address) : ?><?php echo esc_html($company_address); ?><br><?php endif; ?>
+                  <?php if ($company_cvr) : ?>CVR: <?php echo esc_html($company_cvr); ?> &nbsp;·&nbsp; <?php endif; ?>
+                  <a href="mailto:<?php echo esc_attr($company_contact); ?>" style="color:rgba(255,255,255,.7);text-decoration:none;"><?php echo esc_html($company_contact); ?></a>
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>
         <?php
         $message = ob_get_clean();
 
@@ -241,7 +311,10 @@ class AB2B_Email {
             'From: ' . $company_name . ' <' . get_option('admin_email') . '>',
         ];
 
-        return wp_mail($order->customer->email, $subject, $message, $headers);
+        $to = (!empty($order->customer->billing_email) && is_email($order->customer->billing_email))
+            ? $order->customer->billing_email
+            : $order->customer->email;
+        return wp_mail($to, $subject, $message, $headers);
     }
 
     /**
@@ -825,7 +898,10 @@ class AB2B_Email {
             'From: ' . $company_name . ' <' . get_option('admin_email') . '>',
         ];
 
-        return wp_mail($order->customer->email, $subject, $html, $headers);
+        $to = (!empty($order->customer->billing_email) && is_email($order->customer->billing_email))
+            ? $order->customer->billing_email
+            : $order->customer->email;
+        return wp_mail($to, $subject, $html, $headers);
     }
 
     /**
@@ -846,6 +922,7 @@ class AB2B_Email {
             'company_name'      => __('Company Name', 'artisan-b2b-portal'),
             'contact_name'      => __('Contact Name', 'artisan-b2b-portal'),
             'email'             => __('Email', 'artisan-b2b-portal'),
+            'billing_email'     => __('Billing Email', 'artisan-b2b-portal'),
             'phone'             => __('Phone', 'artisan-b2b-portal'),
             'address'           => __('Address', 'artisan-b2b-portal'),
             'city'              => __('City', 'artisan-b2b-portal'),

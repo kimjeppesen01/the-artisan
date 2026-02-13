@@ -215,16 +215,18 @@ class AB2B_Customer {
             return new WP_Error('duplicate_email', __('A customer with this email already exists.', 'artisan-b2b-portal'));
         }
 
+        $billing_email = !empty($data['billing_email']) && is_email($data['billing_email']) ? sanitize_email($data['billing_email']) : '';
         $result = $wpdb->insert($table, [
             'company_name'  => sanitize_text_field($data['company_name']),
             'contact_name'  => sanitize_text_field($data['contact_name']),
             'email'         => sanitize_email($data['email']),
+            'billing_email' => $billing_email,
             'phone'         => sanitize_text_field($data['phone']),
             'address'       => sanitize_textarea_field($data['address']),
             'access_key'    => $data['access_key'],
             'is_active'     => (int) $data['is_active'],
             'notes'         => sanitize_textarea_field($data['notes']),
-        ], ['%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s']);
+        ], ['%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s']);
 
         if ($result === false) {
             return new WP_Error('db_error', __('Failed to create customer.', 'artisan-b2b-portal'));
@@ -268,6 +270,12 @@ class AB2B_Customer {
                 return new WP_Error('duplicate_email', __('A customer with this email already exists.', 'artisan-b2b-portal'));
             }
             $update_data['email'] = sanitize_email($data['email']);
+            $format[] = '%s';
+        }
+
+        if (array_key_exists('billing_email', $data)) {
+            $v = $data['billing_email'];
+            $update_data['billing_email'] = (!empty($v) && is_email($v)) ? sanitize_email($v) : '';
             $format[] = '%s';
         }
 

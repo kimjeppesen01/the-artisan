@@ -169,4 +169,16 @@ function ab2b_maybe_migrate() {
         }
         update_option('ab2b_db_version', '2.2.0');
     }
+
+    if (version_compare($db_version, '2.3.0', '<')) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'ab2b_customers';
+        if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table)) === $table) {
+            $col = $wpdb->get_results("SHOW COLUMNS FROM {$table} LIKE 'billing_email'");
+            if (empty($col)) {
+                $wpdb->query("ALTER TABLE {$table} ADD COLUMN billing_email VARCHAR(255) DEFAULT '' AFTER email");
+            }
+        }
+        update_option('ab2b_db_version', '2.3.0');
+    }
 }

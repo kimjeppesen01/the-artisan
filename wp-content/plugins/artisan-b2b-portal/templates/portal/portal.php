@@ -176,9 +176,34 @@ if (!defined('ABSPATH')) exit;
                             <input type="email" id="profile-email" name="email" required>
                         </div>
                         <div class="ab2b-form-row">
+                            <label for="profile-billing_email"><?php esc_html_e('Billing Email', 'artisan-b2b-portal'); ?></label>
+                            <input type="email" id="profile-billing_email" name="billing_email" placeholder="<?php esc_attr_e('Invoices sent here', 'artisan-b2b-portal'); ?>">
+                            <span class="ab2b-field-hint"><?php esc_html_e('Optional. Leave blank to use contact email.', 'artisan-b2b-portal'); ?></span>
+                        </div>
+                        <div class="ab2b-form-row">
                             <label for="profile-phone"><?php esc_html_e('Phone', 'artisan-b2b-portal'); ?></label>
                             <input type="tel" id="profile-phone" name="phone">
                         </div>
+                    </div>
+                    <div class="ab2b-profile-section ab2b-password-section" id="ab2b-password-section" style="display: none;">
+                        <h3><?php esc_html_e('Password', 'artisan-b2b-portal'); ?></h3>
+                        <p class="ab2b-profile-hint"><?php esc_html_e('Set your own password for secure access.', 'artisan-b2b-portal'); ?></p>
+                        <form id="ab2b-password-form" class="ab2b-password-form">
+                            <div class="ab2b-form-row">
+                                <label for="profile-current_password"><?php esc_html_e('Current Password', 'artisan-b2b-portal'); ?> *</label>
+                                <input type="password" id="profile-current_password" name="current_password" autocomplete="current-password">
+                            </div>
+                            <div class="ab2b-form-row">
+                                <label for="profile-new_password"><?php esc_html_e('New Password', 'artisan-b2b-portal'); ?> *</label>
+                                <input type="password" id="profile-new_password" name="new_password" autocomplete="new-password" minlength="8">
+                                <span class="ab2b-field-hint"><?php esc_html_e('At least 8 characters.', 'artisan-b2b-portal'); ?></span>
+                            </div>
+                            <div class="ab2b-form-row">
+                                <label for="profile-confirm_password"><?php esc_html_e('Confirm New Password', 'artisan-b2b-portal'); ?> *</label>
+                                <input type="password" id="profile-confirm_password" name="confirm_password" autocomplete="new-password">
+                            </div>
+                            <button type="submit" class="ab2b-btn ab2b-btn-primary" id="ab2b-password-btn"><?php esc_html_e('Update Password', 'artisan-b2b-portal'); ?></button>
+                        </form>
                     </div>
                     <button type="submit" class="ab2b-btn ab2b-btn-primary"><?php esc_html_e('Save Changes', 'artisan-b2b-portal'); ?></button>
                 </form>
