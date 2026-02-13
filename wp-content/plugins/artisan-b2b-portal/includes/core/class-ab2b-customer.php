@@ -215,16 +215,18 @@ class AB2B_Customer {
             return new WP_Error('duplicate_email', __('A customer with this email already exists.', 'artisan-b2b-portal'));
         }
 
+        $invoice_email = (!empty($data['invoice_email']) && is_email($data['invoice_email'])) ? sanitize_email($data['invoice_email']) : '';
         $result = $wpdb->insert($table, [
-            'company_name'  => sanitize_text_field($data['company_name']),
-            'contact_name'  => sanitize_text_field($data['contact_name']),
-            'email'         => sanitize_email($data['email']),
-            'phone'         => sanitize_text_field($data['phone']),
-            'address'       => sanitize_textarea_field($data['address']),
-            'access_key'    => $data['access_key'],
-            'is_active'     => (int) $data['is_active'],
-            'notes'         => sanitize_textarea_field($data['notes']),
-        ], ['%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s']);
+            'company_name'   => sanitize_text_field($data['company_name']),
+            'contact_name'   => sanitize_text_field($data['contact_name']),
+            'email'          => sanitize_email($data['email']),
+            'invoice_email'  => $invoice_email,
+            'phone'          => sanitize_text_field($data['phone']),
+            'address'        => sanitize_textarea_field($data['address']),
+            'access_key'     => $data['access_key'],
+            'is_active'      => (int) $data['is_active'],
+            'notes'          => sanitize_textarea_field($data['notes']),
+        ], ['%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s']);
 
         if ($result === false) {
             return new WP_Error('db_error', __('Failed to create customer.', 'artisan-b2b-portal'));
@@ -268,6 +270,12 @@ class AB2B_Customer {
                 return new WP_Error('duplicate_email', __('A customer with this email already exists.', 'artisan-b2b-portal'));
             }
             $update_data['email'] = sanitize_email($data['email']);
+            $format[] = '%s';
+        }
+
+        if (array_key_exists('invoice_email', $data)) {
+            $val = $data['invoice_email'];
+            $update_data['invoice_email'] = (!empty($val) && is_email($val)) ? sanitize_email($val) : '';
             $format[] = '%s';
         }
 

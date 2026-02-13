@@ -84,11 +84,14 @@ class AB2B_Email {
                                     <?php esc_html_e('Use the password provided by your account manager.', 'artisan-b2b-portal'); ?>
                                 </p>
                             </div>
+                            <p style="color: #333; font-size: 15px; font-weight: 600; margin: 0 0 20px; padding: 12px 16px; background-color: #fff8e6; border-left: 4px solid #e6a800; border-radius: 0 4px 4px 0;">
+                                <?php esc_html_e('Important: Please log in immediately and set your own password using the "Forgot password?" link on the login page. This keeps your account secure.', 'artisan-b2b-portal'); ?>
+                            </p>
                         <?php endif; ?>
 
                         <div style="text-align: center; margin: 30px 0;">
                             <a href="<?php echo esc_url($portal_url); ?>" style="display: inline-block; padding: 15px 30px; background-color: #333; color: #ffffff; text-decoration: none; font-weight: bold; border-radius: 5px; font-size: 16px;">
-                                <?php esc_html_e('Access Your Portal', 'artisan-b2b-portal'); ?>
+                                <?php echo $has_custom_url ? esc_html__('Log in Now', 'artisan-b2b-portal') : esc_html__('Access Your Portal', 'artisan-b2b-portal'); ?>
                             </a>
                         </div>
 
@@ -238,7 +241,19 @@ class AB2B_Email {
             'From: ' . $company_name . ' <' . get_option('admin_email') . '>',
         ];
 
-        return wp_mail($order->customer->email, $subject, $message, $headers);
+        $to = self::get_order_email($order->customer);
+        return wp_mail($to, $subject, $message, $headers);
+    }
+
+    /**
+     * Get email for order-related notifications (invoice, confirmations, status)
+     * Uses invoice_email if set, otherwise contact email.
+     */
+    private static function get_order_email($customer) {
+        if (!empty($customer->invoice_email) && is_email($customer->invoice_email)) {
+            return $customer->invoice_email;
+        }
+        return $customer->email;
     }
 
     /**
@@ -822,7 +837,8 @@ class AB2B_Email {
             'From: ' . $company_name . ' <' . get_option('admin_email') . '>',
         ];
 
-        return wp_mail($order->customer->email, $subject, $html, $headers);
+        $to = self::get_order_email($order->customer);
+        return wp_mail($to, $subject, $html, $headers);
     }
 
     /**
@@ -842,7 +858,8 @@ class AB2B_Email {
         $field_labels = [
             'company_name'      => __('Company Name', 'artisan-b2b-portal'),
             'contact_name'      => __('Contact Name', 'artisan-b2b-portal'),
-            'email'             => __('Email', 'artisan-b2b-portal'),
+            'email'             => __('Contact Email', 'artisan-b2b-portal'),
+            'invoice_email'     => __('Invoice Email', 'artisan-b2b-portal'),
             'phone'             => __('Phone', 'artisan-b2b-portal'),
             'address'           => __('Address', 'artisan-b2b-portal'),
             'city'              => __('City', 'artisan-b2b-portal'),

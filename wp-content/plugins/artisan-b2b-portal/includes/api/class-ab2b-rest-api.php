@@ -355,6 +355,7 @@ class AB2B_Rest_Api {
             'company_name'       => $customer->company_name,
             'contact_name'       => $customer->contact_name,
             'email'              => $customer->email,
+            'invoice_email'      => $customer->invoice_email ?? '',
             'phone'              => $customer->phone,
             'address'            => $customer->address ?? '',
             'city'               => $customer->city ?? '',
@@ -376,7 +377,7 @@ class AB2B_Rest_Api {
         $body = $request->get_json_params() ?: $request->get_body_params();
 
         $allowed = [
-            'company_name', 'contact_name', 'email', 'phone',
+            'company_name', 'contact_name', 'email', 'invoice_email', 'phone',
             'address', 'city', 'postcode', 'cvr_number',
             'delivery_company', 'delivery_contact', 'delivery_address',
             'delivery_city', 'delivery_postcode',
@@ -386,6 +387,8 @@ class AB2B_Rest_Api {
             if (isset($body[$key])) {
                 if (in_array($key, ['address', 'delivery_address'])) {
                     $data[$key] = sanitize_textarea_field($body[$key]);
+                } elseif (in_array($key, ['email', 'invoice_email'])) {
+                    $data[$key] = sanitize_email($body[$key]);
                 } else {
                     $data[$key] = sanitize_text_field($body[$key]);
                 }
@@ -394,7 +397,9 @@ class AB2B_Rest_Api {
         if (isset($data['email']) && !is_email($data['email'])) {
             return new WP_Error('invalid_email', __('Invalid email address.', 'artisan-b2b-portal'), ['status' => 400]);
         }
-
+        if (isset($data['invoice_email']) && !empty($data['invoice_email']) && !is_email($data['invoice_email'])) {
+            return new WP_Error('invalid_invoice_email', __('Invalid invoice email address.', 'artisan-b2b-portal'), ['status' => 400]);
+        }
         if (empty($data)) {
             return new WP_Error('no_changes', __('No valid fields to update.', 'artisan-b2b-portal'), ['status' => 400]);
         }
@@ -414,6 +419,7 @@ class AB2B_Rest_Api {
                 'company_name'       => $updated->company_name,
                 'contact_name'       => $updated->contact_name,
                 'email'              => $updated->email,
+                'invoice_email'      => $updated->invoice_email ?? '',
                 'phone'              => $updated->phone,
                 'address'            => $updated->address ?? '',
                 'city'               => $updated->city ?? '',

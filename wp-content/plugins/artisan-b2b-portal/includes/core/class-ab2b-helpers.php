@@ -135,7 +135,7 @@ class AB2B_Helpers {
         }
 
         if ($url_slug) {
-            return trailingslashit(rtrim($url, '/')) . $url_slug . '/';
+            return add_query_arg('customer', $url_slug, $url);
         }
 
         if ($access_key) {
