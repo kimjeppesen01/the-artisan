@@ -1078,7 +1078,6 @@
                 $('#profile-delivery_city').val(customer.delivery_city || '');
                 $('#profile-delivery_postcode').val(customer.delivery_postcode || '');
                 $('#profile-email').val(customer.email || '');
-                $('#profile-invoice_email').val(customer.invoice_email || '');
                 $('#profile-phone').val(customer.phone || '');
                 $('#ab2b-account-loading').hide();
                 $('#ab2b-profile-form').show();
@@ -1110,7 +1109,6 @@
                 delivery_city: $('#profile-delivery_city').val(),
                 delivery_postcode: $('#profile-delivery_postcode').val(),
                 email: $('#profile-email').val(),
-                invoice_email: $('#profile-invoice_email').val(),
                 phone: $('#profile-phone').val()
             };
 

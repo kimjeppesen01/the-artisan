@@ -39,20 +39,10 @@ $page_title = $is_edit ? __('Edit Customer', 'artisan-b2b-portal') : __('Add New
                             </td>
                         </tr>
                         <tr>
-                            <th><label for="email"><?php esc_html_e('Contact / Login Email', 'artisan-b2b-portal'); ?> *</label></th>
+                            <th><label for="email"><?php esc_html_e('Email', 'artisan-b2b-portal'); ?> *</label></th>
                             <td>
                                 <input type="email" name="email" id="email" class="regular-text"
                                        value="<?php echo $is_edit ? esc_attr($customer->email) : ''; ?>" required>
-                                <p class="description"><?php esc_html_e('Used for login, password reset, and account notifications.', 'artisan-b2b-portal'); ?></p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th><label for="invoice_email"><?php esc_html_e('Invoice Email', 'artisan-b2b-portal'); ?></label></th>
-                            <td>
-                                <input type="email" name="invoice_email" id="invoice_email" class="regular-text"
-                                       value="<?php echo $is_edit ? esc_attr($customer->invoice_email ?? '') : ''; ?>"
-                                       placeholder="<?php esc_attr_e('Optional', 'artisan-b2b-portal'); ?>">
-                                <p class="description"><?php esc_html_e('Order confirmations and invoices sent here. Leave blank to use contact email.', 'artisan-b2b-portal'); ?></p>
                             </td>
                         </tr>
                         <tr>

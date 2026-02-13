@@ -172,14 +172,8 @@ if (!defined('ABSPATH')) exit;
                     <div class="ab2b-profile-section">
                         <h3><?php esc_html_e('Contact', 'artisan-b2b-portal'); ?></h3>
                         <div class="ab2b-form-row">
-                            <label for="profile-email"><?php esc_html_e('Contact / Login Email', 'artisan-b2b-portal'); ?> *</label>
+                            <label for="profile-email"><?php esc_html_e('Email', 'artisan-b2b-portal'); ?> *</label>
                             <input type="email" id="profile-email" name="email" required>
-                            <span class="ab2b-field-hint"><?php esc_html_e('Used for login and account notifications.', 'artisan-b2b-portal'); ?></span>
-                        </div>
-                        <div class="ab2b-form-row">
-                            <label for="profile-invoice_email"><?php esc_html_e('Invoice Email', 'artisan-b2b-portal'); ?></label>
-                            <input type="email" id="profile-invoice_email" name="invoice_email" placeholder="<?php esc_attr_e('Optional', 'artisan-b2b-portal'); ?>">
-                            <span class="ab2b-field-hint"><?php esc_html_e('Order confirmations and invoices sent here. Leave blank to use contact email.', 'artisan-b2b-portal'); ?></span>
                         </div>
                         <div class="ab2b-form-row">
                             <label for="profile-phone"><?php esc_html_e('Phone', 'artisan-b2b-portal'); ?></label>

@@ -200,12 +200,10 @@ class AB2B_Admin {
     private function handle_save_customer() {
         $id = isset($_POST['customer_id']) ? (int) $_POST['customer_id'] : 0;
 
-        $invoice_email = sanitize_email($_POST['invoice_email'] ?? '');
         $data = [
             'company_name'      => sanitize_text_field($_POST['company_name'] ?? ''),
             'contact_name'      => sanitize_text_field($_POST['contact_name'] ?? ''),
             'email'             => sanitize_email($_POST['email'] ?? ''),
-            'invoice_email'     => $invoice_email ?: null,
             'phone'             => sanitize_text_field($_POST['phone'] ?? ''),
             'address'           => sanitize_textarea_field($_POST['address'] ?? ''),
             'city'              => sanitize_text_field($_POST['city'] ?? ''),

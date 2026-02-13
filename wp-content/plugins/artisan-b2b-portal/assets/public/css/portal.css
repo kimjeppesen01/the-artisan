@@ -1765,13 +1765,6 @@ body.ab2b-modal-open {
     margin: -0.5rem 0 1rem;
 }
 
-.ab2b-field-hint {
-    display: block;
-    font-size: 0.8rem;
-    color: var(--ab2b-secondary, #666);
-    margin-top: 0.25rem;
-}
-
 .ab2b-profile-form .ab2b-form-row {
     margin-bottom: 1rem;
 }
