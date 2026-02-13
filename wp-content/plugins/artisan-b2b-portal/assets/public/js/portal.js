@@ -1244,7 +1244,7 @@
 
         showMessage: function(text, type) {
             const $msg = $('<div class="ab2b-message ab2b-message-' + type + '">' + text + '</div>');
-            $('.ab2b-portal-content').prepend($msg);
+            $('body').append($msg);
 
             setTimeout(function() {
                 $msg.fadeOut(function() {

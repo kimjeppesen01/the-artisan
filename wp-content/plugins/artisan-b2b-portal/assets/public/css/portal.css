@@ -1189,11 +1189,17 @@ body.ab2b-modal-open {
     }
 }
 
-/* Message Alert */
+/* Message Alert – fixed at top of viewport so visible on mobile */
 .ab2b-message {
-    padding: 1rem 1.5rem;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    right: 1rem;
+    max-width: calc(100vw - 2rem);
+    padding: 1rem 1.25rem;
     border-radius: var(--ab2b-radius);
-    margin-bottom: 1.5rem;
+    z-index: 10000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     animation: ab2b-fade-in 0.3s ease;
 }
 
