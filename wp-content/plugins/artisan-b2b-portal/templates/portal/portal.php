@@ -7,6 +7,9 @@ if (!defined('ABSPATH')) exit;
 
 <div class="ab2b-portal" id="ab2b-portal" data-access-key="<?php echo esc_attr($customer->access_key); ?>">
 
+    <!-- Toast container for error/success messages - fixed at top of viewport -->
+    <div id="ab2b-toast-container" class="ab2b-toast-container" aria-live="polite"></div>
+
     <div class="ab2b-portal-header">
         <div class="ab2b-portal-welcome">
             <h2><?php printf(esc_html__('Welcome, %s', 'artisan-b2b-portal'), esc_html($customer->company_name)); ?></h2>

@@ -314,7 +314,7 @@ class AB2B_Public {
         ob_start();
         ?>
         <div class="ab2b-login-wrap">
-            <div class="ab2b-login-form ab2b-login-form--saren">
+            <div class="ab2b-login-form ab2b-login-form--saren<?php echo $reset_sent ? ' ab2b-login-form--has-notice' : ''; ?>">
                 <p class="ab2b-login-title"><?php esc_html_e( 'B2B Portal Login', 'artisan-b2b-portal' ); ?></p>
                 <?php if ( $company_name ) : ?>
                     <p class="ab2b-login-company"><?php echo esc_html( $company_name ); ?></p>

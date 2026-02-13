@@ -253,6 +253,14 @@
                     `;
                 }
 
+                // Value + unit(s) per weight (e.g. "25 pcs" or "200g · 500g · 1kg")
+                const valueParts = (product.weights || []).map(function(w) {
+                    const val = (w.value !== undefined && w.value !== null) ? w.value : '';
+                    const u = (w.unit || '').toLowerCase();
+                    return val !== '' ? (val + (u ? ' ' + u : '')) : (w.label || '');
+                }).filter(Boolean);
+                const valueDisplay = valueParts.length ? valueParts.join(' · ') : '';
+
                 html += `
                     <div class="ab2b-product-card" data-product-id="${product.id}">
                         <div class="ab2b-product-image-wrap">
@@ -268,6 +276,7 @@
                         </div>
                         <div class="ab2b-product-meta">
                             <h3 class="ab2b-product-name">${product.name}${infoHtml}</h3>
+                            ${valueDisplay ? `<p class="ab2b-product-value">${valueDisplay}</p>` : ''}
                             <p class="ab2b-product-price">${product.price_range}</p>
                         </div>
                     </div>
@@ -300,6 +309,13 @@
                     badgesHtml += '<span class="ab2b-badge ab2b-badge-exclusive">Exclusive</span>';
                 }
 
+                const valueParts = (product.weights || []).map(function(w) {
+                    const val = (w.value !== undefined && w.value !== null) ? w.value : '';
+                    const u = (w.unit || '').toLowerCase();
+                    return val !== '' ? (val + (u ? ' ' + u : '')) : (w.label || '');
+                }).filter(Boolean);
+                const valueDisplay = valueParts.length ? valueParts.join(' · ') : '';
+
                 html += `
                     <div class="ab2b-product-list-item" data-product-id="${product.id}">
                         <div class="ab2b-product-list-image">
@@ -311,6 +327,7 @@
                                 ${badgesHtml ? `<div class="ab2b-product-list-badges">${badgesHtml}</div>` : ''}
                             </div>
                             ${product.short_description ? `<p class="ab2b-product-list-desc">${product.short_description}</p>` : ''}
+                            ${valueDisplay ? `<p class="ab2b-product-value">${valueDisplay}</p>` : ''}
                         </div>
                         <div class="ab2b-product-list-price">
                             <span class="ab2b-product-price">${product.price_range}</span>
@@ -1243,8 +1260,11 @@
         },
 
         showMessage: function(text, type) {
-            const $msg = $('<div class="ab2b-message ab2b-message-' + type + '">' + text + '</div>');
-            $('body').append($msg);
+            if (!text) return;
+            const $container = $('#ab2b-toast-container');
+            const $target = $container.length ? $container : $(document.body);
+            const $msg = $('<div class="ab2b-message ab2b-message-' + (type || 'success') + '"></div>').text(text);
+            $target.append($msg);
 
             setTimeout(function() {
                 $msg.fadeOut(function() {
