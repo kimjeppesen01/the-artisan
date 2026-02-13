@@ -135,11 +135,16 @@ function ab2b_table($table) {
  * Run database migrations if needed
  */
 function ab2b_maybe_migrate() {
+    global $wpdb;
     $db_version = get_option('ab2b_db_version', '1.0.0');
 
     if (version_compare($db_version, '2.1.0', '<')) {
-        global $wpdb;
         $table = $wpdb->prefix . 'ab2b_orders';
+        $table_exists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table)) === $table;
+        if (!$table_exists) {
+            update_option('ab2b_db_version', '2.2.0');
+            return;
+        }
 
         // Add delivery_method column
         $col = $wpdb->get_results("SHOW COLUMNS FROM {$table} LIKE 'delivery_method'");
@@ -157,8 +162,13 @@ function ab2b_maybe_migrate() {
     }
 
     if (version_compare($db_version, '2.2.0', '<')) {
-        global $wpdb;
         $table = $wpdb->prefix . 'ab2b_customers';
+        $table_exists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table)) === $table;
+        if (!$table_exists) {
+            update_option('ab2b_db_version', '2.2.0');
+            return;
+        }
+
         $cols = ['city', 'postcode', 'cvr_number', 'delivery_company', 'delivery_contact', 'delivery_address', 'delivery_city', 'delivery_postcode'];
         foreach ($cols as $col) {
             $exists = $wpdb->get_results($wpdb->prepare("SHOW COLUMNS FROM {$table} LIKE %s", $col));
