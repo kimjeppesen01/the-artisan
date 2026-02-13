@@ -392,17 +392,22 @@ class AB2B_Admin {
      * Handle save settings
      */
     private function handle_save_settings() {
-        $settings = [
-            'min_days_before'            => (int) ($_POST['min_days_before'] ?? 2),
-            'order_notification_email'   => sanitize_email($_POST['order_notification_email'] ?? ''),
-            'admin_emails'               => sanitize_textarea_field($_POST['admin_emails'] ?? ''),
-            'send_customer_confirmation' => isset($_POST['send_customer_confirmation']) ? '1' : '0',
-            'company_name'               => sanitize_text_field($_POST['company_name'] ?? ''),
-            'company_logo'               => esc_url_raw($_POST['company_logo'] ?? ''),
-            'currency_symbol'            => sanitize_text_field($_POST['currency_symbol'] ?? 'kr.'),
-            'currency_position'          => sanitize_text_field($_POST['currency_position'] ?? 'before'),
-            'order_prefix'               => sanitize_text_field($_POST['order_prefix'] ?? 'B2B-'),
-        ];
+        $existing = get_option('ab2b_settings', []);
+        $settings = array_merge($existing, [
+            'min_days_before'              => (int) ($_POST['min_days_before'] ?? 2),
+            'order_notification_email'     => sanitize_email($_POST['order_notification_email'] ?? ''),
+            'admin_emails'                 => sanitize_textarea_field($_POST['admin_emails'] ?? ''),
+            'send_customer_confirmation'   => isset($_POST['send_customer_confirmation']) ? '1' : '0',
+            'company_name'                 => sanitize_text_field($_POST['company_name'] ?? ''),
+            'company_logo'                 => esc_url_raw($_POST['company_logo'] ?? ''),
+            'currency_symbol'              => sanitize_text_field($_POST['currency_symbol'] ?? 'kr.'),
+            'currency_position'            => sanitize_text_field($_POST['currency_position'] ?? 'before'),
+            'order_prefix'                 => sanitize_text_field($_POST['order_prefix'] ?? 'B2B-'),
+            'shipping_domestic'            => (float) ($_POST['shipping_domestic'] ?? 100),
+            'shipping_international'       => (float) ($_POST['shipping_international'] ?? 125),
+            'shipping_international_7kg'    => (float) ($_POST['shipping_international_7kg'] ?? 190),
+            'weight_threshold_kg'          => (float) ($_POST['weight_threshold_kg'] ?? 7),
+        ]);
 
         update_option('ab2b_settings', $settings);
         set_transient('ab2b_admin_success', __('Settings saved successfully.', 'artisan-b2b-portal'), 30);

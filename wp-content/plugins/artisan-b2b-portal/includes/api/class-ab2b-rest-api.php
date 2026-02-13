@@ -436,7 +436,7 @@ class AB2B_Rest_Api {
 
         // Delivery method
         $delivery_method = sanitize_text_field($request->get_param('delivery_method'));
-        if (!in_array($delivery_method, ['shipping', 'pickup'])) {
+        if (!in_array($delivery_method, ['shipping', 'international', 'pickup'])) {
             $delivery_method = 'shipping';
         }
 
@@ -478,7 +478,7 @@ class AB2B_Rest_Api {
             'delivery_date'        => $order->delivery_date,
             'delivery_date_formatted' => date_i18n('l, M j, Y', strtotime($order->delivery_date)),
             'delivery_method'      => $delivery_method,
-            'delivery_method_label' => ($delivery_method === 'pickup') ? __('Pick up', 'artisan-b2b-portal') : __('Shipping', 'artisan-b2b-portal'),
+            'delivery_method_label' => $this->get_delivery_method_label($delivery_method),
             'shipping_cost'        => $shipping_cost,
             'shipping_cost_formatted' => AB2B_Helpers::format_price($shipping_cost),
             'subtotal'             => (float) $order->subtotal,
@@ -509,6 +509,21 @@ class AB2B_Rest_Api {
     }
 
     /**
+     * Get human-readable delivery method label
+     */
+    private function get_delivery_method_label($method) {
+        switch ($method) {
+            case 'pickup':
+                return __('Pick up', 'artisan-b2b-portal');
+            case 'international':
+                return __('International', 'artisan-b2b-portal');
+            case 'shipping':
+            default:
+                return __('Delivery', 'artisan-b2b-portal');
+        }
+    }
+
+    /**
      * Get active categories
      */
     public function get_categories($request) {
@@ -533,9 +548,13 @@ class AB2B_Rest_Api {
         $min_days = ab2b_get_option('min_days_before', 2);
 
         return rest_ensure_response([
-            'min_days_before' => (int) $min_days,
-            'next_friday'     => AB2B_Helpers::get_next_friday($min_days),
-            'currency_symbol' => ab2b_get_option('currency_symbol', 'kr.'),
+            'min_days_before'        => (int) $min_days,
+            'next_friday'            => AB2B_Helpers::get_next_friday($min_days),
+            'currency_symbol'        => ab2b_get_option('currency_symbol', 'kr.'),
+            'shipping_domestic'      => (float) ab2b_get_option('shipping_domestic', 100),
+            'shipping_international' => (float) ab2b_get_option('shipping_international', 125),
+            'shipping_international_7kg' => (float) ab2b_get_option('shipping_international_7kg', 190),
+            'weight_threshold_kg'    => (float) ab2b_get_option('weight_threshold_kg', 7),
         ]);
     }
 }

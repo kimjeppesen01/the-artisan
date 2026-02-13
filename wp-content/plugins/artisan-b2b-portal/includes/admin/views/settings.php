@@ -13,6 +13,45 @@ if (!defined('ABSPATH')) exit;
         <input type="hidden" name="ab2b_action" value="save_settings">
 
         <div class="ab2b-form-card">
+            <h2><?php esc_html_e('Shipping', 'artisan-b2b-portal'); ?></h2>
+
+            <table class="form-table">
+                <tr>
+                    <th><label for="shipping_domestic"><?php esc_html_e('Domestic Shipping', 'artisan-b2b-portal'); ?></label></th>
+                    <td>
+                        <input type="number" name="shipping_domestic" id="shipping_domestic" class="small-text" step="0.01" min="0"
+                               value="<?php echo esc_attr($settings['shipping_domestic'] ?? 100); ?>"> kr.
+                        <p class="description"><?php esc_html_e('Cost for domestic delivery.', 'artisan-b2b-portal'); ?></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="shipping_international"><?php esc_html_e('International Shipping', 'artisan-b2b-portal'); ?></label></th>
+                    <td>
+                        <input type="number" name="shipping_international" id="shipping_international" class="small-text" step="0.01" min="0"
+                               value="<?php echo esc_attr($settings['shipping_international'] ?? 125); ?>"> kr.
+                        <p class="description"><?php esc_html_e('Cost for international delivery (under weight threshold).', 'artisan-b2b-portal'); ?></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="shipping_international_7kg"><?php esc_html_e('International Shipping (7kg+)', 'artisan-b2b-portal'); ?></label></th>
+                    <td>
+                        <input type="number" name="shipping_international_7kg" id="shipping_international_7kg" class="small-text" step="0.01" min="0"
+                               value="<?php echo esc_attr($settings['shipping_international_7kg'] ?? 190); ?>"> kr.
+                        <p class="description"><?php esc_html_e('Cost for international delivery when cart weight is 7 kg or more.', 'artisan-b2b-portal'); ?></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="weight_threshold_kg"><?php esc_html_e('Weight Threshold (kg)', 'artisan-b2b-portal'); ?></label></th>
+                    <td>
+                        <input type="number" name="weight_threshold_kg" id="weight_threshold_kg" class="small-text" step="0.1" min="0"
+                               value="<?php echo esc_attr($settings['weight_threshold_kg'] ?? 7); ?>">
+                        <p class="description"><?php esc_html_e('Cart weight (kg) above which the higher international rate applies.', 'artisan-b2b-portal'); ?></p>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="ab2b-form-card">
             <h2><?php esc_html_e('Order Settings', 'artisan-b2b-portal'); ?></h2>
 
             <table class="form-table">

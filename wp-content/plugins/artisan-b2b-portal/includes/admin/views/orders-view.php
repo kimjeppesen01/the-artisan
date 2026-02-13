@@ -130,7 +130,9 @@ if (!defined('ABSPATH')) exit;
                                 $method = isset($order->delivery_method) ? $order->delivery_method : 'shipping';
                                 echo $method === 'pickup'
                                     ? esc_html__('Pick up', 'artisan-b2b-portal')
-                                    : esc_html__('Shipping', 'artisan-b2b-portal');
+                                    : ($method === 'international'
+                                        ? esc_html__('International', 'artisan-b2b-portal')
+                                        : esc_html__('Delivery', 'artisan-b2b-portal'));
                                 ?>
                             </span>
                         </li>

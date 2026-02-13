@@ -338,7 +338,8 @@
                     // Show discount percentage in dropdown instead of "was" text
                     optionLabel = weight.label + ' - ' + weight.price_formatted + ' (-' + weight.discount_percent + '%)';
                 }
-                weightsHtml += `<option value="${weight.id}" data-price="${weight.price}" data-formatted="${weight.price_formatted}" data-on-sale="${weight.is_on_sale ? '1' : '0'}" data-original="${weight.original_price_formatted || ''}" data-discount="${weight.discount_percent || 0}" ${index === 0 ? 'selected' : ''}>${optionLabel}</option>`;
+                const unit = weight.unit || 'g';
+                weightsHtml += `<option value="${weight.id}" data-price="${weight.price}" data-formatted="${weight.price_formatted}" data-on-sale="${weight.is_on_sale ? '1' : '0'}" data-original="${weight.original_price_formatted || ''}" data-discount="${weight.discount_percent || 0}" data-unit="${unit}" ${index === 0 ? 'selected' : ''}>${optionLabel}</option>`;
             });
 
             const firstWeight = product.weights[0];
@@ -364,7 +365,7 @@
                                 </select>
                             </div>
                             <div class="ab2b-form-group">
-                                <label for="ab2b-quantity">${ab2b_portal.strings.quantity}</label>
+                                <label for="ab2b-quantity">${ab2b_portal.strings.quantity} <span class="ab2b-quantity-unit" id="ab2b-quantity-unit">(${firstWeight.unit || 'g'})</span></label>
                                 <input type="number" id="ab2b-quantity" name="quantity" value="1" min="1" max="999">
                             </div>
                             <p class="ab2b-weight-price" id="ab2b-selected-price">${priceHtml}</p>
@@ -381,7 +382,7 @@
         },
 
         /**
-         * Update price display when weight changes
+         * Update price display and quantity unit when weight changes
          */
         updateWeightPrice: function() {
             const $selected = $(this).find(':selected');
@@ -389,6 +390,7 @@
             const formatted = $selected.data('formatted');
             const original = $selected.data('original');
             const discount = $selected.data('discount');
+            const unit = $selected.data('unit') || 'g';
 
             let priceHtml = formatted;
             if (isOnSale && original) {
@@ -396,6 +398,7 @@
             }
 
             $('#ab2b-selected-price').html(priceHtml);
+            $('#ab2b-quantity-unit').text('(' + unit + ')');
         },
 
         /**
@@ -423,6 +426,8 @@
 
             if (existingIndex >= 0) {
                 this.cart[existingIndex].quantity += quantity;
+                if (weight.value !== undefined) this.cart[existingIndex].weight_value = weight.value;
+                if (weight.unit) this.cart[existingIndex].weight_unit = weight.unit;
             } else {
                 this.cart.push({
                     product_id: productId,
@@ -430,6 +435,9 @@
                     product_name: product.name,
                     product_image: product.image,
                     weight_label: weight.label,
+                    weight_value: weight.value || 0,
+                    weight_unit: weight.unit || 'g',
+                    unit: weight.unit || 'g',
                     unit_price: weight.price,
                     unit_price_formatted: weight.price_formatted,
                     quantity: quantity
@@ -464,6 +472,50 @@
             this.saveCart();
             this.updateCartUI();
             this.renderCart();
+        },
+
+        /**
+         * Get total cart weight in kg (for international shipping tier)
+         */
+        getCartWeightKg: function() {
+            let totalKg = 0;
+            this.cart.forEach(function(item) {
+                const val = (item.weight_value || 0) * (item.quantity || 1);
+                const unit = (item.weight_unit || 'g').toLowerCase();
+                if (unit === 'kg') {
+                    totalKg += val;
+                } else if (unit === 'g') {
+                    totalKg += val / 1000;
+                }
+                // ltr, pcs etc. - treat as 0 for weight calculation
+            });
+            return totalKg;
+        },
+
+        /**
+         * Get shipping cost for given delivery method
+         */
+        getShippingCost: function(method) {
+            const s = ab2b_portal.shipping || {};
+            const domestic = s.domestic || 100;
+            const international = s.international || 125;
+            const international7kg = s.international_7kg || 190;
+            const threshold = s.weight_threshold_kg || 7;
+
+            if (method === 'pickup') return 0;
+            if (method === 'international') {
+                return this.getCartWeightKg() >= threshold ? international7kg : international;
+            }
+            return domestic;
+        },
+
+        /**
+         * Update date picker label and note when delivery method changes
+         */
+        updateDeliveryDateLabel: function(method) {
+            const isPickup = method === 'pickup';
+            $('#ab2b-delivery-date-label').text(isPickup ? ab2b_portal.strings.available_from_date : ab2b_portal.strings.delivery_date);
+            $('.ab2b-friday-note').text(isPickup ? ab2b_portal.strings.friday_only_pickup : ab2b_portal.strings.friday_only);
         },
 
         /**
@@ -508,6 +560,7 @@
                 const lineTotal = item.unit_price * item.quantity;
                 total += lineTotal;
 
+                const unitSuffix = (item.unit && item.unit === 'pcs') ? ' ' + item.unit : '';
                 itemsHtml += `
                     <div class="ab2b-cart-item" data-index="${index}">
                         <img src="${item.product_image || placeholder}" alt="${item.product_name}" class="ab2b-cart-item-image">
@@ -517,7 +570,7 @@
                         </div>
                         <div class="ab2b-cart-item-qty">
                             <button type="button" class="ab2b-qty-btn" data-action="decrease">−</button>
-                            <span class="ab2b-qty-value">${item.quantity}</span>
+                            <span class="ab2b-qty-value">${item.quantity}${unitSuffix}</span>
                             <button type="button" class="ab2b-qty-btn" data-action="increase">+</button>
                         </div>
                         <div class="ab2b-cart-item-price">${self.formatPrice(lineTotal)}</div>
@@ -528,7 +581,10 @@
 
             const minDate = this.getNextFriday();
 
-            const shippingCost = 100;
+            const defaultMethod = 'shipping';
+            const shippingCost = this.getShippingCost(defaultMethod);
+            const domesticCost = this.getShippingCost('shipping');
+            const intlCost = this.getShippingCost('international');
             const vat = (total + shippingCost) * 0.25;
             const grandTotal = total + shippingCost + vat;
 
@@ -544,7 +600,14 @@
                                 <input type="radio" name="delivery_method" value="shipping" checked>
                                 <span class="ab2b-delivery-option-content">
                                     <span class="ab2b-delivery-option-name">Shipping</span>
-                                    <span class="ab2b-delivery-option-price">${this.formatPrice(shippingCost)} ex. VAT</span>
+                                    <span class="ab2b-delivery-option-price">${this.formatPrice(domesticCost)} ex. VAT</span>
+                                </span>
+                            </label>
+                            <label class="ab2b-delivery-option">
+                                <input type="radio" name="delivery_method" value="international">
+                                <span class="ab2b-delivery-option-content">
+                                    <span class="ab2b-delivery-option-name">International</span>
+                                    <span class="ab2b-delivery-option-price">${this.formatPrice(intlCost)} ex. VAT</span>
                                 </span>
                             </label>
                             <label class="ab2b-delivery-option">
@@ -575,7 +638,7 @@
                         </div>
                     </div>
                     <div class="ab2b-delivery-picker">
-                        <label for="ab2b-delivery-date">${ab2b_portal.strings.delivery_date}</label>
+                        <label for="ab2b-delivery-date" id="ab2b-delivery-date-label">${ab2b_portal.strings.delivery_date}</label>
                         <input type="date" id="ab2b-delivery-date" min="${minDate}" value="${minDate}" required>
                         <p class="ab2b-friday-note">${ab2b_portal.strings.friday_only}</p>
                     </div>
@@ -613,7 +676,7 @@
          */
         updateDeliveryMethod: function(e) {
             const method = $('input[name="delivery_method"]:checked').val();
-            const shippingCost = (method === 'shipping') ? 100 : 0;
+            const shippingCost = this.getShippingCost(method);
 
             // Calculate subtotal from cart
             let subtotal = 0;
@@ -628,6 +691,9 @@
             $('#ab2b-shipping-cost').text(shippingCost > 0 ? this.formatPrice(shippingCost) : 'Free');
             $('#ab2b-vat').text(this.formatPrice(vat));
             $('#ab2b-grand-total').text(this.formatPrice(grandTotal));
+
+            // Update date label for Pick up vs Delivery
+            this.updateDeliveryDateLabel(method);
 
             // Toggle active class on options
             $('.ab2b-delivery-option').removeClass('ab2b-delivery-option-active');
@@ -730,7 +796,7 @@
                                 <span class="ab2b-order-number">${order.order_number}</span>
                                 <span class="ab2b-status ${order.status_class}">${order.status_label}</span>
                             </div>
-                            <p class="ab2b-order-delivery">Delivery: ${order.delivery_date_formatted}</p>
+                            <p class="ab2b-order-delivery">${order.delivery_method_label || 'Delivery'}: ${order.delivery_date_formatted}</p>
                         </div>
                         <div class="ab2b-order-right">
                             <div class="ab2b-order-total">${order.total_formatted}</div>

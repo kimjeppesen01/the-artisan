@@ -216,6 +216,10 @@ class AB2B_Activator {
             'currency_symbol' => 'kr.',
             'currency_position' => 'before',
             'order_prefix' => 'B2B-',
+            'shipping_domestic' => 100,
+            'shipping_international' => 125,
+            'shipping_international_7kg' => 190,
+            'weight_threshold_kg' => 7,
         ];
 
         $existing = get_option('ab2b_settings', []);

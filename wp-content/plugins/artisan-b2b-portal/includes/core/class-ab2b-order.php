@@ -245,10 +245,10 @@ class AB2B_Order {
 
         // Delivery method and shipping cost
         $delivery_method = isset($data['delivery_method']) ? sanitize_text_field($data['delivery_method']) : 'shipping';
-        if (!in_array($delivery_method, ['shipping', 'pickup'])) {
+        if (!in_array($delivery_method, ['shipping', 'international', 'pickup'])) {
             $delivery_method = 'shipping';
         }
-        $shipping_cost = ($delivery_method === 'shipping') ? 100.00 : 0.00;
+        $shipping_cost = self::calculate_shipping_cost($delivery_method, $data['items']);
         $total = $subtotal + $shipping_cost;
 
         // Generate order number
@@ -283,6 +283,42 @@ class AB2B_Order {
         do_action('ab2b_order_created', $order_id);
 
         return $order_id;
+    }
+
+    /**
+     * Calculate shipping cost from delivery method and items
+     */
+    public static function calculate_shipping_cost($delivery_method, $items) {
+        if ($delivery_method === 'pickup') {
+            return 0.00;
+        }
+
+        $domestic = (float) ab2b_get_option('shipping_domestic', 100);
+        $international = (float) ab2b_get_option('shipping_international', 125);
+        $international_7kg = (float) ab2b_get_option('shipping_international_7kg', 190);
+        $threshold = (float) ab2b_get_option('weight_threshold_kg', 7);
+
+        if ($delivery_method === 'shipping') {
+            return $domestic;
+        }
+
+        if ($delivery_method === 'international') {
+            $total_kg = 0;
+            foreach ($items as $item) {
+                $weight = AB2B_Product::get_weight($item['product_weight_id']);
+                if (!$weight) continue;
+                $val = (float) ($weight->weight_value ?? 0) * (int) ($item['quantity'] ?? 1);
+                $unit = strtolower($weight->weight_unit ?? 'g');
+                if ($unit === 'kg') {
+                    $total_kg += $val;
+                } elseif ($unit === 'g') {
+                    $total_kg += $val / 1000;
+                }
+            }
+            return $total_kg >= $threshold ? $international_7kg : $international;
+        }
+
+        return $domestic;
     }
 
     /**

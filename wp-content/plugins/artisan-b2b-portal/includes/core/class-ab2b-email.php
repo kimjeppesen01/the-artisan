@@ -204,7 +204,9 @@ class AB2B_Email {
                                                     $delivery_method = isset($order->delivery_method) ? $order->delivery_method : 'shipping';
                                                     echo $delivery_method === 'pickup'
                                                         ? esc_html__('Pick up', 'artisan-b2b-portal')
-                                                        : esc_html__('Shipping', 'artisan-b2b-portal');
+                                                        : ($delivery_method === 'international'
+                                                            ? esc_html__('International', 'artisan-b2b-portal')
+                                                            : esc_html__('Delivery', 'artisan-b2b-portal'));
                                                     ?>
                                                 </span>
                                             </td>
@@ -395,7 +397,9 @@ class AB2B_Email {
                                         $admin_delivery_method = isset($order->delivery_method) ? $order->delivery_method : 'shipping';
                                         echo $admin_delivery_method === 'pickup'
                                             ? esc_html__('Pick up', 'artisan-b2b-portal')
-                                            : esc_html__('Shipping', 'artisan-b2b-portal');
+                                            : ($admin_delivery_method === 'international'
+                                                ? esc_html__('International', 'artisan-b2b-portal')
+                                                : esc_html__('Delivery', 'artisan-b2b-portal'));
                                         ?>
                                     </span>
                                 </td>

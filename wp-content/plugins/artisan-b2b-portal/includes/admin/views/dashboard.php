@@ -108,16 +108,28 @@ if (!defined('ABSPATH')) exit;
                         <thead>
                             <tr>
                                 <th><?php esc_html_e('Date', 'artisan-b2b-portal'); ?></th>
+                                <th><?php esc_html_e('Method', 'artisan-b2b-portal'); ?></th>
                                 <th><?php esc_html_e('Customer', 'artisan-b2b-portal'); ?></th>
                                 <th><?php esc_html_e('Order', 'artisan-b2b-portal'); ?></th>
                                 <th><?php esc_html_e('Status', 'artisan-b2b-portal'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($upcoming_deliveries as $order) : ?>
+                            <?php foreach ($upcoming_deliveries as $order) :
+                                $method = isset($order->delivery_method) ? $order->delivery_method : 'shipping';
+                                $method_label = $method === 'pickup'
+                                    ? __('Pick up', 'artisan-b2b-portal')
+                                    : ($method === 'international'
+                                        ? __('International', 'artisan-b2b-portal')
+                                        : __('Delivery', 'artisan-b2b-portal'));
+                                $method_class = 'ab2b-method-' . esc_attr($method);
+                            ?>
                                 <tr>
                                     <td>
                                         <strong><?php echo esc_html(date_i18n('D, M j', strtotime($order->delivery_date))); ?></strong>
+                                    </td>
+                                    <td>
+                                        <span class="ab2b-delivery-method-badge <?php echo $method_class; ?>"><?php echo esc_html($method_label); ?></span>
                                     </td>
                                     <td><?php echo esc_html($order->company_name); ?></td>
                                     <td>
