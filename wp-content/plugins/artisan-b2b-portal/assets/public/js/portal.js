@@ -779,18 +779,15 @@
                 return;
             }
 
+            const minDate = this.getNextFriday();
+            if (deliveryDate < minDate) {
+                this.showMessage(ab2b_portal.strings.pickup_from_friday || 'Pickup is available from the next Friday. Please select a valid date.', 'error');
+                return;
+            }
             if (deliveryMethod !== 'pickup') {
                 const date = new Date(deliveryDate);
                 if (date.getDay() !== 5) {
                     this.showMessage(ab2b_portal.strings.friday_only, 'error');
-                    return;
-                }
-            } else {
-                const minDate = this.getMinDate('pickup');
-                if (deliveryDate < minDate) {
-                    const minDays = ab2b_portal.min_days || 2;
-                    const msg = (ab2b_portal.strings.pickup_date_min || 'Please select a date at least %d days in advance.').replace('%d', minDays);
-                    this.showMessage(msg, 'error');
                     return;
                 }
             }
@@ -1274,14 +1271,9 @@
         },
 
         /**
-         * Get minimum selectable date – Fridays for shipping, any day for pickup
+         * Get minimum selectable date – next Friday for both (pickup "from" Friday, shipping Fridays only)
          */
         getMinDate: function(method) {
-            if (method === 'pickup') {
-                const today = new Date();
-                today.setDate(today.getDate() + parseInt(ab2b_portal.min_days || 2, 10));
-                return this.formatDateForInput(today);
-            }
             return this.getNextFriday();
         },
 

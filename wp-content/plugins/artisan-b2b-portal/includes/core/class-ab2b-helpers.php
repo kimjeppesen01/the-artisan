@@ -84,21 +84,12 @@ class AB2B_Helpers {
     }
 
     /**
-     * Get minimum date (today + min_days) – any day, used for pickup
+     * Validate pickup date – from next Friday (with min_days lead), but any day allowed (not just Fridays)
      */
-    public static function get_min_date($min_days = 2) {
-        $today = new DateTime();
-        $today->modify('+' . $min_days . ' days');
-        return $today->format('Y-m-d');
-    }
-
-    /**
-     * Validate date meets minimum lead time (any day) – used for pickup
-     */
-    public static function is_valid_date($date, $min_days = 2) {
+    public static function is_valid_pickup_date($date, $min_days = 2) {
         $delivery = new DateTime($date);
-        $min_date = new DateTime();
-        $min_date->modify('+' . $min_days . ' days');
+        $min_date_str = self::get_next_friday($min_days);
+        $min_date = new DateTime($min_date_str);
         return $delivery >= $min_date;
     }
 

@@ -239,8 +239,8 @@ class AB2B_Order {
         // Validate delivery date (Fridays for shipping; any day for pickup)
         $min_days = ab2b_get_option('min_days_before', 2);
         if ($delivery_method === 'pickup') {
-            if (!AB2B_Helpers::is_valid_date($data['delivery_date'], $min_days)) {
-                return new WP_Error('invalid_date', sprintf(__('Invalid date. Must be at least %d days in advance.', 'artisan-b2b-portal'), $min_days));
+            if (!AB2B_Helpers::is_valid_pickup_date($data['delivery_date'], $min_days)) {
+                return new WP_Error('invalid_date', __('Pickup is available from the next Friday. Please select a valid date.', 'artisan-b2b-portal'));
             }
         } else {
             if (!AB2B_Helpers::is_valid_friday($data['delivery_date'], $min_days)) {
@@ -438,8 +438,8 @@ class AB2B_Order {
 
         $min_days = ab2b_get_option('min_days_before', 2);
         if ($delivery_method === 'pickup') {
-            if (!AB2B_Helpers::is_valid_date($delivery_date, $min_days)) {
-                return new WP_Error('invalid_date', sprintf(__('Invalid date. Must be at least %d days in advance.', 'artisan-b2b-portal'), $min_days), ['status' => 400]);
+            if (!AB2B_Helpers::is_valid_pickup_date($delivery_date, $min_days)) {
+                return new WP_Error('invalid_date', __('Pickup is available from the next Friday. Please select a valid date.', 'artisan-b2b-portal'), ['status' => 400]);
             }
         } else {
             if (!AB2B_Helpers::is_valid_friday($delivery_date, $min_days)) {
