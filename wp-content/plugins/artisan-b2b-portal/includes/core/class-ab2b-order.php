@@ -230,10 +230,22 @@ class AB2B_Order {
             return new WP_Error('invalid_customer', __('Invalid customer.', 'artisan-b2b-portal'));
         }
 
-        // Validate delivery date
+        // Delivery method – needed for date validation
+        $delivery_method = isset($data['delivery_method']) ? sanitize_text_field($data['delivery_method']) : 'shipping';
+        if (!in_array($delivery_method, ['shipping', 'international', 'pickup'])) {
+            $delivery_method = 'shipping';
+        }
+
+        // Validate delivery date (Fridays for shipping; any day for pickup)
         $min_days = ab2b_get_option('min_days_before', 2);
-        if (!AB2B_Helpers::is_valid_friday($data['delivery_date'], $min_days)) {
-            return new WP_Error('invalid_date', __('Invalid delivery date. Must be a Friday with sufficient lead time.', 'artisan-b2b-portal'));
+        if ($delivery_method === 'pickup') {
+            if (!AB2B_Helpers::is_valid_date($data['delivery_date'], $min_days)) {
+                return new WP_Error('invalid_date', sprintf(__('Invalid date. Must be at least %d days in advance.', 'artisan-b2b-portal'), $min_days));
+            }
+        } else {
+            if (!AB2B_Helpers::is_valid_friday($data['delivery_date'], $min_days)) {
+                return new WP_Error('invalid_date', __('Invalid delivery date. Must be a Friday with sufficient lead time.', 'artisan-b2b-portal'));
+            }
         }
 
         // Calculate totals
@@ -243,11 +255,7 @@ class AB2B_Order {
             $subtotal += $line_total;
         }
 
-        // Delivery method and shipping cost
-        $delivery_method = isset($data['delivery_method']) ? sanitize_text_field($data['delivery_method']) : 'shipping';
-        if (!in_array($delivery_method, ['shipping', 'international', 'pickup'])) {
-            $delivery_method = 'shipping';
-        }
+        // Shipping cost (delivery_method already set above)
         $shipping_cost = self::calculate_shipping_cost($delivery_method, $data['items']);
         $total = $subtotal + $shipping_cost;
 
@@ -429,8 +437,14 @@ class AB2B_Order {
         $special_instructions = isset($data['special_instructions']) ? sanitize_textarea_field($data['special_instructions']) : $order->special_instructions;
 
         $min_days = ab2b_get_option('min_days_before', 2);
-        if (!AB2B_Helpers::is_valid_friday($delivery_date, $min_days)) {
-            return new WP_Error('invalid_date', __('Invalid delivery date.', 'artisan-b2b-portal'), ['status' => 400]);
+        if ($delivery_method === 'pickup') {
+            if (!AB2B_Helpers::is_valid_date($delivery_date, $min_days)) {
+                return new WP_Error('invalid_date', sprintf(__('Invalid date. Must be at least %d days in advance.', 'artisan-b2b-portal'), $min_days), ['status' => 400]);
+            }
+        } else {
+            if (!AB2B_Helpers::is_valid_friday($delivery_date, $min_days)) {
+                return new WP_Error('invalid_date', __('Invalid delivery date. Must be a Friday.', 'artisan-b2b-portal'), ['status' => 400]);
+            }
         }
 
         $subtotal = 0;

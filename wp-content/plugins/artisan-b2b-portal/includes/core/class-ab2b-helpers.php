@@ -84,6 +84,25 @@ class AB2B_Helpers {
     }
 
     /**
+     * Get minimum date (today + min_days) – any day, used for pickup
+     */
+    public static function get_min_date($min_days = 2) {
+        $today = new DateTime();
+        $today->modify('+' . $min_days . ' days');
+        return $today->format('Y-m-d');
+    }
+
+    /**
+     * Validate date meets minimum lead time (any day) – used for pickup
+     */
+    public static function is_valid_date($date, $min_days = 2) {
+        $delivery = new DateTime($date);
+        $min_date = new DateTime();
+        $min_date->modify('+' . $min_days . ' days');
+        return $delivery >= $min_date;
+    }
+
+    /**
      * Get status label
      */
     public static function get_status_label($status) {

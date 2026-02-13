@@ -544,7 +544,20 @@
         updateDeliveryDateLabel: function(method) {
             const isPickup = method === 'pickup';
             $('#ab2b-delivery-date-label').text(isPickup ? ab2b_portal.strings.available_from_date : ab2b_portal.strings.delivery_date);
-            $('.ab2b-friday-note').text(isPickup ? ab2b_portal.strings.friday_only_pickup : ab2b_portal.strings.friday_only);
+            $('.ab2b-delivery-note').text(isPickup ? (ab2b_portal.strings.pickup_any_day || 'Select when you\'d like to pick up.') : ab2b_portal.strings.friday_only);
+            const newMin = this.getMinDate(method);
+            $('#ab2b-delivery-date').attr('min', newMin).attr('data-friday-only', isPickup ? '0' : '1');
+            if ($('.ab2b-delivery-picker').length) $('.ab2b-delivery-picker').attr('data-delivery-method', method);
+            if (isPickup) {
+                const currentVal = $('#ab2b-delivery-date').val();
+                if (currentVal && currentVal < newMin) $('#ab2b-delivery-date').val(newMin);
+            } else {
+                const currentVal = $('#ab2b-delivery-date').val();
+                if (currentVal) {
+                    const d = new Date(currentVal);
+                    if (d.getDay() !== 5) $('#ab2b-delivery-date').val(newMin);
+                }
+            }
         },
 
         /**
@@ -608,9 +621,9 @@
                 `;
             });
 
-            const minDate = this.getNextFriday();
             const editData = this.editingOrderData || {};
             const defaultMethod = editData.delivery_method || 'shipping';
+            const minDate = this.getMinDate(defaultMethod);
             const defaultDate = editData.delivery_date ? editData.delivery_date : minDate;
             const defaultInstructions = editData.special_instructions || '';
 
@@ -670,10 +683,10 @@
                             <span id="ab2b-grand-total">${this.formatPrice(grandTotal)}</span>
                         </div>
                     </div>
-                    <div class="ab2b-delivery-picker">
-                        <label for="ab2b-delivery-date" id="ab2b-delivery-date-label">${ab2b_portal.strings.delivery_date}</label>
-                        <input type="date" id="ab2b-delivery-date" min="${minDate}" value="${defaultDate}" required>
-                        <p class="ab2b-friday-note">${ab2b_portal.strings.friday_only}</p>
+                    <div class="ab2b-delivery-picker" data-delivery-method="${defaultMethod}">
+                        <label for="ab2b-delivery-date" id="ab2b-delivery-date-label">${defaultMethod === 'pickup' ? ab2b_portal.strings.available_from_date : ab2b_portal.strings.delivery_date}</label>
+                        <input type="date" id="ab2b-delivery-date" min="${minDate}" value="${defaultDate}" required data-friday-only="${defaultMethod !== 'pickup' ? '1' : '0'}">
+                        <p class="ab2b-friday-note ab2b-delivery-note">${defaultMethod === 'pickup' ? (ab2b_portal.strings.pickup_any_day || 'Select when you\'d like to pick up.') : ab2b_portal.strings.friday_only}</p>
                     </div>
                     <div class="ab2b-special-instructions">
                         <label for="ab2b-instructions">${ab2b_portal.strings.special_instructions}</label>
@@ -697,16 +710,15 @@
         },
 
         /**
-         * Validate delivery date is a Friday
+         * Validate delivery date – Friday only for shipping; any day for pickup
          */
         validateDeliveryDate: function(e) {
+            const method = $('input[name="delivery_method"]:checked').val() || 'shipping';
+            if (method === 'pickup') return;
             const $input = $(e.target);
             const date = new Date($input.val());
             const dayOfWeek = date.getDay();
-
-            // 5 = Friday
             if (dayOfWeek !== 5) {
-                // Find next Friday
                 const daysUntilFriday = (5 - dayOfWeek + 7) % 7 || 7;
                 date.setDate(date.getDate() + daysUntilFriday);
                 $input.val(this.formatDateForInput(date));
@@ -767,11 +779,20 @@
                 return;
             }
 
-            // Validate Friday
-            const date = new Date(deliveryDate);
-            if (date.getDay() !== 5) {
-                this.showMessage(ab2b_portal.strings.friday_only, 'error');
-                return;
+            if (deliveryMethod !== 'pickup') {
+                const date = new Date(deliveryDate);
+                if (date.getDay() !== 5) {
+                    this.showMessage(ab2b_portal.strings.friday_only, 'error');
+                    return;
+                }
+            } else {
+                const minDate = this.getMinDate('pickup');
+                if (deliveryDate < minDate) {
+                    const minDays = ab2b_portal.min_days || 2;
+                    const msg = (ab2b_portal.strings.pickup_date_min || 'Please select a date at least %d days in advance.').replace('%d', minDays);
+                    this.showMessage(msg, 'error');
+                    return;
+                }
             }
 
             const btnLabel = isUpdate ? (ab2b_portal.strings.updating_order || 'Updating...') : ab2b_portal.strings.placing_order;
@@ -1233,7 +1254,7 @@
 
         getNextFriday: function() {
             const today = new Date();
-            today.setDate(today.getDate() + parseInt(ab2b_portal.min_days));
+            today.setDate(today.getDate() + parseInt(ab2b_portal.min_days || 2, 10));
 
             const dayOfWeek = today.getDay();
             let daysUntilFriday;
@@ -1250,6 +1271,18 @@
 
             today.setDate(today.getDate() + daysUntilFriday);
             return this.formatDateForInput(today);
+        },
+
+        /**
+         * Get minimum selectable date – Fridays for shipping, any day for pickup
+         */
+        getMinDate: function(method) {
+            if (method === 'pickup') {
+                const today = new Date();
+                today.setDate(today.getDate() + parseInt(ab2b_portal.min_days || 2, 10));
+                return this.formatDateForInput(today);
+            }
+            return this.getNextFriday();
         },
 
         formatDateForInput: function(date) {

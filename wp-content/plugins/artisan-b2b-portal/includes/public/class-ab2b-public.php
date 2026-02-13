@@ -321,6 +321,8 @@ class AB2B_Public {
                 'available_from_date'   => __('Available from date', 'artisan-b2b-portal'),
                 'friday_only'           => __('Delivery available on Fridays only.', 'artisan-b2b-portal'),
                 'friday_only_pickup'    => __('Ready for pick up from the selected Friday.', 'artisan-b2b-portal'),
+                'pickup_any_day'        => __('Select when you\'d like to pick up.', 'artisan-b2b-portal'),
+                'pickup_date_min'       => __('Please select a date at least %d days in advance.', 'artisan-b2b-portal'),
                 'place_order'      => __('Place Order', 'artisan-b2b-portal'),
                 'placing_order'    => __('Placing Order...', 'artisan-b2b-portal'),
                 'order_success'    => __('Order placed successfully!', 'artisan-b2b-portal'),
