@@ -84,11 +84,14 @@ class AB2B_Email {
                                     <?php esc_html_e('Use the password provided by your account manager.', 'artisan-b2b-portal'); ?>
                                 </p>
                             </div>
+                            <p style="color: #333; font-size: 15px; font-weight: 600; margin: 0 0 20px; padding: 12px 16px; background-color: #fff8e6; border-left: 4px solid #e6a800; border-radius: 0 4px 4px 0;">
+                                <?php esc_html_e('Please log in immediately. If you wish to use your own password, use "Forgot password?" on the login page to receive a new one by email.', 'artisan-b2b-portal'); ?>
+                            </p>
                         <?php endif; ?>
 
                         <div style="text-align: center; margin: 30px 0;">
                             <a href="<?php echo esc_url($portal_url); ?>" style="display: inline-block; padding: 15px 30px; background-color: #333; color: #ffffff; text-decoration: none; font-weight: bold; border-radius: 5px; font-size: 16px;">
-                                <?php esc_html_e('Access Your Portal', 'artisan-b2b-portal'); ?>
+                                <?php echo $has_custom_url ? esc_html__('Log in Now', 'artisan-b2b-portal') : esc_html__('Access Your Portal', 'artisan-b2b-portal'); ?>
                             </a>
                         </div>
 

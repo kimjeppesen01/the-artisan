@@ -19,42 +19,9 @@ class AB2B_Public {
     public function __construct() {
         add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);
         add_action('init', [$this, 'register_shortcodes']);
-        add_action('init', [$this, 'register_rewrite_rules']);
-        add_filter('query_vars', [$this, 'add_query_vars']);
         add_action('init', [$this, 'handle_password_login']);
         add_action('init', [$this, 'handle_password_reset']);
         add_action('template_redirect', [$this, 'check_portal_access']);
-    }
-
-    /**
-     * Register rewrite rules for clean customer URLs: /b2b-portal/company-name/
-     */
-    public function register_rewrite_rules() {
-        $page_id = get_option('ab2b_portal_page_id');
-        if (!$page_id) {
-            $slug = 'b2b-portal';
-        } else {
-            $page = get_post($page_id);
-            $slug = $page ? $page->post_name : 'b2b-portal';
-        }
-        add_rewrite_rule(
-            $slug . '/([^/]+)/?$',
-            'index.php?pagename=' . $slug . '&ab2b_customer=$matches[1]',
-            'top'
-        );
-
-        if (!get_option('ab2b_path_url_flushed')) {
-            flush_rewrite_rules();
-            update_option('ab2b_path_url_flushed', true);
-        }
-    }
-
-    /**
-     * Add ab2b_customer to allowed query vars
-     */
-    public function add_query_vars($vars) {
-        $vars[] = 'ab2b_customer';
-        return $vars;
     }
 
     /**
@@ -166,11 +133,8 @@ class AB2B_Public {
             }
         }
 
-        // Check for custom URL slug: path-based (/b2b-portal/company-name/) or legacy ?customer=
-        $customer_slug = get_query_var('ab2b_customer', '');
-        if (empty($customer_slug)) {
-            $customer_slug = isset($_GET['customer']) ? sanitize_text_field($_GET['customer']) : '';
-        }
+        // Check for customer slug via ?customer=
+        $customer_slug = isset($_GET['customer']) ? sanitize_text_field($_GET['customer']) : '';
 
         if ($customer_slug) {
             $customer = AB2B_Customer::get_by_slug($customer_slug);
